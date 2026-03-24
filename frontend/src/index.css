@@ -1,3 +1,69 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  @keyframes sb-marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .sb-marquee-track {
+    width: max-content;
+    animation: sb-marquee 38s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-marquee-track {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Enhanced Time Input Styling */
+@layer components {
+  /* Custom time input styling */
+  input[type="time"] {
+    position: relative;
+    cursor: pointer;
+  }
+
+  /* Style the time input clock icon */
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    filter: invert(0.5);
+  }
+
+  input[type="time"]:hover::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    filter: invert(0.3);
+  }
+
+  input[type="time"]:focus::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    filter: invert(0.2);
+  }
+
+  /* Custom styling for the time picker when it's focused */
+  input[type="time"]:focus {
+    outline: none;
+  }
+
+  /* Firefox specific styling */
+  input[type="time"]::-moz-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  input[type="time"]:hover::-moz-calendar-picker-indicator {
+    opacity: 1;
+  }
+}

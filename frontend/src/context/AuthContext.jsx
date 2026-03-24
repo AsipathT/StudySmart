@@ -9,19 +9,43 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
+    // Check if user is logged in from localStorage (synchronous)
     const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
 
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
       setToken(storedToken);
-      
-      // Set default axios header
       axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
     }
-    
+
+    // Set loading false immediately after localStorage check
+    // This ensures PrivateRoute doesn't unmount/remount children
     setLoading(false);
+  }, []);
+
+  // Separate effect to fetch profile image in the background
+  // This does NOT affect loading state, so it won't cause component remounts
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      fetch('http://localhost:5000/api/profile', {
+        headers: { 'Authorization': `Bearer ${storedToken}` }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(profileData => {
+          if (profileData && profileData.profileImage) {
+            const parsedUser = JSON.parse(localStorage.getItem("user") || "{}");
+            const updatedUser = { ...parsedUser, profileImage: profileData.profileImage };
+            setUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+          }
+        })
+        .catch(() => { });
+    }
   }, []);
 
   const login = (userData, authToken) => {
@@ -30,6 +54,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", authToken);
     axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
+
+    // Fetch profile image after login (background, no loading state change)
+    fetch('http://localhost:5000/api/profile', {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(profileData => {
+        if (profileData && profileData.profileImage) {
+          const updatedUser = { ...userData, profileImage: profileData.profileImage };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        }
+      })
+      .catch(() => { });
   };
 
   const logout = () => {

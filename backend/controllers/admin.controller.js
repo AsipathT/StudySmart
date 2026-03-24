@@ -121,7 +121,6 @@ exports.getDashboardStats = async (req, res) => {
 
     // Get study group statistics
     const totalGroups = await StudyGroup.countDocuments();
-    const activeGroups = await StudyGroup.countDocuments({ isActive: true });
 
     res.status(200).json({
       success: true,
@@ -133,7 +132,6 @@ exports.getDashboardStats = async (req, res) => {
         totalSubjects: subjects.length,
         topDegrees: usersByDegree,
         totalGroups,
-        activeGroups,
       },
     });
   } catch (error) {

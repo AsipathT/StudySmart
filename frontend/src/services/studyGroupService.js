@@ -26,23 +26,37 @@ export const getStudyGroupById = async (id) => {
 //create new study Group
 export const createStudyGroup = async (groupData) => {
     try {
-        const response = await api.post("/studygroups", groupData);
+        const config = {};
+        // If it's FormData (for file uploads), set proper content type
+        if (groupData instanceof FormData) {
+            config.headers = {
+                'Content-Type': 'multipart/form-data',
+            };
+        }
+        
+        const response = await api.post("/studygroups", groupData, config);
         return response.data;
     } catch (error) {
         throw error.response?.data || error.message;
     }
-
 };
 
 //Update a study group(only creator can update)
 export const updateStudyGroup = async (id, groupData) => {
   try {
-    const response = await api.put(`/studygroups/${id}`, groupData);
+    const config = {};
+    // If it's FormData (for file uploads), set proper content type
+    if (groupData instanceof FormData) {
+        config.headers = {
+            'Content-Type': 'multipart/form-data',
+        };
+    }
+    
+    const response = await api.put(`/studygroups/${id}`, groupData, config);
     return response.data;
   } catch (error){
      throw error.response?.data || error.message;
   }
-
 };
 
 

@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { AuthContext } from "../context/AuthContext";
 import {
   getAllStudyGroups,
@@ -16,6 +17,7 @@ import {
   searchStudentsBySubject,
   searchStudentsByAvailability,
   updateProfile,
+  uploadProfileImage,
 } from "../services/userService";
 import {
   sendFriendRequest as sendFriendReq,
@@ -39,6 +41,8 @@ import StudyGroupsTab from "./StudyGroupsTab";
 import MyGroupsTab from "./MyGroupsTab";
 import FindBuddiesTab from "./FindBuddiesTab";
 import FriendsTab from "./FriendsTab";
+import ProfileTab from "./ProfileTab";
+import SettingsTab from "./SettingsTab";
 import {
   MagnifyingGlassIcon,
   UserGroupIcon,
@@ -60,6 +64,7 @@ const Dashboard = () => {
   const [greeting, setGreeting] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // ─── Dashboard tab data ──────────────────────────
   const [studyGroups, setStudyGroups] = useState([]);
@@ -72,7 +77,9 @@ const Dashboard = () => {
   const [sgSearchType, setSgSearchType] = useState("all");
   const [sgSubject, setSgSubject] = useState("");
   const [sgMeetingTime, setSgMeetingTime] = useState({
-    weekdays: false, weekend: false, morning: false, evening: false,
+    day: "",
+    startTime: "",
+    endTime: "",
   });
   const [sgGroups, setSgGroups] = useState([]);
   const [sgLoading, setSgLoading] = useState(false);
@@ -121,24 +128,22 @@ const Dashboard = () => {
   const [friendsError, setFriendsError] = useState("");
   const [friendActionLoading, setFriendActionLoading] = useState(null);
 
-  // ─── Profile edit state ───────────────────────────
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [profileForm, setProfileForm] = useState(null);
+  // ─── Profile state ──────────────────────────────
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [profileSuccess, setProfileSuccess] = useState("");
-  const [newSubjectInput, setNewSubjectInput] = useState("");
+
 
   // ─── Helpers ──────────────────────────────────────
   const getInitials = (name) => {
     if (!name) return "?";
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   };
-  const groupColors = ["bg-blue-500","bg-purple-500","bg-emerald-500","bg-orange-500","bg-pink-500","bg-cyan-500"];
-  const buddyColors = ["bg-indigo-500","bg-teal-500","bg-rose-500","bg-amber-500","bg-violet-500"];
+  const groupColors = ["bg-blue-500", "bg-purple-500", "bg-emerald-500", "bg-orange-500", "bg-pink-500", "bg-cyan-500"];
+  const buddyColors = ["bg-indigo-500", "bg-teal-500", "bg-rose-500", "bg-amber-500", "bg-violet-500"];
 
-  const formatTime = (d) => d.toLocaleTimeString("en-US",{ hour:"numeric", minute:"2-digit", hour12:true });
-  const formatDate = (d) => d.toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" });
+  const formatTime = (d) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  const formatDate = (d) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   // ─── Greeting & clock ─────────────────────────────
   useEffect(() => {
@@ -158,14 +163,64 @@ const Dashboard = () => {
       const groupsRes = await getAllStudyGroups();
       const all = groupsRes.studyGroups || [];
       setStudyGroups(all);
-      const uid = user?._id || user?.id;
-      setMyGroupsList(all.filter((g) => g.members?.some((m) => (m._id || m).toString() === uid)));
-      if (user?.subjects?.length > 0) {
+      const uid = (user?._id || user?.id || "").toString();
+
+      // Build my groups list from all groups
+      const myGroups = all.filter((g) =>
+        g.members?.some((m) => ((m._id || m.id || m) || "").toString() === uid)
+      );
+      setMyGroupsList(myGroups);
+
+      // ── Suggest buddies from same study groups ──
+      let buddySuggestions = [];
+      try {
+        // Load all students so we have full profile data
+        const studentsRes = await getAllStudents();
+        const allStudents = studentsRes.users || [];
+
+        if (myGroups.length > 0 && allStudents.length > 0) {
+          const suggestionsMap = new Map();
+
+          allStudents.forEach((student) => {
+            const sid = (student._id || student.id || "").toString();
+            if (!sid || sid === uid) return; // skip self / invalid ids
+
+            // Find groups this student shares with the current user
+            const sharedGroups = myGroups.filter((g) =>
+              g.members?.some((m) => ((m._id || m.id || m) || "").toString() === sid)
+            );
+
+            if (sharedGroups.length > 0) {
+              const existing = suggestionsMap.get(sid);
+              const payload = {
+                ...student,
+                sharedGroups: sharedGroups.map((g) => ({
+                  _id: g._id,
+                  name: g.name,
+                  subject: g.subject,
+                })),
+              };
+              suggestionsMap.set(sid, existing ? { ...existing, ...payload } : payload);
+            }
+          });
+
+          buddySuggestions = Array.from(suggestionsMap.values());
+        }
+      } catch (e) {
+        console.error("Failed to build same-group buddy suggestions", e);
+      }
+
+      // Fallback: if no same-group buddies, use subject-based suggestions as before
+      if (buddySuggestions.length === 0 && user?.subjects?.length > 0) {
         try {
           const b = await searchStudentsBySubject(user.subjects[0]);
-          setSuggestedBuddies((b.users || []).slice(0, 5));
-        } catch { setSuggestedBuddies([]); }
+          buddySuggestions = (b.users || []).slice(0, 5);
+        } catch {
+          buddySuggestions = [];
+        }
       }
+
+      setSuggestedBuddies(buddySuggestions.slice(0, 8));
       // Load pending friend requests & group invites for dashboard
       try {
         const [pData, giData] = await Promise.all([getPendingRequests(), getMyGroupInvites()]);
@@ -200,7 +255,19 @@ const Dashboard = () => {
   const sgAdvancedSearch = async (e) => {
     e.preventDefault();
     setSgLoading(true); setSgError("");
-    try { const d = await searchStudyGroupsByAvailability({ subject: sgSubject || undefined, meetingTime: sgMeetingTime }); setSgGroups(d.studyGroups); }
+    try {
+      const day = sgMeetingTime?.day || undefined;
+      const startTime = sgMeetingTime?.startTime || undefined;
+      const endTime = sgMeetingTime?.endTime || undefined;
+
+      const d = await searchStudyGroupsByAvailability({
+        subject: sgSubject || undefined,
+        day,
+        startTime,
+        endTime,
+      });
+      setSgGroups(d.studyGroups);
+    }
     catch (e) { setSgError(e.message || "Search failed"); }
     finally { setSgLoading(false); }
   };
@@ -209,7 +276,7 @@ const Dashboard = () => {
     setJoinLoading(id); setSgError("");
     try {
       await joinStudyGroup(id);
-      alert("Successfully joined the group!");
+      toast.success("Successfully joined the group!");
       sgLoadAll();
       fetchDashboardData();
     } catch (e) { setSgError(e.message || "Failed to join"); }
@@ -242,25 +309,45 @@ const Dashboard = () => {
 
   const mgOpenEdit = (g) => {
     setSelectedGroup(g);
-    setEditFormData({ name: g.name, description: g.description || "", subject: g.subject, maxMembers: g.maxMembers, meetingTime: { ...g.meetingTime }, isActive: g.isActive ?? true });
+    setEditFormData({
+      name: g.name,
+      description: g.description || "",
+      subject: g.subject,
+      maxMembers: g.maxMembers,
+      meetingTimes: g.meetingTimes && Array.isArray(g.meetingTimes) ? [...g.meetingTimes] : [],
+      hallAllocation: g.hallAllocation ? {
+        building: g.hallAllocation.building || "",
+        floor: g.hallAllocation.floor || "",
+        lab: g.hallAllocation.lab || "",
+      } : {
+        building: "",
+        floor: "",
+        lab: "",
+      },
+      image: g.image || "",
+    });
     setShowEditModal(true);
   };
 
-  const mgUpdate = async (e) => {
-    e.preventDefault();
-    if (!editFormData.name.trim() || !editFormData.subject.trim()) { setMgError("Name and subject required"); return; }
-    const mt = editFormData.meetingTime;
-    if (!mt.weekdays && !mt.weekend && !mt.morning && !mt.evening) { setMgError("Select at least one meeting time"); return; }
-    setMgActionLoading(selectedGroup._id); setMgError("");
-    try { await updateStudyGroup(selectedGroup._id, editFormData); alert("Updated!"); setShowEditModal(false); loadMyGroups(); fetchDashboardData(); }
-    catch (e) { setMgError(e.message || "Update failed"); }
-    finally { setMgActionLoading(false); }
+  const mgUpdate = async (formData) => {
+    setMgActionLoading(selectedGroup._id);
+    setMgError("");
+    try {
+      await updateStudyGroup(selectedGroup._id, formData);
+      toast.success("Updated!");
+      setShowEditModal(false);
+      loadMyGroups();
+      fetchDashboardData();
+    } catch (e) {
+      setMgError(e.message || "Update failed");
+    } finally {
+      setMgActionLoading(null);
+    }
   };
 
   const mgDelete = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
     setMgActionLoading(id); setMgError("");
-    try { await deleteStudyGroup(id); alert("Deleted!"); loadMyGroups(); fetchDashboardData(); }
+    try { await deleteStudyGroup(id); toast.success("Deleted!"); loadMyGroups(); fetchDashboardData(); }
     catch (e) { setMgError(e.message || "Delete failed"); }
     finally { setMgActionLoading(null); }
   };
@@ -268,7 +355,7 @@ const Dashboard = () => {
   const mgLeave = async (id, name) => {
     if (!window.confirm(`Leave "${name}"?`)) return;
     setMgActionLoading(id); setMgError("");
-    try { await leaveStudyGroup(id); alert("Left group!"); loadMyGroups(); fetchDashboardData(); }
+    try { await leaveStudyGroup(id); toast.success("Left group!"); loadMyGroups(); fetchDashboardData(); }
     catch (e) { setMgError(e.message || "Leave failed"); }
     finally { setMgActionLoading(null); }
   };
@@ -294,9 +381,9 @@ const Dashboard = () => {
     setInviteSending(friendId);
     try {
       await sendGroupInvite(inviteGroupId, friendId);
-      alert("Invite sent!");
+      toast.success("Invite sent!");
       setInviteFriends((prev) => prev.filter((f) => f._id !== friendId));
-    } catch (e) { alert(e.message || "Failed to send invite"); }
+    } catch (e) { toast.error(e.message || "Failed to send invite"); }
     finally { setInviteSending(null); }
   };
 
@@ -325,6 +412,11 @@ const Dashboard = () => {
     }
   }, [activeTab, fbSearchType, loadFriendStatuses, fbLoadAll]);
 
+  // Also load friend statuses once so dashboard suggestions can show correct buttons
+  useEffect(() => {
+    loadFriendStatuses();
+  }, [loadFriendStatuses]);
+
   const fbSimpleSearch = async (e) => {
     e.preventDefault();
     if (!fbSubject.trim()) { setFbError("Enter a subject"); return; }
@@ -348,7 +440,7 @@ const Dashboard = () => {
     try {
       await sendFriendReq(userId);
       setFriendStatusMap((prev) => ({ ...prev, [userId]: { status: "pending", direction: "sent" } }));
-    } catch (e) { alert(e.message || "Failed to send request"); }
+    } catch (e) { toast.error(e.message || "Failed to send request"); }
     finally { setFrActionLoading(null); }
   };
 
@@ -369,6 +461,11 @@ const Dashboard = () => {
     } catch (e) { setFriendsError(e.message || "Failed to load"); }
     finally { setFriendsLoading(false); }
   }, []);
+
+  // Load friends once so dashboard can filter out existing friends
+  useEffect(() => {
+    if (user) loadFriendsData();
+  }, [user, loadFriendsData]);
 
   useEffect(() => { if (activeTab === "friends") loadFriendsData(); }, [activeTab, loadFriendsData]);
 
@@ -396,7 +493,7 @@ const Dashboard = () => {
 
   const handleAcceptGroupInvite = async (inviteId) => {
     setFriendActionLoading(inviteId);
-    try { await acceptGroupInvite(inviteId); alert("You joined the group!"); loadFriendsData(); fetchDashboardData(); }
+    try { await acceptGroupInvite(inviteId); toast.success("You joined the group!"); loadFriendsData(); fetchDashboardData(); }
     catch (e) { setFriendsError(e.message || "Failed"); }
     finally { setFriendActionLoading(null); }
   };
@@ -410,73 +507,7 @@ const Dashboard = () => {
 
   // ─── Profile edit helpers ────────────────────────
   const openProfileEdit = () => {
-    setProfileForm({
-      name: user?.name || "",
-      degree: user?.degree || "",
-      year: user?.year || "",
-      subjects: user?.subjects ? [...user.subjects] : [],
-      availableTime: {
-        weekdays: user?.availableTime?.weekdays || false,
-        weekend: user?.availableTime?.weekend || false,
-        morning: user?.availableTime?.morning || false,
-        evening: user?.availableTime?.evening || false,
-      },
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-    setProfileError("");
-    setProfileSuccess("");
-    setNewSubjectInput("");
-    setShowProfileModal(true);
-  };
-
-  const addSubject = () => {
-    const s = newSubjectInput.trim();
-    if (s && !profileForm.subjects.includes(s)) {
-      setProfileForm((p) => ({ ...p, subjects: [...p.subjects, s] }));
-      setNewSubjectInput("");
-    }
-  };
-
-  const removeSubject = (idx) => {
-    setProfileForm((p) => ({ ...p, subjects: p.subjects.filter((_, i) => i !== idx) }));
-  };
-
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
-    setProfileError("");
-    setProfileSuccess("");
-
-    if (!profileForm.name.trim()) { setProfileError("Name is required"); return; }
-    if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
-      setProfileError("New passwords do not match"); return;
-    }
-
-    setProfileLoading(true);
-    try {
-      const payload = {
-        name: profileForm.name.trim(),
-        degree: profileForm.degree.trim(),
-        year: profileForm.year.toString().trim(),
-        subjects: profileForm.subjects,
-        availableTime: profileForm.availableTime,
-      };
-      if (profileForm.newPassword) {
-        payload.currentPassword = profileForm.currentPassword;
-        payload.newPassword = profileForm.newPassword;
-      }
-
-      const data = await updateProfile(payload);
-      updateUser(data.user);
-      setProfileSuccess("Profile updated successfully!");
-      fetchDashboardData();
-      setTimeout(() => setShowProfileModal(false), 1200);
-    } catch (err) {
-      setProfileError(err.message || "Failed to update profile");
-    } finally {
-      setProfileLoading(false);
-    }
+    setActiveTab("profile");
   };
 
   // ─── Logout ───────────────────────────────────────
@@ -543,6 +574,7 @@ const Dashboard = () => {
         myGroupsList={myGroupsList}
         studyGroups={studyGroups}
         suggestedBuddies={suggestedBuddies}
+        friendStatusMap={friendStatusMap}
         pendingRequests={pendingRequests}
         groupInvitesList={groupInvitesList}
         friendActionLoading={friendActionLoading}
@@ -556,6 +588,8 @@ const Dashboard = () => {
         getInitials={getInitials}
         groupColors={groupColors}
         buddyColors={buddyColors}
+        myFriendsList={myFriendsList}
+        renderFriendButton={renderFriendButton}
       />
     ),
     studygroups: () => (
@@ -591,15 +625,15 @@ const Dashboard = () => {
         mgOpenEdit={mgOpenEdit}
         mgDelete={mgDelete}
         mgLeave={mgLeave}
-        mgUpdate={mgUpdate}
         openInviteModal={openInviteModal}
+        showDetailsModal={showDetailsModal}
+        setShowDetailsModal={setShowDetailsModal}
+        selectedGroup={selectedGroup}
         showEditModal={showEditModal}
         setShowEditModal={setShowEditModal}
         editFormData={editFormData}
         setEditFormData={setEditFormData}
-        showDetailsModal={showDetailsModal}
-        setShowDetailsModal={setShowDetailsModal}
-        selectedGroup={selectedGroup}
+        mgUpdate={mgUpdate}
       />
     ),
     findbuddies: () => (
@@ -643,14 +677,63 @@ const Dashboard = () => {
         buddyColors={buddyColors}
       />
     ),
+    profile: () => (
+      <ProfileTab
+        user={user}
+        getInitials={getInitials}
+        onUpdateProfile={async (data) => {
+          setProfileLoading(true);
+          setProfileError("");
+          setProfileSuccess("");
+          try {
+            const result = await updateProfile(data);
+            updateUser(result.user);
+            setProfileSuccess("Profile updated successfully!");
+            fetchDashboardData();
+            setTimeout(() => setProfileSuccess(""), 3000);
+          } catch (err) {
+            setProfileError(err.message || "Failed to update profile");
+            throw err;
+          } finally {
+            setProfileLoading(false);
+          }
+        }}
+        onUploadImage={async (file) => {
+          setProfileLoading(true);
+          setProfileError("");
+          setProfileSuccess("");
+          try {
+            const result = await uploadProfileImage(file);
+            updateUser(result.user);
+            setProfileSuccess("Profile picture updated!");
+            setTimeout(() => setProfileSuccess(""), 3000);
+          } catch (err) {
+            setProfileError(err.message || "Failed to upload image");
+            throw err;
+          } finally {
+            setProfileLoading(false);
+          }
+        }}
+        profileLoading={profileLoading}
+        profileError={profileError}
+        profileSuccess={profileSuccess}
+      />
+    ),
+    settings: () => (
+      <SettingsTab
+        onChangePassword={async ({ currentPassword, newPassword }) => {
+          await updateProfile({ currentPassword, newPassword });
+        }}
+      />
+    ),
   };
 
   // ════════════════════════════════════════════════════
   //  MAIN LAYOUT
   // ════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex min-h-screen">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+      <div className="min-h-screen">
         {/* ─── Sidebar ─── */}
         <Sidebar
           user={user}
@@ -663,10 +746,13 @@ const Dashboard = () => {
           myFriendsList={myFriendsList}
           getInitials={getInitials}
           handleLogout={handleLogout}
+          collapsed={sidebarCollapsed}
+          setCollapsed={setSidebarCollapsed}
+          onProfileEdit={() => setActiveTab("profile")}
         />
 
         {/* ─── Main Content ─── */}
-        <div className="flex-1 lg:ml-72">
+        <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
           {/* Top Bar */}
           <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
             <div className="flex items-center justify-between px-6 py-4 lg:px-8">
@@ -680,7 +766,13 @@ const Dashboard = () => {
           </div>
 
           {/* Page content */}
-          <div className="p-6 lg:p-8">
+          <div
+            className={
+              activeTab === 'studygroups'
+                ? 'pb-24 sm:pb-24 lg:pb-10'
+                : 'p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-10'
+            }
+          >
             {tabContent[activeTab]()}
           </div>
         </div>
@@ -722,91 +814,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* ─── Profile Edit Modal ─── */}
-      {showProfileModal && profileForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Edit Profile</h3>
-              <button onClick={() => setShowProfileModal(false)} className="p-1 text-gray-400 transition rounded-lg hover:text-gray-700 hover:bg-gray-100">
-                <span className="text-2xl leading-none">&times;</span>
-              </button>
-            </div>
 
-            {profileSuccess && <div className="p-3 mb-4 text-sm font-medium text-green-700 border border-green-200 bg-green-50 rounded-xl">{profileSuccess}</div>}
-            {profileError && <div className="p-3 mb-4 text-sm font-medium text-red-700 border border-red-200 bg-red-50 rounded-xl">{profileError}</div>}
-
-            <form onSubmit={handleProfileSubmit} className="space-y-5">
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700">Name *</label>
-                <input type="text" value={profileForm.name} onChange={(e) => setProfileForm((p) => ({ ...p, name: e.target.value }))} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
-              </div>
-
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700">Email</label>
-                <input type="email" value={user?.email || ""} disabled className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">Degree</label>
-                  <input type="text" value={profileForm.degree} onChange={(e) => setProfileForm((p) => ({ ...p, degree: e.target.value }))} placeholder="e.g., Computer Science" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">Year</label>
-                  <input type="text" value={profileForm.year} onChange={(e) => setProfileForm((p) => ({ ...p, year: e.target.value }))} placeholder="e.g., 2" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700">Subjects</label>
-                <div className="flex gap-2 mb-2">
-                  <input type="text" value={newSubjectInput} onChange={(e) => setNewSubjectInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSubject(); } }} placeholder="Add a subject..." className="flex-1 px-4 py-2 transition border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-                  <button type="button" onClick={addSubject} className="px-4 py-2 text-sm font-medium text-white transition bg-indigo-600 rounded-xl hover:bg-indigo-700">Add</button>
-                </div>
-                {profileForm.subjects.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {profileForm.subjects.map((s, i) => (
-                      <span key={i} className="inline-flex items-center px-3 py-1 text-sm font-medium text-indigo-700 rounded-full bg-indigo-50">
-                        {s}
-                        <button type="button" onClick={() => removeSubject(i)} className="ml-1.5 text-indigo-400 hover:text-red-500 transition">&times;</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">Availability</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[["weekdays","Weekdays"],["weekend","Weekend"],["morning","Morning"],["evening","Evening"]].map(([key, label]) => (
-                    <label key={key} className="flex items-center p-3 space-x-3 transition border border-gray-200 cursor-pointer rounded-xl hover:bg-gray-50">
-                      <input type="checkbox" checked={profileForm.availableTime[key]} onChange={() => setProfileForm((p) => ({ ...p, availableTime: { ...p.availableTime, [key]: !p.availableTime[key] } }))} className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-                      <span className="text-sm text-gray-700">{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <p className="mb-3 text-sm font-medium text-gray-700">Change Password <span className="font-normal text-gray-400">(optional)</span></p>
-                <div className="space-y-3">
-                  <input type="password" value={profileForm.currentPassword} onChange={(e) => setProfileForm((p) => ({ ...p, currentPassword: e.target.value }))} placeholder="Current password" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="password" value={profileForm.newPassword} onChange={(e) => setProfileForm((p) => ({ ...p, newPassword: e.target.value }))} placeholder="New password" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
-                    <input type="password" value={profileForm.confirmPassword} onChange={(e) => setProfileForm((p) => ({ ...p, confirmPassword: e.target.value }))} placeholder="Confirm new password" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowProfileModal(false)} className="flex-1 px-4 py-2.5 text-gray-700 transition border border-gray-300 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
-                <button type="submit" disabled={profileLoading} className="flex-1 px-4 py-2.5 text-white transition bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:bg-gray-400 font-medium">{profileLoading ? "Saving..." : "Save Changes"}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <style>{`.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}`}</style>
     </div>

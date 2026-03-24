@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { Toaster } from "react-hot-toast";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Dashboard from "./components/Dashboard";
@@ -7,14 +8,13 @@ import AdminDashboard from "./components/AdminDashboard";
 import PrivateRoute from "./components/PrivateRoute";
 
 import StudentSearch from "./components/StudentSearch";
-import StudyGroupBrowser from "./components/StudyGroupBrowser";
-import MyGroups from "./components/MyGroups";
-
-
+// import StudyGroupBrowser from "./components/StudyGroupBrowser";
+// import MyGroups from "./components/MyGroups";
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" reverseOrder={false} />
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
@@ -44,7 +44,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route
+          {/* <Route
            path="/study-groups"
            element={
               <PrivateRoute>
@@ -53,8 +53,8 @@ function App() {
            }
           
           
-          />
-          <Route
+          /> */}
+          {/* <Route
            path="/my-groups"
            element={
               <PrivateRoute>
@@ -63,7 +63,7 @@ function App() {
            }
           
           
-          />
+          /> */}
 
         </Routes>
       </Router>

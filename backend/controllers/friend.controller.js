@@ -120,8 +120,8 @@ exports.getMyFriends = async (req, res) => {
       status: "accepted",
       $or: [{ from: userId }, { to: userId }],
     })
-      .populate("from", "name email degree year subjects availableTime")
-      .populate("to", "name email degree year subjects availableTime")
+      .populate("from", "name email degree year subjects availableTime profileImage")
+      .populate("to", "name email degree year subjects availableTime profileImage")
       .sort({ updatedAt: -1 });
 
     // Extract the friend (the other user)

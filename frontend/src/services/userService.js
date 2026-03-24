@@ -23,7 +23,7 @@ export const searchStudentsBySubject = async (subject) => {
 
 //Search Students by subject and availability
 //Why using post? Because we need to send more complex data (subject + availability) in the request body
-export const searchStudentsByAvailability = async(searchData) => {
+export const searchStudentsByAvailability = async (searchData) => {
     try {
         const response = await api.post("/users/search/availability", searchData);
         return response.data;
@@ -37,6 +37,22 @@ export const searchStudentsByAvailability = async(searchData) => {
 export const updateProfile = async (profileData) => {
     try {
         const response = await api.put("/users/profile", profileData);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+// Upload profile image
+export const uploadProfileImage = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append('profileImage', file);
+        const response = await api.post("/users/profile/upload-image", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
         return response.data;
     } catch (error) {
         throw error.response?.data || error.message;

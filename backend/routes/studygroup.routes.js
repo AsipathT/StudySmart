@@ -6,6 +6,7 @@ const {
     getAllStudyGroups,
     getStudyGroupById,
     updateStudyGroup,
+    updateStudyGroupImage,
     deleteStudyGroup,
     searchStudyGroupsBySubject,
     searchStudyGroupsByAvailability,
@@ -15,11 +16,12 @@ const {
 } = require("../controllers/studygroup.controller");
 
 const authMiddleware = require("../middleware/auth.middleware");
+const upload = require("../middleware/upload.middleware");
 
 //All routes are protected(require authentication)
 
-//Create a study group
-router.post("/", authMiddleware, createStudyGroup);
+//Create a study group (with optional image upload)
+router.post("/", authMiddleware, upload.single('image'), createStudyGroup);
 
 //Get all study groups
 router.get("/", authMiddleware, getAllStudyGroups);
@@ -33,8 +35,11 @@ router.post("/search/availability", authMiddleware, searchStudyGroupsByAvailabil
 //Get Single study group by ID
 router.get("/:id", authMiddleware, getStudyGroupById);
 
-//Update a study group(only creator can update)
-router.put("/:id", authMiddleware, updateStudyGroup);
+//Update a study group(only creator can update) - with optional image
+router.put("/:id", authMiddleware, upload.single('image'), updateStudyGroup);
+
+//Update study group image only
+router.put("/:id/image", authMiddleware, upload.single('image'), updateStudyGroupImage);
 
 //Delete a study group(only creator can delete)
 router.delete("/:id", authMiddleware, deleteStudyGroup);

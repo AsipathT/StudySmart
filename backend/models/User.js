@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    profileImage: {
+      type: String,
+      default: "",
+    },
     degree: {
       type: String,
       default: "",
@@ -40,15 +44,20 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    availableTime: {
-      type: {
-        weekdays: { type: Boolean, default: false },
-        weekend: { type: Boolean, default: false },
-        morning: { type: Boolean, default: false },
-        evening: { type: Boolean, default: false },
+    availableTime: [{
+      day: {
+        type: String,
+        enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
       },
-      default: {},
-    },
+      startTime: {
+        type: String, // "10:00" format
+        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Please provide a valid time in HH:mm format"],
+      },
+      endTime: {
+        type: String, // "12:00" format
+        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Please provide a valid time in HH:mm format"],
+      },
+    }],
     studyGroups: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -72,10 +73,10 @@ const AdminDashboard = () => {
 
     try {
       await axios.delete(`http://localhost:5000/api/admin/users/${userId}`);
-      alert('User deleted successfully');
+      toast.success('User deleted successfully');
       fetchUsers(currentPage, searchTerm);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete user');
+      toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -94,10 +95,10 @@ const AdminDashboard = () => {
       await axios.put(`http://localhost:5000/api/admin/users/${userId}/role`, {
         role: newRole,
       });
-      alert('User role updated successfully');
+      toast.success('User role updated successfully');
       fetchUsers(currentPage, searchTerm);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update user role');
+      toast.error(err.response?.data?.message || 'Failed to update user role');
     }
   };
 
@@ -140,10 +141,10 @@ const AdminDashboard = () => {
 
     try {
       await axios.delete(`http://localhost:5000/api/studygroups/${groupId}`);
-      alert('Study group deleted successfully');
+      toast.success('Study group deleted successfully');
       fetchStudyGroups(groupsCurrentPage, groupsSearchTerm);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete study group');
+      toast.error(err.response?.data?.message || 'Failed to delete study group');
     }
   };
 
@@ -646,11 +647,7 @@ const AdminDashboard = () => {
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
                             {group.members?.length || 0}/{group.maxMembers} members
                           </span>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            group.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {group.isActive ? 'Active' : 'Inactive'}
-                          </span>
+
                         </div>
                       </div>
                       <button
