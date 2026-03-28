@@ -1,0 +1,83 @@
+.profile-page {
+  padding: 24px;
+}
+
+.profile-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+}
+
+.profile-header .ant-card-body {
+  color: white;
+}
+
+.profile-header .ant-typography,
+.profile-header .ant-typography-secondary {
+  color: white !important;
+}
+
+.profile-header .ant-tag {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+.profile-header .ant-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+}
+
+.profile-header .ant-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.profile-avatar {
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.achievement-card {
+  text-align: center;
+  transition: all 0.3s;
+  border-radius: 12px;
+}
+
+.achievement-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.error-container {
+  max-width: 600px;
+  margin: 100px auto;
+  padding: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 16px;
+  }
+  
+  .profile-header {
+    text-align: center;
+  }
+  
+  .profile-header .ant-col:last-child {
+    text-align: center !important;
+  }
+}
