@@ -1,5 +1,10 @@
 # Node dependencies
 node_modules/
+**/node_modules/
+
+# Cache
+.cache/
+**/.cache/
 
 # Environment variables
 .env
