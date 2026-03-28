@@ -1,0 +1,132 @@
+/* ─── Upload Page ─────────────────────────────────────────────── */
+.upload-page {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+/* ─── Wizard Card ─────────────────────────────────────────────── */
+.wizard-card {
+  border-radius: 12px;
+}
+
+/* ─── Step content ─────────────────────────────────────────────── */
+.step-content {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+.step-icon {
+  font-size: 28px;
+  color: #1890ff;
+  margin-top: 2px;
+}
+
+.step-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.next-btn {
+  min-width: 160px;
+}
+
+/* ─── Semester radio ────────────────────────────────────────────── */
+.semester-radio-group .ant-radio-button-wrapper {
+  width: 140px;
+  text-align: center;
+}
+
+/* ─── Dropzone ─────────────────────────────────────────────────── */
+.dropzone {
+  border: 2px dashed #d9d9d9;
+  border-radius: 12px;
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone:hover {
+  border-color: #1890ff;
+  background: #e6f4ff;
+}
+
+.dropzone.active {
+  border-color: #1890ff;
+  background: #e6f4ff;
+}
+
+.dropzone.has-file {
+  border-color: #52c41a;
+  background: #f6ffed;
+}
+
+.dropzone.uploading {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.browse-text {
+  color: #1890ff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ─── Code example ─────────────────────────────────────────────── */
+.code-example {
+  background: #f5f5f5;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #333;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ─── Upload progress ──────────────────────────────────────────── */
+.upload-progress {
+  padding: 0 4px;
+}
+
+/* ─── Success step ─────────────────────────────────────────────── */
+.success-step {
+  align-items: center;
+  padding: 16px 0;
+}
+
+.success-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f6ffed;
+  border: 3px solid #52c41a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-check {
+  font-size: 36px;
+  color: #52c41a;
+}
+
+/* ─── Header card ──────────────────────────────────────────────── */
+.upload-header {
+  border-radius: 12px;
+}

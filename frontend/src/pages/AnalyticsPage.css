@@ -1,0 +1,62 @@
+.analytics-page {
+  padding: 24px;
+}
+
+.analytics-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.analytics-header .ant-card-body {
+  color: white;
+}
+
+.analytics-header .ant-typography,
+.analytics-header .ant-typography-secondary {
+  color: white !important;
+}
+
+.metric-card {
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.recommendation-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: none;
+  transition: all 0.3s;
+}
+
+.recommendation-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Chart container styling */
+.recharts-wrapper {
+  margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .analytics-page {
+    padding: 16px;
+  }
+  
+  .metric-card {
+    margin-bottom: 16px;
+  }
+}
