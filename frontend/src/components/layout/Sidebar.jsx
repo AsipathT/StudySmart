@@ -96,9 +96,16 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       icon: <DashboardOutlined />,
       label: 'Dashboard',
     },
+    ...(user?.role === 'admin' ? [
+      {
+        key: '/admin-dashboard',
+        icon: <ThunderboltOutlined />,
+        label: 'Admin Dashboard',
+      },
+    ] : []),
     {
       key: 'performance-predictor',
-      icon: <ThunderboltOutlined />,
+      icon: <BarChartOutlined />,
       label: 'Performance Predictor',
       children: [
         { key: '/upload',      icon: <UploadOutlined />,   label: 'Upload Marks'  },
