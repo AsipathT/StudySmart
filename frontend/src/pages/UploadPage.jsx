@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import {
   Card, Button, Row, Col, Spin, Alert, Space, Typography,
   Progress, Table, Tag, Statistic, Empty, Modal, Descriptions,
-  Timeline, Tooltip, Form, Input, Select, Radio, Steps, Divider,
+  Timeline, Tooltip, Form, Input, Select, Radio, Steps, Divider, Badge,
 } from 'antd';
 import {
   UploadOutlined, FilePdfOutlined, FileExcelOutlined,
@@ -10,7 +10,7 @@ import {
   HistoryOutlined, BarChartOutlined, DeleteOutlined, EyeOutlined,
   DownloadOutlined, ReloadOutlined, UserOutlined, IdcardOutlined,
   BankOutlined, ArrowRightOutlined, ArrowLeftOutlined,
-  CloudUploadOutlined, CheckOutlined, TrophyOutlined,
+  CloudUploadOutlined, CheckOutlined, TrophyOutlined, InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useDropzone } from 'react-dropzone';
 import uploadService from '../services/upload.service';
@@ -162,22 +162,19 @@ Object.keys(SUBJECTS).forEach(program => {
   });
 });
 
-// ─── Helper: strip all whitespace + uppercase for ID comparison ───────────────
-// "IT 23 1458 70" → "IT23145870"
 const normalizeId = (val) => String(val || '').replace(/\s+/g, '').toUpperCase();
 
-// ─── File icon helper ─────────────────────────────────────────────────────────
 const FileIcon = ({ fileName }) => {
-  if (!fileName) return <CloudUploadOutlined style={{ fontSize: 40, color: '#1890ff' }} />;
+  if (!fileName) return <CloudUploadOutlined style={{ fontSize: 40, color: '#2563eb' }} />;
   if (fileName.endsWith('.pdf'))
-    return <FilePdfOutlined style={{ fontSize: 40, color: '#ff4d4f' }} />;
-  return <FileExcelOutlined style={{ fontSize: 40, color: '#52c41a' }} />;
+    return <FilePdfOutlined style={{ fontSize: 40, color: '#dc2626' }} />;
+  return <FileExcelOutlined style={{ fontSize: 40, color: '#16a34a' }} />;
 };
 
 // ─── Step 1: Student Info ─────────────────────────────────────────────────────
 const StudentInfoForm = ({ form, onNext }) => {
   const [selectedProgram, setSelectedProgram] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedYear, setSelectedYear]       = useState(null);
 
   const handleNext = async () => {
     try {
@@ -192,79 +189,108 @@ const StudentInfoForm = ({ form, onNext }) => {
         <UserOutlined className="step-icon" />
         <div>
           <Title level={4} style={{ margin: 0 }}>Student Information</Title>
-          <Text type="secondary">Fill in your details before uploading your marks file.</Text>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            Fill in your details before uploading your marks file.
+          </Text>
         </div>
       </div>
       <Divider />
+
       <Form form={form} layout="vertical" requiredMark={false}>
-        <Form.Item name="fullName" label="Full Name"
-          rules={[{ required: true, message: 'Please enter your full name' }]}>
-          <Input prefix={<UserOutlined />} placeholder="e.g. John Doe" size="large" />
-        </Form.Item>
-        <Form.Item name="studentId" label="Student ID"
-          rules={[
-            { required: true, message: 'Please enter your student ID' },
-            {
-              validator: (_, value) => {
-                const normalized = normalizeId(value);
-                if (!/^IT\d{8}$/.test(normalized)) {
-                  return Promise.reject(new Error('Student ID must be in the format ITxxxxxxxx (IT followed by 8 digits)'));
+        <Row gutter={12}>
+          <Col span={12}>
+            <Form.Item name="fullName" label="Full Name"
+              rules={[{ required: true, message: 'Please enter your full name' }]}>
+              <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
+                placeholder="e.g. John Doe" size="large" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="studentId" label="Student ID"
+              rules={[
+                { required: true, message: 'Please enter your student ID' },
+                {
+                  validator: (_, value) => {
+                    const normalized = normalizeId(value);
+                    if (!/^IT\d{8}$/.test(normalized)) {
+                      return Promise.reject(new Error('Format: IT followed by 8 digits'));
+                    }
+                    return Promise.resolve();
+                  }
                 }
-                return Promise.resolve();
-              }
-            }
-          ]}>
-          <Input prefix={<IdcardOutlined />} placeholder="IT23145870" size="large" />
-        </Form.Item>
+              ]}>
+              <Input prefix={<IdcardOutlined style={{ color: '#94a3b8' }} />}
+                placeholder="IT23145870" size="large" />
+            </Form.Item>
+          </Col>
+        </Row>
+
         <Form.Item name="courseProgram" label="Course Program"
           rules={[{ required: true, message: 'Please select your course program' }]}>
-          <Select size="large" placeholder="Select program" onChange={(value) => { setSelectedProgram(value); setSelectedYear(null); }}>
+          <Select size="large" placeholder="Select your program"
+            onChange={(value) => { setSelectedProgram(value); setSelectedYear(null); form.setFieldsValue({ academicYear: null, subjects: [] }); }}>
             {PROGRAMS.map(p => <Option key={p} value={p}>{p}</Option>)}
           </Select>
         </Form.Item>
-        {selectedProgram && (
-          <Form.Item name="academicYear" label="Academic Year"
-            rules={[{ required: true, message: 'Please select your academic year' }]}>
-            <Select size="large" placeholder="Select year" onChange={setSelectedYear}>
-              {Object.keys(SUBJECTS[selectedProgram]).map(y => <Option key={y} value={parseInt(y)}>{parseInt(y) === 1 ? '1st Year' : parseInt(y) === 2 ? '2nd Year' : parseInt(y) === 3 ? '3rd Year' : '4th Year'}</Option>)}
-            </Select>
-          </Form.Item>
-        )}
+
+        <Row gutter={12}>
+          {selectedProgram && (
+            <Col span={12}>
+              <Form.Item name="academicYear" label="Academic Year"
+                rules={[{ required: true, message: 'Please select your academic year' }]}>
+                <Select size="large" placeholder="Select year" onChange={setSelectedYear}>
+                  {Object.keys(SUBJECTS[selectedProgram]).map(y => (
+                    <Option key={y} value={parseInt(y)}>
+                      {parseInt(y) === 1 ? '1st Year' : parseInt(y) === 2 ? '2nd Year' : parseInt(y) === 3 ? '3rd Year' : '4th Year'}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          )}
+          <Col span={selectedProgram ? 12 : 24}>
+            <Form.Item name="semester" label="Semester"
+              rules={[{ required: true, message: 'Please select a semester' }]}>
+              <Radio.Group className="semester-radio-group">
+                <Radio.Button value={1}>Semester 1</Radio.Button>
+                <Radio.Button value={2}>Semester 2</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
+          </Col>
+        </Row>
+
         {selectedYear && (
-          <Form.Item name="subjects" label="Subjects (Optional - subjects will be read from uploaded file)"
-            rules={[]}>
-            <Select size="large" placeholder="Select subjects (optional)" mode="multiple" onChange={(selected) => {
-              if (selected && selected.length > 0) {
-                const semesters = new Set(selected.map(sub => subjectToSemester[sub]));
-                if (semesters.size === 1) {
-                  form.setFieldsValue({ semester: Array.from(semesters)[0] });
+          <Form.Item name="subjects" label={
+            <Space size={4}>
+              <span>Subjects</span>
+              <Text type="secondary" style={{ fontSize: 11, fontWeight: 400 }}>(optional — read from file)</Text>
+            </Space>
+          }>
+            <Select size="large" placeholder="Select subjects (optional)" mode="multiple"
+              onChange={(selected) => {
+                if (selected && selected.length > 0) {
+                  const semesters = new Set(selected.map(sub => subjectToSemester[sub]));
+                  if (semesters.size === 1) form.setFieldsValue({ semester: Array.from(semesters)[0] });
                 }
-              }
-            }}>
+              }}>
               {(() => {
                 const allSubjects = [];
-                Object.values(SUBJECTS[selectedProgram][selectedYear]).forEach(semSubjects => {
-                  allSubjects.push(...semSubjects);
-                });
+                Object.values(SUBJECTS[selectedProgram][selectedYear]).forEach(s => allSubjects.push(...s));
                 return allSubjects.map(s => <Option key={s} value={s}>{s}</Option>);
               })()}
             </Select>
           </Form.Item>
         )}
-        <Form.Item name="semester" label="Semester"
-          rules={[{ required: true, message: 'Please select a semester' }]}>
-          <Radio.Group className="semester-radio-group">
-            <Radio.Button value={1}>Semester 1</Radio.Button>
-            <Radio.Button value={2}>Semester 2</Radio.Button>
-          </Radio.Group>
-        </Form.Item>
+
         <Form.Item name="branch" label="Branch"
           rules={[{ required: true, message: 'Please select your branch' }]}>
-          <Select size="large" placeholder="Select branch" suffixIcon={<BankOutlined />}>
+          <Select size="large" placeholder="Select your branch"
+            suffixIcon={<BankOutlined style={{ color: '#94a3b8' }} />}>
             {BRANCHES.map(b => <Option key={b.value} value={b.value}>{b.label}</Option>)}
           </Select>
         </Form.Item>
       </Form>
+
       <div className="step-footer">
         <Button type="primary" size="large" icon={<ArrowRightOutlined />}
           iconPosition="end" onClick={handleNext} className="next-btn">
@@ -301,7 +327,9 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
         <CloudUploadOutlined className="step-icon" />
         <div>
           <Title level={4} style={{ margin: 0 }}>Upload Marks File</Title>
-          <Text type="secondary">Drag &amp; drop a PDF, CSV, or Excel file containing student marks.</Text>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            Drag &amp; drop a PDF, CSV, or Excel file containing student marks.
+          </Text>
         </div>
       </div>
       <Divider />
@@ -310,52 +338,75 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
         className={`dropzone ${isDragActive ? 'active' : ''} ${file ? 'has-file' : ''} ${uploading ? 'uploading' : ''}`}>
         <input {...getInputProps()} />
         {file ? (
-          <Space direction="vertical" align="center" size={8}>
+          <Space direction="vertical" align="center" size={10}>
             <FileIcon fileName={file.name} />
-            <Text strong>{file.name}</Text>
-            <Text type="secondary">{(file.size / 1024).toFixed(1)} KB</Text>
+            <div>
+              <Text strong style={{ fontSize: 14, display: 'block' }}>{file.name}</Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>{(file.size / 1024).toFixed(1)} KB</Text>
+            </div>
             {!uploading && (
               <Button danger size="small" onClick={e => { e.stopPropagation(); setFile(null); }}>
-                Remove
+                Remove file
               </Button>
             )}
           </Space>
         ) : (
-          <Space direction="vertical" align="center" size={4}>
-            <CloudUploadOutlined style={{ fontSize: 40, color: '#bfbfbf' }} />
-            <Text strong style={{ fontSize: 15 }}>
-              {isDragActive ? 'Drop the file here' : 'Drag & drop your file here'}
+          <Space direction="vertical" align="center" size={6}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%',
+              background: 'rgba(37,99,235,0.08)', border: '1.5px dashed #93c5fd',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 4,
+            }}>
+              <CloudUploadOutlined style={{ fontSize: 28, color: '#2563eb' }} />
+            </div>
+            <Text strong style={{ fontSize: 15, color: '#0f172a' }}>
+              {isDragActive ? 'Release to upload' : 'Drop your file here'}
             </Text>
-            <Text type="secondary">or <span className="browse-text">browse to select</span></Text>
-            <Space size={4} style={{ marginTop: 8 }}>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              or <span className="browse-text">browse to select</span>
+            </Text>
+            <Space size={6} style={{ marginTop: 10 }}>
               <Tag icon={<FilePdfOutlined />} color="red">PDF</Tag>
               <Tag icon={<FileExcelOutlined />} color="green">CSV</Tag>
               <Tag icon={<FileExcelOutlined />} color="blue">XLSX</Tag>
               <Tag icon={<FileExcelOutlined />} color="cyan">XLS</Tag>
             </Space>
-            <Text type="secondary" style={{ fontSize: 11 }}>Maximum file size: 20 MB</Text>
+            <Text type="secondary" style={{ fontSize: 11, marginTop: 4 }}>
+              Maximum file size: 20 MB
+            </Text>
           </Space>
         )}
       </div>
 
       {uploading && (
-        <div className="upload-progress" style={{ marginTop: 16 }}>
-          <Progress percent={uploadProgress} status="active" />
-          <Text type="secondary" style={{ fontSize: 12 }}>{uploadStatus?.message}</Text>
+        <div className="upload-progress" style={{ marginTop: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <Text style={{ fontSize: 12, fontWeight: 600, color: '#2563eb' }}>Uploading…</Text>
+            <Text style={{ fontSize: 12, color: '#64748b' }}>{uploadProgress}%</Text>
+          </div>
+          <Progress percent={uploadProgress} showInfo={false} strokeColor={{ from: '#2563eb', to: '#60a5fa' }} />
+          <Text type="secondary" style={{ fontSize: 11, marginTop: 4, display: 'block' }}>
+            {uploadStatus?.message}
+          </Text>
         </div>
       )}
 
       {uploadStatus && !uploading && (
-        <Alert type={uploadStatus.type} message={uploadStatus.message} showIcon style={{ marginTop: 12 }} />
+        <Alert type={uploadStatus.type} message={uploadStatus.message} showIcon
+          style={{ marginTop: 14 }} />
       )}
 
-      <Card size="small" style={{ marginTop: 16 }} title="CSV / Excel Format Guide">
-        <Text strong style={{ fontSize: 12 }}>Required columns:</Text>
-        <div style={{ marginTop: 6, marginBottom: 8 }}>
+      <Card size="small" style={{ marginTop: 16 }}
+        title={<Space size={6}><InfoCircleOutlined style={{ color: '#2563eb' }} /><span>CSV / Excel Format Guide</span></Space>}>
+        <Text style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 8 }}>
+          Required columns:
+        </Text>
+        <Space size={4} wrap style={{ marginBottom: 10 }}>
           {['studentNumber','name','subject','score','type'].map(col => (
-            <Tag key={col} color="blue" style={{ marginBottom: 4 }}>{col}</Tag>
+            <Tag key={col} color="blue" style={{ fontFamily: 'DM Mono, monospace' }}>{col}</Tag>
           ))}
-        </div>
+        </Space>
         <pre className="code-example">
 {`studentNumber,name,subject,score,type
 STU001,John Doe,Mathematics,85,quiz
@@ -378,28 +429,20 @@ STU002,Jane Smith,Physics,92,final`}
 
 // ─── Step 3: Success ──────────────────────────────────────────────────────────
 const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
-  // ✅ Backend now returns only the matched student's row(s) in preview,
-  // plus a studentFound flag. We still normalize both sides as a safety net
-  // in case an older backend version is running.
   const rawPreview   = uploadResult?.preview || [];
   const studentFound = uploadResult?.studentFound ?? (rawPreview.length > 0);
   const enteredId    = normalizeId(formValues?.studentId);
 
-  // Filter: keep only rows where the Registration No matches the student.
-  // normalizeId() handles spaced IDs from the file ("IT 23 1458 70" → "IT23145870").
   const preview = rawPreview.filter(row => {
     const regVal = normalizeId(
       row['Registration No'] || row['studentNumber'] || row['student_number'] ||
       row['StudentNumber']   || row['regNo']         || row['reg_no']         || ''
     );
-    // If the backend already filtered to the student's row, enteredId === regVal.
-    // If not (old backend), we do the filtering here.
     return !enteredId || regVal === enteredId || regVal === '';
   });
 
   const recordsCount = uploadResult?.recordsCount || 0;
 
-  // Build table columns dynamically, skip __EMPTY keys
   const buildColumns = (rows) => {
     if (!rows.length) return [];
     const keys = Object.keys(rows[0]).filter(k => !k.startsWith('__EMPTY') && k.trim());
@@ -430,35 +473,44 @@ const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
       <div className="success-icon-wrapper">
         <CheckOutlined className="success-check" />
       </div>
-      <Title level={3} style={{ marginTop: 16, color: '#52c41a' }}>Upload Successful!</Title>
-      <Text type="secondary">Your marks file has been submitted for processing.</Text>
+      <Title level={3} style={{ marginTop: 20, color: '#16a34a', marginBottom: 4 }}>
+        Upload Successful!
+      </Title>
+      <Text type="secondary" style={{ fontSize: 13 }}>
+        Your marks file has been submitted for processing.
+      </Text>
 
-      {/* ── Summary stats ── */}
-      <Row gutter={16} style={{ marginTop: 20, width: '100%', maxWidth: 480 }}>
+      <Row gutter={12} style={{ marginTop: 24, width: '100%', maxWidth: 480 }}>
         <Col span={8}>
-          <Card size="small" style={{ textAlign: 'center', background: '#f6ffed', borderColor: '#b7eb8f' }}>
-            <TrophyOutlined style={{ fontSize: 22, color: '#52c41a' }} />
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#52c41a' }}>{recordsCount}</div>
-            <Text type="secondary" style={{ fontSize: 11 }}>Records Extracted</Text>
+          <Card size="small" style={{ textAlign: 'center', background: '#f0fdf4', borderColor: '#86efac' }}>
+            <TrophyOutlined style={{ fontSize: 22, color: '#16a34a' }} />
+            <div style={{ fontSize: 24, fontWeight: 700, color: '#16a34a', lineHeight: 1.3, marginTop: 4 }}>
+              {recordsCount}
+            </div>
+            <Text type="secondary" style={{ fontSize: 11 }}>Records</Text>
           </Card>
         </Col>
         <Col span={8}>
-          <Card size="small" style={{ textAlign: 'center', background: '#e6f4ff', borderColor: '#91caff' }}>
-            <FileExcelOutlined style={{ fontSize: 22, color: '#1890ff' }} />
-            <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{file?.name}</div>
-            <Text type="secondary" style={{ fontSize: 11 }}>File Uploaded</Text>
+          <Card size="small" style={{ textAlign: 'center', background: '#eff6ff', borderColor: '#93c5fd' }}>
+            <FileExcelOutlined style={{ fontSize: 22, color: '#2563eb' }} />
+            <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4, color: '#1e40af',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+              {file?.name}
+            </div>
+            <Text type="secondary" style={{ fontSize: 11 }}>Uploaded</Text>
           </Card>
         </Col>
         <Col span={8}>
-          <Card size="small" style={{ textAlign: 'center', background: '#fff7e6', borderColor: '#ffd591' }}>
-            <UserOutlined style={{ fontSize: 22, color: '#fa8c16' }} />
-            <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{formValues?.studentId || '—'}</div>
+          <Card size="small" style={{ textAlign: 'center', background: '#fffbeb', borderColor: '#fcd34d' }}>
+            <UserOutlined style={{ fontSize: 22, color: '#d97706' }} />
+            <div style={{ fontSize: 12, fontWeight: 600, marginTop: 4, color: '#92400e' }}>
+              {formValues?.studentId || '—'}
+            </div>
             <Text type="secondary" style={{ fontSize: 11 }}>Student ID</Text>
           </Card>
         </Col>
       </Row>
 
-      {/* ── Student details ── */}
       <Descriptions bordered size="small" column={1}
         style={{ marginTop: 16, width: '100%', maxWidth: 480 }}>
         <Descriptions.Item label="Name">{formValues?.fullName || '—'}</Descriptions.Item>
@@ -474,25 +526,19 @@ const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
         </Descriptions.Item>
       </Descriptions>
 
-      {/* ── Student's marks row ── */}
       {preview.length > 0 ? (
-        <div style={{ marginTop: 16, width: '100%', maxWidth: 640 }}>
-          <Text strong>Your Marks</Text>
+        <div style={{ marginTop: 20, width: '100%', maxWidth: 640 }}>
+          <Text strong style={{ fontSize: 13 }}>Your Marks</Text>
           <Table
-            dataSource={preview}
-            columns={columns}
-            rowKey={(_, i) => i}
-            size="small"
+            dataSource={preview} columns={columns}
+            rowKey={(_, i) => i} size="small"
             pagination={false}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: 10 }}
             scroll={{ x: true }}
           />
         </div>
       ) : (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginTop: 16, width: '100%', maxWidth: 480 }}
+        <Alert type="warning" showIcon style={{ marginTop: 16, width: '100%', maxWidth: 480 }}
           message="No marks found for your Student ID"
           description={
             `No record was found for "${formValues?.studentId}" in the uploaded file. ` +
@@ -505,7 +551,8 @@ const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
         <Button type="primary" icon={<UploadOutlined />} onClick={onReset} size="large">
           Upload Another File
         </Button>
-        <Button type="default" icon={<BarChartOutlined />} onClick={() => window.location.href = '/analytics'} size="large">
+        <Button icon={<BarChartOutlined />}
+          onClick={() => window.location.href = '/analytics'} size="large">
           View Analytics
         </Button>
       </div>
@@ -547,7 +594,6 @@ const UploadPage = () => {
     () => sessionStorage.getItem('uploadStudentId') || ''
   );
 
-  // Filter history to only the current student (normalize both sides)
   const extractions = currentStudentId
     ? allExtractions.filter(e => normalizeId(e.studentId) === normalizeId(currentStudentId))
     : allExtractions;
@@ -578,12 +624,10 @@ const UploadPage = () => {
     }
   };
 
-  // ── Submit upload ─────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     const values = form.getFieldsValue(true);
     setFormValues({ ...values });
 
-    // Normalize and persist student ID
     const normalizedStudentId = normalizeId(values.studentId);
     if (normalizedStudentId) {
       setCurrentStudentId(normalizedStudentId);
@@ -595,9 +639,6 @@ const UploadPage = () => {
     setUploadStatus({ type: 'info', message: 'Uploading file…' });
 
     try {
-      // ✅ FIX: Send studentId in FormData so backend can find and return
-      // that student's specific row from anywhere in the file — not just
-      // the first N rows. This is the key fix for large files (622+ records).
       const response = await uploadService.uploadFile(
         file,
         {
@@ -615,9 +656,6 @@ const UploadPage = () => {
         }
       );
 
-      // uploadService.uploadFile returns response.data (axios body):
-      // { success: true, data: { recordsCount, preview, studentFound, ... }, message: ... }
-      // So response is { success, data, message } structure
       const resultData = response?.data || {};
 
       console.log('[Upload] full response:', response);
@@ -628,55 +666,30 @@ const UploadPage = () => {
 
       setUploadResult(resultData);
 
-      // 🔑 CRITICAL FIX: Store preview data in sessionStorage so AnalyticsPage can access it immediately
-      // AnalyticsPage reads from sessionStorage first, before querying the API
       if (resultData?.preview && Array.isArray(resultData.preview)) {
         console.log('[Upload] preview is array with', resultData.preview.length, 'items');
-        // Get subjects from form - these are the subjects the user selected during upload
         const selectedSubjects = Array.isArray(values.subjects) ? values.subjects : [];
-        console.log('[Upload] selected subjects from form:', selectedSubjects);
-        
-        // Transform preview to match the score format that AnalyticsPage expects
-        const analyticsScores = resultData.preview.map((row, idx) => {
-          console.log('[Upload] processing row:', Object.keys(row));
-          // Extract score with multiple fallback field names
+        const analyticsScores = resultData.preview.map((row) => {
           let score = null;
           const rawScore = row['CA Marks'] ?? row['ca_marks'] ?? row['CAMarks'] ?? row['Marks'] ?? row['marks'] ?? row['Score'] ?? row['score'] ?? row['Total'] ?? row['total'] ?? null;
-          if (rawScore !== null) {
-            score = parseFloat(String(rawScore).replace(/[^0-9.]/g, ''));
-          }
+          if (rawScore !== null) score = parseFloat(String(rawScore).replace(/[^0-9.]/g, ''));
           if (isNaN(score) || score === null) score = 0;
-          
-          // Use selected subjects - if we have multiple, use the first one, otherwise try to extract from row
           let subject = row['Subject'] || row['subject'] || row['Module Name'] || row['Module'] || row['course'] || row['Course'] || '';
-          if (!subject && selectedSubjects.length > 0) {
-            // If no subject in row, use the first selected subject (since file typically contains marks for one subject per upload)
-            subject = selectedSubjects[0];
-            console.log('[Upload] using selected subject:', subject);
-          }
-          
+          if (!subject && selectedSubjects.length > 0) subject = selectedSubjects[0];
           return {
-            subject: subject,
-            score: score,
+            subject, score,
             grade: row['Grade'] || row['grade'] || '',
             status: row['Pass/Fail'] || row['Status'] || row['status'] || '',
             studentNumber: normalizedStudentId,
             name: values.fullName,
             branch: values.branch || '',
             date: new Date().toISOString(),
-            // Preserve all original fields in case AnalyticsPage needs them
             ...row
           };
         });
-        console.log('[Upload] storing analyticsScores in sessionStorage:', analyticsScores.length, 'rows');
-        console.log('[Upload] sample scores:', analyticsScores.slice(0, 2));
         sessionStorage.setItem('analyticsScores', JSON.stringify(analyticsScores));
-        console.log('[Upload] stored! sessionStorage.analyticsScores size:', sessionStorage.getItem('analyticsScores')?.length, 'bytes');
-      } else {
-        console.warn('[Upload] preview is NOT an array!', typeof resultData?.preview, resultData?.preview);
       }
 
-      // Add to local history
       const newEntry = {
         id:               resultData.extractionId || 'local-' + Date.now(),
         fileName:         file.name,
@@ -698,7 +711,6 @@ const UploadPage = () => {
 
       setUploadStatus({ type: 'success', message: 'Upload complete!' });
       setCurrentStep(2);
-
       setTimeout(() => { loadExtractionHistory(); loadStats(); }, 1000);
 
     } catch (err) {
@@ -719,55 +731,80 @@ const UploadPage = () => {
     setCurrentStep(0);
   };
 
-  // ── Table columns ─────────────────────────────────────────────────────────
   const columns = [
     {
-      title: 'File Name', dataIndex: 'fileName', key: 'fileName',
+      title: 'File', dataIndex: 'fileName', key: 'fileName',
       render: (text, record) => (
         <Space>
           {record.fileType === 'pdf'
-            ? <FilePdfOutlined style={{ color: '#ff4d4f' }} />
-            : <FileExcelOutlined style={{ color: '#52c41a' }} />}
-          {text}
+            ? <FilePdfOutlined style={{ color: '#dc2626' }} />
+            : <FileExcelOutlined style={{ color: '#16a34a' }} />}
+          <Text style={{ fontSize: 13 }} ellipsis={{ tooltip: text }}>{text}</Text>
         </Space>
       ),
     },
-    { title: 'Student ID',  dataIndex: 'studentId',   key: 'studentId' },
-    { title: 'Upload Date', dataIndex: 'uploadedAt',  key: 'uploadedAt',
-      render: d => d ? new Date(d).toLocaleString() : '—' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: s => getStatusTag(s) },
-    { title: 'Records', dataIndex: 'recordCount', key: 'recordCount', render: c => c || 0 },
     {
-      title: 'Actions', key: 'actions',
+      title: 'Student ID', dataIndex: 'studentId', key: 'studentId',
+      render: v => <Text code style={{ fontSize: 12 }}>{v}</Text>
+    },
+    {
+      title: 'Date', dataIndex: 'uploadedAt', key: 'uploadedAt',
+      render: d => d ? <Text type="secondary" style={{ fontSize: 12 }}>{new Date(d).toLocaleString()}</Text> : '—'
+    },
+    { title: 'Status', dataIndex: 'status', key: 'status', render: s => getStatusTag(s) },
+    {
+      title: 'Records', dataIndex: 'recordCount', key: 'recordCount',
+      render: c => <Badge count={c || 0} showZero color="#2563eb" style={{ fontSize: 11 }} />
+    },
+    {
+      title: '', key: 'actions',
       render: (_, record) => (
-        <Space>
+        <Space size={2}>
           <Tooltip title="View Details">
-            <Button type="text" icon={<EyeOutlined />}
+            <Button type="text" size="small" icon={<EyeOutlined />}
               onClick={() => { setSelectedExtraction(record); setModalVisible(true); }} />
           </Tooltip>
-          <Tooltip title="Download"><Button type="text" icon={<DownloadOutlined />} /></Tooltip>
-          <Tooltip title="Delete"><Button type="text" danger icon={<DeleteOutlined />} /></Tooltip>
+          <Tooltip title="Download">
+            <Button type="text" size="small" icon={<DownloadOutlined />} />
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+          </Tooltip>
         </Space>
       ),
     },
   ];
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const successRate = stats.totalUploads > 0
+    ? Math.round((stats.successfulExtractions / stats.totalUploads) * 100) : 0;
+
   return (
     <div className="upload-page">
+
+      {/* ── Header ── */}
       <Card className="upload-header" style={{ marginBottom: 24 }}>
         <Row justify="space-between" align="middle">
           <Col>
-            <Space align="center">
-              <CloudUploadOutlined style={{ fontSize: 28, color: '#1890ff' }} />
+            <Space align="center" size={16}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 12,
+                background: 'linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
+              }}>
+                <CloudUploadOutlined style={{ fontSize: 24, color: '#fff' }} />
+              </div>
               <div>
-                <Title level={3} style={{ margin: 0 }}>Upload Marks</Title>
-                <Text type="secondary">Submit your student marks via PDF, CSV, or Excel</Text>
+                <Title level={3} style={{ margin: 0, lineHeight: 1.3 }}>Upload Marks</Title>
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  Submit your student marks via PDF, CSV, or Excel
+                </Text>
               </div>
             </Space>
           </Col>
           <Col>
-            <Button icon={<ReloadOutlined />} onClick={() => { loadExtractionHistory(); loadStats(); }}>
+            <Button icon={<ReloadOutlined />}
+              onClick={() => { loadExtractionHistory(); loadStats(); }}>
               Refresh
             </Button>
           </Col>
@@ -775,9 +812,11 @@ const UploadPage = () => {
       </Card>
 
       <Row gutter={24}>
+
+        {/* ── Left column: Wizard + Stats ── */}
         <Col xs={24} lg={10}>
           <Card className="wizard-card">
-            <Steps current={currentStep} size="small" style={{ marginBottom: 24 }}
+            <Steps current={currentStep} size="small" style={{ marginBottom: 28 }}
               items={[
                 { title: 'Student Info', icon: <UserOutlined /> },
                 { title: 'Upload File',  icon: <CloudUploadOutlined /> },
@@ -801,50 +840,71 @@ const UploadPage = () => {
             )}
           </Card>
 
+          {/* Stats Cards */}
           <Row gutter={12} style={{ marginTop: 16 }}>
             <Col span={12}>
-              <Card size="small">
-                <Statistic title="Total Uploads" value={stats.totalUploads} prefix={<UploadOutlined />} />
+              <Card size="small" style={{ background: '#eff6ff', borderColor: '#bfdbfe' }}>
+                <Statistic title="Total Uploads" value={stats.totalUploads}
+                  prefix={<UploadOutlined style={{ color: '#2563eb' }} />}
+                />
               </Card>
             </Col>
             <Col span={12}>
-              <Card size="small">
-                <Statistic
-                  title="Success Rate"
-                  value={stats.totalUploads > 0
-                    ? Math.round((stats.successfulExtractions / stats.totalUploads) * 100) : 0}
-                  suffix="%" prefix={<CheckCircleOutlined />}
+              <Card size="small" style={{
+                background: successRate >= 80 ? '#f0fdf4' : '#fffbeb',
+                borderColor: successRate >= 80 ? '#bbf7d0' : '#fde68a'
+              }}>
+                <Statistic title="Success Rate" value={successRate} suffix="%"
+                  prefix={<CheckCircleOutlined style={{ color: successRate >= 80 ? '#16a34a' : '#d97706' }} />}
                 />
               </Card>
             </Col>
           </Row>
         </Col>
 
+        {/* ── Right column: History + Activity ── */}
         <Col xs={24} lg={14}>
           <Card
-            title={<Space><HistoryOutlined />Upload History</Space>}
-            extra={<Button type="link" icon={<BarChartOutlined />} onClick={() => window.location.href = '/analytics'}>View Analytics</Button>}
+            title={<Space><HistoryOutlined style={{ color: '#2563eb' }} /><span>Upload History</span></Space>}
+            extra={
+              <Button type="link" icon={<BarChartOutlined />}
+                style={{ fontSize: 13, fontWeight: 600 }}
+                onClick={() => window.location.href = '/analytics'}>
+                View Analytics
+              </Button>
+            }
           >
             {loading ? (
-              <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
+              <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>
             ) : (
               <Table
                 dataSource={extractions} columns={columns} rowKey="id" size="small"
-                pagination={{ pageSize: 8 }}
-                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No upload history yet" /> }}
+                pagination={{ pageSize: 8, size: 'small' }}
+                locale={{ emptyText: (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={<Text type="secondary">No upload history yet</Text>} />
+                )}}
               />
             )}
           </Card>
 
-          <Card title="Recent Activity" style={{ marginTop: 16 }}>
+          <Card title={
+            <Space><ClockCircleOutlined style={{ color: '#2563eb' }} /><span>Recent Activity</span></Space>
+          } style={{ marginTop: 16 }}>
             {extractions.length > 0 ? (
               <Timeline items={extractions.slice(0, 5).map(e => ({
                 color: e.status === 'completed' ? 'green' : e.status === 'failed' ? 'red' : 'blue',
                 children: (
-                  <div>
-                    <Text strong>{e.fileName} {e.status === 'completed' ? 'processed' : e.status}</Text>
+                  <div style={{ paddingBottom: 4 }}>
+                    <Text strong style={{ fontSize: 13 }}>
+                      {e.fileName}{' '}
+                      <Text type={e.status === 'completed' ? 'success' : 'danger'}
+                        style={{ fontWeight: 400, fontSize: 12 }}>
+                        {e.status}
+                      </Text>
+                    </Text>
                     <br />
-                    <Text type="secondary">
+                    <Text type="secondary" style={{ fontSize: 12 }}>
                       {e.recordCount || 0} records · {new Date(e.uploadedAt).toLocaleString()}
                     </Text>
                   </div>
@@ -852,15 +912,16 @@ const UploadPage = () => {
               }))} />
             ) : (
               <Timeline items={[
-                { color: 'green', children: <div><Text strong>grades_2024_q1.pdf processed</Text><br /><Text type="secondary">45 records extracted · 2 minutes ago</Text></div> },
-                { color: 'green', children: <div><Text strong>student_scores_feb.csv processed</Text><br /><Text type="secondary">78 records extracted · 1 hour ago</Text></div> },
-                { color: 'red',   children: <div><Text strong>midterm_results.pdf failed</Text><br /><Text type="secondary">Invalid file format · 3 hours ago</Text></div> },
+                { color: 'green', children: <div><Text strong style={{ fontSize: 13 }}>grades_2024_q1.pdf processed</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>45 records extracted · 2 minutes ago</Text></div> },
+                { color: 'green', children: <div><Text strong style={{ fontSize: 13 }}>student_scores_feb.csv processed</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>78 records extracted · 1 hour ago</Text></div> },
+                { color: 'red',   children: <div><Text strong style={{ fontSize: 13 }}>midterm_results.pdf failed</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>Invalid file format · 3 hours ago</Text></div> },
               ]} />
             )}
           </Card>
         </Col>
       </Row>
 
+      {/* ── Detail Modal ── */}
       <Modal
         title="Extraction Details" open={modalVisible}
         onCancel={() => setModalVisible(false)}
@@ -876,14 +937,16 @@ const UploadPage = () => {
               <Descriptions.Item label="File Name" span={2}>
                 <Space>
                   {selectedExtraction.fileType === 'pdf'
-                    ? <FilePdfOutlined style={{ color: '#ff4d4f' }} />
-                    : <FileExcelOutlined style={{ color: '#52c41a' }} />}
+                    ? <FilePdfOutlined style={{ color: '#dc2626' }} />
+                    : <FileExcelOutlined style={{ color: '#16a34a' }} />}
                   {selectedExtraction.fileName}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="Status">{getStatusTag(selectedExtraction.status)}</Descriptions.Item>
               <Descriptions.Item label="Records">{selectedExtraction.recordCount}</Descriptions.Item>
-              <Descriptions.Item label="Uploaded At">{new Date(selectedExtraction.uploadedAt).toLocaleString()}</Descriptions.Item>
+              <Descriptions.Item label="Uploaded At">
+                {new Date(selectedExtraction.uploadedAt).toLocaleString()}
+              </Descriptions.Item>
               <Descriptions.Item label="Processed At">
                 {selectedExtraction.processedAt ? new Date(selectedExtraction.processedAt).toLocaleString() : '—'}
               </Descriptions.Item>
