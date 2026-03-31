@@ -10,6 +10,7 @@ import {
   LogoutOutlined,
   BookOutlined,
   HistoryOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,12 +22,18 @@ const { Title, Text } = Typography;
 
 const AVATAR_KEY = 'sidebarAvatarUrl';
 
+// Routes that belong under Performance Predictor
+const PREDICTOR_KEYS = ['/upload', '/analytics', '/predictions', '/chatbot', '/history'];
+
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const location  = useLocation();
   const navigate  = useNavigate();
   const { user, logout } = useAuth();
-  const [selectedKey, setSelectedKey] = useState(location.pathname);
-  const [avatarUrl,   setAvatarUrl]   = useState(
+  const [selectedKey,  setSelectedKey]  = useState(location.pathname);
+  const [openKeys,     setOpenKeys]     = useState(() =>
+    PREDICTOR_KEYS.includes(location.pathname) ? ['performance-predictor'] : []
+  );
+  const [avatarUrl, setAvatarUrl] = useState(
     () => sessionStorage.getItem(AVATAR_KEY) || null
   );
 
@@ -39,17 +46,15 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         const raw = res.data.personalInfo.avatarUrl;
         const url = raw.startsWith('http') ? raw : `http://localhost:5000${raw}`;
         setAvatarUrl(url);
-        sessionStorage.setItem(AVATAR_KEY, url);  // cache for instant display
+        sessionStorage.setItem(AVATAR_KEY, url);
       }
     } catch (err) {
       console.warn('Sidebar avatar load failed', err);
     }
   };
 
-  // Load once on mount
   useEffect(() => { loadAvatar(); }, [user]);
 
-  // Re-fetch whenever ProfilePage broadcasts an avatar update
   useEffect(() => {
     const onAvatarUpdate = (e) => {
       if (e.detail?.avatarUrl) {
@@ -61,26 +66,52 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     return () => window.removeEventListener('avatarUpdated', onAvatarUpdate);
   }, []);
 
-  // Sync selected menu item with route
-  useEffect(() => { setSelectedKey(location.pathname); }, [location.pathname]);
+  // Sync selected key + auto-open parent when route changes
+  useEffect(() => {
+    setSelectedKey(location.pathname);
+    if (PREDICTOR_KEYS.includes(location.pathname) && !collapsed) {
+      setOpenKeys(['performance-predictor']);
+    }
+  }, [location.pathname, collapsed]);
 
-  const handleMenuClick = (e) => {
-    setSelectedKey(e.key);
-    if (e.key === 'logout') { logout(); navigate('/login'); }
-    else navigate(e.key);
+  // When collapsing, close all sub-menus (Ant Design does this by default,
+  // but we mirror it in state so re-expand works correctly on uncollapse)
+  useEffect(() => {
+    if (collapsed) setOpenKeys([]);
+  }, [collapsed]);
+
+  const handleMenuClick = ({ key }) => {
+    setSelectedKey(key);
+    if (key === 'logout') { logout(); navigate('/login'); }
+    else navigate(key);
+  };
+
+  const handleOpenChange = (keys) => {
+    setOpenKeys(keys);
   };
 
   const menuItems = [
-    { key: '/dashboard',   icon: <DashboardOutlined />, label: 'Dashboard'    },
-    { key: '/upload',      icon: <UploadOutlined />,    label: 'Upload Marks' },
-    { key: '/analytics',   icon: <BarChartOutlined />,  label: 'Analytics'    },
-    { key: '/predictions', icon: <BookOutlined />,      label: 'Predictions'  },
-    { key: '/chatbot',     icon: <RobotOutlined />,     label: 'AI Assistant' },
-    { key: '/history',     icon: <HistoryOutlined />,   label: 'History'      },
+    {
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: 'performance-predictor',
+      icon: <ThunderboltOutlined />,
+      label: 'Performance Predictor',
+      children: [
+        { key: '/upload',      icon: <UploadOutlined />,   label: 'Upload Marks'  },
+        { key: '/analytics',   icon: <BarChartOutlined />, label: 'Analytics'     },
+        { key: '/predictions', icon: <BookOutlined />,     label: 'Predictions'   },
+        { key: '/chatbot',     icon: <RobotOutlined />,    label: 'AI Assistant'  },
+        { key: '/history',     icon: <HistoryOutlined />,  label: 'History'       },
+      ],
+    },
     { type: 'divider' },
-    { key: '/profile',     icon: <UserOutlined />,      label: 'Profile'      },
-    { key: '/settings',    icon: <SettingOutlined />,   label: 'Settings'     },
-    { key: 'logout',       icon: <LogoutOutlined />,    label: 'Logout', danger: true },
+    { key: '/profile',  icon: <UserOutlined />,   label: 'Profile'   },
+    { key: '/settings', icon: <SettingOutlined />, label: 'Settings'  },
+    { key: 'logout',    icon: <LogoutOutlined />,  label: 'Logout', danger: true },
   ];
 
   return (
@@ -121,6 +152,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       <Menu
         mode="inline"
         selectedKeys={[selectedKey]}
+        openKeys={openKeys}
+        onOpenChange={handleOpenChange}
         onClick={handleMenuClick}
         items={menuItems}
         className="sidebar-menu"
