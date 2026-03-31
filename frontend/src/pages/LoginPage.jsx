@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Alert } from 'antd';
 import { UserOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import './LoginPage.css';
 
@@ -44,13 +45,28 @@ const LoginPage = () => {
   const onFinish = async ({ email, password }) => {
     setLoading(true);
     setError('');
-    const result = await login(email, password);
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError(result.error || result.message || 'Login failed. Please check your credentials.');
+    
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        toast.success('✅ Welcome back!');
+        // Redirect based on role
+        if (result.user?.role === 'admin') {
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        setError(result.error || result.message || 'Login failed. Please check your credentials.');
+        toast.error('❌ ' + (result.error || 'Login failed'));
+      }
+    } catch (err) {
+      const errMsg = err.message || 'Login failed';
+      setError(errMsg);
+      toast.error('❌ ' + errMsg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const offline = connectionStatus === 'disconnected';
