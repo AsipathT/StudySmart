@@ -10,6 +10,15 @@ try {
   console.warn('⚠️  User model not loaded:', e.message);
 }
 
+// ── SLIIT Email Validation ────────────────────────────────────────────────────
+const validateSLIITEmail = (email) => {
+  if (email === 'admin@nidu.sliit.lk') {
+    return true;
+  }
+  const sliitRegex = /^IT\d{8}@my\.sliit\.lk$/i;
+  return sliitRegex.test(email);
+};
+
 // ── In-memory fallback user store (used when DB is unavailable) ───────────────
 // Seeded with the demo account from LOGIN_GUIDE.md
 const memoryUsers = [
@@ -59,6 +68,24 @@ class AuthController {
         return res.status(400).json({
           success: false,
           error: { code: 'MISSING_FIELDS', message: 'Email and password are required' },
+        });
+      }
+
+      // ── ADMIN HARDCODE CHECK ──────────────────────────────────────────────
+      if (email === 'admin@nidu.sliit.lk' && password === 'nidu@123') {
+        const adminUser = {
+          id:       'admin-hardcoded',
+          name:     'Admin',
+          email:    'admin@nidu.sliit.lk',
+          role:     'admin',
+          studentId: null
+        };
+        const token = signToken(adminUser);
+        console.log('[AUTH] ✅ Admin login successful');
+        return res.json({
+          success: true,
+          token,
+          user: adminUser,
         });
       }
 
@@ -134,12 +161,45 @@ class AuthController {
   // ── REGISTER ───────────────────────────────────────────────────────────────
   async register(req, res) {
     try {
-      const { name, email, password, studentId, role } = req.body;
+      const { name, email, password } = req.body;
 
       if (!name || !email || !password) {
         return res.status(400).json({
           success: false,
           error: { code: 'MISSING_FIELDS', message: 'Name, email and password are required' },
+        });
+      }
+
+      // ── VALIDATE SLIIT EMAIL FORMAT ───────────────────────────────────────
+      if (!validateSLIITEmail(email)) {
+        return res.status(400).json({
+          success: false,
+          error: { 
+            code: 'INVALID_EMAIL', 
+            message: 'Email must be in SLIIT format: IT12345678@my.sliit.lk' 
+          },
+        });
+      }
+
+      // ── PREVENT ADMIN REGISTRATION ────────────────────────────────────────
+      if (email === 'admin@nidu.sliit.lk') {
+        return res.status(403).json({
+          success: false,
+          error: { 
+            code: 'FORBIDDEN', 
+            message: 'Admin registration is not allowed' 
+          },
+        });
+      }
+
+      // ── VALIDATE PASSWORD LENGTH ──────────────────────────────────────────
+      if (password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          error: { 
+            code: 'WEAK_PASSWORD', 
+            message: 'Password must be at least 6 characters' 
+          },
         });
       }
 
@@ -149,8 +209,8 @@ class AuthController {
         name,
         email:     email.toLowerCase(),
         password:  hashed,
-        role:      role || 'student',
-        studentId: studentId || null,
+        role:      'student', // Always register as student
+        studentId: null,
       };
 
       // Try to save to MongoDB

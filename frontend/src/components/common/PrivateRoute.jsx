@@ -1,17 +1,37 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { Spin, Result } from 'antd';
 import { useAuth } from '../../hooks/useAuth';
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children, roles }) => {
   const { user, loading, token, isAuthenticated } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>; // Or a spinner component
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" tip="Loading..." />
+      </div>
+    );
   }
 
-  // allow access if we have either a user object or a valid token
+  // Check if authenticated
   const authOk = user || token || isAuthenticated;
-  return authOk ? children : <Navigate to="/login" />;
+  if (!authOk) {
+    return <Navigate to="/login" />;
+  }
+
+  // Check if role is allowed (if roles specified)
+  if (roles && roles.length > 0 && user && !roles.includes(user.role)) {
+    return (
+      <Result
+        status="403"
+        title="Access Denied"
+        subTitle={`You don't have permission to access this page. Required role: ${roles.join(', ')}`}
+      />
+    );
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

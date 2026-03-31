@@ -16,6 +16,8 @@ import HistoryPage from './pages/HistoryPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import AdminDashboard from './pages/AdminDashboard';
 
 import './App.css';
 
@@ -49,7 +51,18 @@ function App() {
             >
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
                 <Route path="/" element={<Navigate to="/dashboard" />} />
+                
+                {/* Admin Route */}
+                <Route
+                  path="/admin-dashboard"
+                  element={
+                    <PrivateRoute roles={['admin']}>
+                      <AdminDashboard />
+                    </PrivateRoute>
+                  }
+                />
                 
                 {/* Protected Routes */}
                 <Route
