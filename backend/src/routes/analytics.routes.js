@@ -15,4 +15,7 @@ router.get('/class/summary', protect, authorize('teacher', 'admin'), AnalyticsCo
 // Analytics overview (teachers/admins only)
 router.get('/overview', protect, authorize('teacher', 'admin'), AnalyticsController.getAnalyticsOverview);
 
+// Export analytics report (teachers/admins only)
+router.get('/export', protect, authorize('teacher', 'admin'), AnalyticsController.exportAnalyticsReport);
+
 module.exports = router;

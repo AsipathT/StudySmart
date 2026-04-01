@@ -23,6 +23,7 @@ import {
 import analyticsService from '../services/analytics.service';
 import profileService from '../services/profile.service';
 import { useAuth } from '../hooks/useAuth';
+import * as XLSX from 'xlsx';
 import './AnalyticsPage.css';
 
 const { Title, Text } = Typography;
@@ -513,6 +514,110 @@ const AnalyticsPage = () => {
   }, [user]);
 
   useEffect(() => { loadAnalyticsData(); }, [loadAnalyticsData]);
+
+  // ── Export analytics report ─────────────────────────────────────────────────
+  const handleExportReport = async () => {
+    try {
+      if (!analyticsData) {
+        Modal.error({
+          title: 'No Data',
+          content: 'No analytics data available to export.',
+          okText: 'OK'
+        });
+        return;
+      }
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+
+      // Summary Sheet
+      const summaryData = [
+        ['Student Analytics Report'],
+        ['Generated on', new Date().toLocaleString()],
+        ['Student', user?.name || 'Unknown'],
+        ['Student ID', user?.studentId || 'Unknown'],
+        [''],
+        ['Overall Statistics'],
+        ['Total Subjects', analyticsData.subjectPerformance?.length || 0],
+        ['Total Assessments', analyticsData.summary?.totalAssessments || 0],
+        ['Average Score', analyticsData.summary?.averageScore || 'N/A'],
+        ['Pass Rate', analyticsData.summary?.passRate ? `${analyticsData.summary.passRate}%` : 'N/A'],
+        ['Top Score', analyticsData.summary?.topScore || 'N/A'],
+        ['Bottom Score', analyticsData.summary?.bottomScore || 'N/A']
+      ];
+
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+      // Subject Performance Sheet
+      const subjectHeaders = ['Subject', 'Average Score', 'Grade', 'GPA', 'Status', 'Pass Rate', 'Top Score', 'Bottom Score'];
+      const subjectData = (analyticsData.subjectPerformance || []).map(s => [
+        s.subject,
+        s.average,
+        s.grade,
+        s.gpa,
+        s.status,
+        `${s.passRate}%`,
+        s.topScore,
+        s.bottomScore
+      ]);
+
+      const wsSubjects = XLSX.utils.aoa_to_sheet([subjectHeaders, ...subjectData]);
+      XLSX.utils.book_append_sheet(wb, wsSubjects, 'Subject Performance');
+
+      // Grade Distribution Sheet
+      if (analyticsData.gradeDistribution && analyticsData.gradeDistribution.length > 0) {
+        const gradeHeaders = ['Grade Range', 'Count'];
+        const gradeData = analyticsData.gradeDistribution.map(g => [
+          g.name,
+          g.value
+        ]);
+
+        const wsGrades = XLSX.utils.aoa_to_sheet([gradeHeaders, ...gradeData]);
+        XLSX.utils.book_append_sheet(wb, wsGrades, 'Grade Distribution');
+      }
+
+      // Performance Trend Sheet
+      if (analyticsData.performanceTrend && analyticsData.performanceTrend.length > 0) {
+        const trendHeaders = ['Month', 'Average Score', 'Target', 'Assessments'];
+        const trendData = analyticsData.performanceTrend.map(t => [
+          t.month,
+          t.average,
+          t.target,
+          t.students
+        ]);
+
+        const wsTrend = XLSX.utils.aoa_to_sheet([trendHeaders, ...trendData]);
+        XLSX.utils.book_append_sheet(wb, wsTrend, 'Performance Trend');
+      }
+
+      // Generate buffer
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `analytics_report_${user?.name || 'student'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      // Show success message
+      Modal.success({
+        title: 'Download Successful',
+        content: `${user?.name || 'Student'} analytical report has been downloaded successfully!`,
+        okText: 'OK'
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      Modal.error({
+        title: 'Export Failed',
+        content: 'Failed to generate the analytics report. Please try again.',
+        okText: 'OK'
+      });
+    }
+  };
 
   // Enrich backend data with letter grades / GPA where missing
   function enrichWithSubjectDetails(d) {
@@ -1143,7 +1248,7 @@ const AnalyticsPage = () => {
               <Button icon={<ReloadOutlined />} onClick={loadAnalyticsData} loading={loading}>
                 Refresh
               </Button>
-              <Button type="primary" icon={<DownloadOutlined />}>
+              <Button type="primary" icon={<DownloadOutlined />} onClick={handleExportReport}>
                 Export Report
               </Button>
             </Space>
