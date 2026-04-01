@@ -1,108 +1,91 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const mongoose = require('mongoose');
 require('dotenv').config();
+require('dns').setServers(['8.8.8.8', '1.1.1.1']);
 
 const app = express();
 
-// ── Middleware ────────────────────────────────────────────────────────────────
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const staticUploadsPath = path.join(__dirname, 'uploads');
+app.use("/api/study-groups", require("./routes/studygroup.routes"));
+
+const staticUploadsPath = path.join(__dirname, '../uploads');
 console.log('📁 Serving static uploads from', staticUploadsPath);
 app.use('/uploads', express.static(staticUploadsPath));
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-const uploadRoutes    = require('./routes/upload.routes');
-const analyticsRoutes = require('./routes/analytics.routes');
-const predictionRoutes= require('./routes/prediction.routes');
-const chatbotRoutes   = require('./routes/chatbot.routes');
-const quizScoreRoutes = require('./routes/quizscore.routes');
-const profileRoutes   = require('./routes/profile.routes');
-const reportRoutes    = require('./routes/report.routes');
+// Routes
+try {
+  app.use('/api/auth', require('../src/routes/auth.routes'));
+  console.log('✅ auth routes');
+} catch (e) {
+  console.warn('⚠️ auth.routes:', e.message);
+}
 
-app.use('/api/upload',      uploadRoutes);
-app.use('/api/analytics',   analyticsRoutes);
-app.use('/api/predictions', predictionRoutes);
-app.use('/api/chatbot',     chatbotRoutes);
-app.use('/api/quiz-scores', quizScoreRoutes);
-app.use('/api/profile',     profileRoutes);
-app.use('/api/report',      reportRoutes);
+try {
+  app.use('/api/upload', require('../src/routes/upload.routes'));
+  console.log('✅ upload routes');
+} catch (e) {
+  console.warn('⚠️ upload.routes:', e.message);
+}
 
-// ── Health check ──────────────────────────────────────────────────────────────
+try {
+  app.use('/api/analytics', require('../src/routes/analytics.routes'));
+  console.log('✅ analytics routes');
+} catch (e) {
+  console.warn('⚠️ analytics.routes:', e.message);
+}
+
+try {
+  app.use('/api/predictions', require('../src/routes/prediction.routes'));
+  console.log('✅ prediction routes');
+} catch (e) {
+  console.warn('⚠️ prediction.routes:', e.message);
+}
+
+try {
+  app.use('/api/profile', require('../src/routes/profile.routes'));
+  console.log('✅ profile routes');
+} catch (e) {
+  console.warn('⚠️ profile.routes:', e.message);
+}
+
+try {
+  app.use('/api/chatbot', require('../src/routes/chatbot.routes'));
+  console.log('✅ chatbot routes');
+} catch (e) {
+  console.warn('⚠️ chatbot.routes:', e.message);
+}
+
+try {
+  app.use('/api/quiz-scores', require('../src/routes/quizscore.routes'));
+  console.log('✅ quiz-scores routes');
+} catch (e) {
+  console.warn('⚠️ quizscore.routes:', e.message);
+}
+
+// Health check
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    message: 'Server is running'
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
-// ── Global error handler ──────────────────────────────────────────────────────
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
+  console.error('Unhandled error:', err.stack || err.message);
+  res.status(err.status || 500).json({
     success: false,
-    error: { code: 'SERVER_ERROR', message: err.message || 'Internal server error' }
+    error: {
+      code: err.code || 'SERVER_ERROR',
+      message: err.message || 'Internal server error'
+    }
   });
 });
 
-// ── Start server ──────────────────────────────────────────────────────────────
-const startServer = async () => {
-  // 1. MongoDB (optional — continue if it fails)
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      connectTimeoutMS: 5000,
-      serverSelectionTimeoutMS: 5000
-    });
-    console.log('✅ Connected to MongoDB');
-  } catch {
-    console.log('⚠️  MongoDB unavailable — continuing without it');
-  }
-
-  // 2. Auth routes — try real auth first, fall back to a simple stub
-  try {
-    const authRoutes = require('./routes/auth.routes');
-    app.use('/api/auth', authRoutes);
-    console.log('✅ Auth routes loaded');
-  } catch {
-    // Minimal stub so /api/auth/login always responds
-    const router = express.Router();
-    router.post('/login', (req, res) => {
-      res.json({
-        success: true,
-        token: 'dev-token-' + Date.now(),
-        user: { id: 'dev-user', name: 'Dev User', email: req.body?.email || 'dev@example.com' }
-      });
-    });
-    router.post('/register', (req, res) => {
-      res.json({ success: true, message: 'Registered (dev mode)' });
-    });
-    app.use('/api/auth', router);
-    console.log('⚠️  Using dev auth stub');
-  }
-
-  // 3. PostgreSQL (optional — continue if it fails)
-  try {
-    const { connectPostgreSQL } = require('../config/database');
-    await connectPostgreSQL();
-  } catch (e) {
-    console.log('⚠️  PostgreSQL unavailable:', e.message);
-  }
-
-  // 4. Start listening
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`\n✅ Server running on port ${PORT}`);
-    console.log(`   Health:  http://localhost:${PORT}/health`);
-    console.log(`   Upload:  POST http://localhost:${PORT}/api/upload/upload`);
-    console.log(`   Login:   POST http://localhost:${PORT}/api/auth/login\n`);
-  });
-};
-
-startServer();
+module.exports = app;

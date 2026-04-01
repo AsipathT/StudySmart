@@ -11,11 +11,17 @@ import {
   BookOutlined,
   HistoryOutlined,
   ThunderboltOutlined,
+  UsergroupAddOutlined,
+  GroupOutlined,
+  PlusCircleOutlined
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import profileService from '../../services/profile.service';
 import './Sidebar.css';
+import { SearchOutlined } from '@ant-design/icons';
+
+
 
 const { Sider } = Layout;
 const { Title, Text } = Typography;
@@ -114,7 +120,21 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         { key: '/chatbot',     icon: <RobotOutlined />,    label: 'AI Assistant'  },
         { key: '/history',     icon: <HistoryOutlined />,  label: 'History'       },
       ],
-    },
+    },{
+  key: 'study-buddy',
+  icon: <BookOutlined />,
+  label: 'Study Buddy Finder',
+  children: [
+    { key: '/buddy/my-groups', icon: <UserOutlined />, label: 'My Groups' },
+    { key: '/buddy/joined', icon: <GroupOutlined />, label: 'Joined Groups' },
+    { key: '/buddy/all-groups',icon: <UsergroupAddOutlined />, label: 'All Groups' },
+    { key: '/buddy/create', icon: <PlusCircleOutlined />, label: 'Create Group' },
+  ],
+},
+
+   
+
+
     { type: 'divider' },
     { key: '/profile',  icon: <UserOutlined />,   label: 'Profile'   },
     { key: '/settings', icon: <SettingOutlined />, label: 'Settings'  },

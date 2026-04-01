@@ -19,6 +19,11 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminDashboard from './pages/AdminDashboard';
 
+import MyGroups from "./pages/MyGroups";
+import JoinedGroups from "./pages/JoinedGroups";
+import AllGroups from "./pages/AllGroups";
+import CreateGroup from "./pages/CreateGroup";
+
 import './App.css';
 
 const { Content } = Layout;
@@ -129,6 +134,48 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+
+                <Route
+  path="/buddy/my-groups"
+  element={
+    <PrivateRoute>
+      <MyGroups />
+    </PrivateRoute>
+  }
+/>
+
+<Route
+  path="/buddy/joined"
+  element={
+    <PrivateRoute>
+      <JoinedGroups />
+    </PrivateRoute>
+  }
+/>
+
+
+
+<Route
+  path="/buddy/create"
+  element={
+    <PrivateRoute>
+      <CreateGroup />
+    </PrivateRoute>
+  }
+/>
+
+<Route
+  path="/buddy/all-groups"
+  element={
+    <PrivateRoute>
+      <AllGroups />
+    </PrivateRoute>
+  }
+/>
+                
+
+
+
               </Routes>
             </Content>
           </Layout>
