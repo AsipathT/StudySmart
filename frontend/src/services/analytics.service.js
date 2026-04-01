@@ -45,6 +45,16 @@ class AnalyticsService {
     });
     return response.data;
   }
+
+  /**
+   * Download PDF analytics report
+   */
+  async downloadPdfReport() {
+    const response = await api.get('/report/pdf', {
+      responseType: 'blob'
+    });
+    return response.data;
+  }
 }
 
 export default new AnalyticsService();

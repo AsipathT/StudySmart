@@ -345,30 +345,66 @@ class AnalyticsController {
       }
       const allScores = await QuizScore.findAll({ where: scoreWhere });
 
-      // Create workbook
       const wb = XLSX.utils.book_new();
+      const reportDate = new Date();
 
-      // Summary Sheet
+      const allScoreValues = allScores.map(s => parseFloat(s.score));
+      const totalAssessments = allScores.length;
+      const averageScore = allScoreValues.length ? (allScoreValues.reduce((a, b) => a + b, 0) / allScoreValues.length).toFixed(1) : 'N/A';
+      const passRate = allScoreValues.length ? ((allScoreValues.filter(s => s >= 50).length / allScoreValues.length) * 100).toFixed(1) : 'N/A';
+
+      const subjects = [...new Set(allScores.map(s => s.subject))];
+      const subjectAnalytics = subjects.map(sub => {
+        const scores = allScores.filter(s => s.subject === sub).map(s => parseFloat(s.score));
+        const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+        return {
+          subject: sub,
+          average: parseFloat(avg.toFixed(1)),
+          passRate: scores.length ? ((scores.filter(s => s >= 50).length / scores.length) * 100).toFixed(1) : '0.0',
+          top: scores.length ? Math.max(...scores) : 0,
+          bottom: scores.length ? Math.min(...scores) : 0,
+          a: scores.filter(s => s >= 80).length,
+          b: scores.filter(s => s >= 65 && s < 80).length,
+          c: scores.filter(s => s >= 50 && s < 65).length,
+          d: scores.filter(s => s >= 40 && s < 50).length,
+          f: scores.filter(s => s < 40).length,
+          count: scores.length
+        };
+      });
+
+      const sortedSubjects = subjectAnalytics.sort((a, b) => b.average - a.average);
+      const topSubject = sortedSubjects[0] || null;
+      const bottomSubject = sortedSubjects[sortedSubjects.length - 1] || null;
+
       const summaryData = [
-        ['Analytics Report Summary'],
-        ['Generated on', new Date().toLocaleString()],
+        ['StudySmart Analytics Export'],
+        ['Generated on', reportDate.toLocaleString()],
+        ['Program', program || 'All'],
+        ['Year', year || 'All'],
+        ['Semester', semester || 'All'],
+        ['Branch', branch || 'All'],
+        ['Subject Filter', subject || 'All'],
         [''],
+        ['Summary'],
         ['Total Students', students.length],
-        ['Total Assessments', allScores.length],
-        ['Average Score', allScores.length ? (allScores.reduce((a, b) => a + parseFloat(b.score), 0) / allScores.length).toFixed(1) : 0],
-        ['Pass Rate (%)', allScores.length ? ((allScores.filter(s => parseFloat(s.score) >= 50).length / allScores.length) * 100).toFixed(1) : 0],
-        ['Top Score', allScores.length ? Math.max(...allScores.map(s => parseFloat(s.score))) : 0],
-        ['Bottom Score', allScores.length ? Math.min(...allScores.map(s => parseFloat(s.score))) : 0]
+        ['Total Assessments', totalAssessments],
+        ['Average Score', averageScore],
+        ['Pass Rate (%)', passRate],
+        ['Top Score', allScoreValues.length ? Math.max(...allScoreValues) : 'N/A'],
+        ['Bottom Score', allScoreValues.length ? Math.min(...allScoreValues) : 'N/A'],
+        ['Best Subject', topSubject ? `${topSubject.subject} (${topSubject.average})` : 'N/A'],
+        ['Weakest Subject', bottomSubject ? `${bottomSubject.subject} (${bottomSubject.average})` : 'N/A'],
+        ['Suggested Focus', bottomSubject ? `Improve ${bottomSubject.subject} with targeted practice` : 'N/A']
       ];
 
       const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Overview');
 
-      // Student Performance Sheet
-      const studentHeaders = ['Student ID', 'Name', 'Student Number', 'Program', 'Year', 'Semester', 'Branch', 'Average Score', 'Total Assessments', 'Trend'];
-      const studentData = students.map(student => {
-        const studentScores = allScores.filter(s => s.studentId === student.id);
-        const avg = studentScores.length ? studentScores.reduce((a, b) => a + parseFloat(b.score), 0) / studentScores.length : 0;
+      const studentHeaders = ['Student ID', 'Name', 'Student Number', 'Program', 'Year', 'Semester', 'Branch', 'Avg Score', 'Assessments', 'Trend'];
+      const studentRows = students.map(student => {
+        const studentScores = allScores.filter(s => s.studentId === student.id).map(s => parseFloat(s.score));
+        const average = studentScores.length ? (studentScores.reduce((a,b) => a+b,0)/studentScores.length).toFixed(1) : 'N/A';
+        const trend = studentScores.length ? (average >= 75 ? 'Improving' : average >= 50 ? 'Stable' : 'Declining') : 'N/A';
         return [
           student.id,
           student.name,
@@ -377,86 +413,69 @@ class AnalyticsController {
           student.year,
           student.semester,
           student.branch,
-          parseFloat(avg.toFixed(1)),
+          average,
           studentScores.length,
-          avg > 75 ? 'Improving' : avg > 50 ? 'Stable' : 'Declining'
+          trend
         ];
       });
-
-      const wsStudents = XLSX.utils.aoa_to_sheet([studentHeaders, ...studentData]);
+      const wsStudents = XLSX.utils.aoa_to_sheet([studentHeaders, ...studentRows]);
       XLSX.utils.book_append_sheet(wb, wsStudents, 'Student Performance');
 
-      // Subject Performance Sheet
-      const subjectHeaders = ['Subject', 'Average Score', 'Pass Rate (%)', 'Total Students', 'Top Score', 'Bottom Score', 'A Grades', 'B Grades', 'C Grades', 'D Grades', 'F Grades'];
-      const subjects = [...new Set(allScores.map(s => s.subject))];
-      const subjectData = subjects.map(subject => {
-        const scores = allScores.filter(s => s.subject === subject).map(s => parseFloat(s.score));
-        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-        return [
-          subject,
-          parseFloat(avg.toFixed(1)),
-          ((scores.filter(s => s >= 50).length / scores.length) * 100).toFixed(1),
-          new Set(allScores.filter(s => s.subject === subject).map(s => s.studentId)).size,
-          Math.max(...scores),
-          Math.min(...scores),
-          scores.filter(s => s >= 80).length,
-          scores.filter(s => s >= 65 && s < 80).length,
-          scores.filter(s => s >= 50 && s < 65).length,
-          scores.filter(s => s >= 40 && s < 50).length,
-          scores.filter(s => s < 40).length
-        ];
+      const subjectHeaders = ['Rank', 'Subject', 'Average', 'Pass Rate (%)', 'Students', 'Top', 'Bottom', 'A', 'B', 'C', 'D', 'F'];
+      const subjectRows = sortedSubjects.map((s, idx) => [
+        idx + 1,
+        s.subject,
+        s.average,
+        s.passRate,
+        s.count,
+        s.top,
+        s.bottom,
+        s.a,
+        s.b,
+        s.c,
+        s.d,
+        s.f
+      ]);
+      const wsSubjectPerf = XLSX.utils.aoa_to_sheet([subjectHeaders, ...subjectRows]);
+      XLSX.utils.book_append_sheet(wb, wsSubjectPerf, 'Subject Analysis');
+
+      const branchHeaders = ['Branch', 'Avg Score', 'Pass Rate (%)', 'Students'];
+      const branchValues = [...new Set(students.map(s => s.branch))];
+      const branchRows = branchValues.map(br => {
+        const branchStudents = students.filter(s => s.branch === br).map(s => s.id);
+        const branchScores = allScores.filter(s => branchStudents.includes(s.studentId)).map(s => parseFloat(s.score));
+        const avg = branchScores.length ? (branchScores.reduce((a,b) => a+b,0)/branchScores.length).toFixed(1) : 'N/A';
+        const pass = branchScores.length ? ((branchScores.filter(x => x >= 50).length / branchScores.length) * 100).toFixed(1) : 'N/A';
+        return [br, avg, pass, branchStudents.length];
       });
+      const wsBranch = XLSX.utils.aoa_to_sheet([branchHeaders, ...branchRows]);
+      XLSX.utils.book_append_sheet(wb, wsBranch, 'Branch Analysis');
 
-      const wsSubjects = XLSX.utils.aoa_to_sheet([subjectHeaders, ...subjectData]);
-      XLSX.utils.book_append_sheet(wb, wsSubjects, 'Subject Performance');
-
-      // Branch Performance Sheet
-      const branchHeaders = ['Branch', 'Average Score', 'Pass Rate (%)', 'Total Students'];
-      const branches = [...new Set(students.map(s => s.branch))];
-      const branchData = branches.map(branch => {
-        const branchStudents = students.filter(s => s.branch === branch);
-        const branchScores = allScores.filter(s => branchStudents.some(bs => bs.id === s.studentId)).map(s => parseFloat(s.score));
-        const avg = branchScores.length ? branchScores.reduce((a, b) => a + b, 0) / branchScores.length : 0;
-        return [
-          branch,
-          parseFloat(avg.toFixed(1)),
-          branchScores.length ? ((branchScores.filter(s => s >= 50).length / branchScores.length) * 100).toFixed(1) : 0,
-          branchStudents.length
-        ];
-      });
-
-      const wsBranches = XLSX.utils.aoa_to_sheet([branchHeaders, ...branchData]);
-      XLSX.utils.book_append_sheet(wb, wsBranches, 'Branch Performance');
-
-      // Individual Scores Sheet
-      const scoresHeaders = ['Student Name', 'Student Number', 'Subject', 'Score', 'Date', 'Grade'];
-      const scoresData = allScores.map(score => {
-        const student = students.find(s => s.id === score.studentId);
-        const scoreValue = parseFloat(score.score);
+      const individualHeaders = ['Date', 'Student', 'Student Number', 'Subject', 'Score', 'Grade', 'Status'];
+      const individualRows = allScores.map(row => {
+        const student = students.find(s => s.id === row.studentId);
+        const score = parseFloat(row.score);
         let grade = 'F';
-        if (scoreValue >= 90) grade = 'A';
-        else if (scoreValue >= 80) grade = 'B';
-        else if (scoreValue >= 70) grade = 'C';
-        else if (scoreValue >= 60) grade = 'D';
-
+        if (score >= 90) grade = 'A';
+        else if (score >= 80) grade = 'B';
+        else if (score >= 70) grade = 'C';
+        else if (score >= 60) grade = 'D';
+        const status = score >= 50 ? 'Pass' : 'Fail';
         return [
+          row.date ? new Date(row.date).toLocaleString() : 'N/A',
           student ? student.name : 'Unknown',
-          student ? student.studentNumber : '',
-          score.subject,
-          scoreValue,
-          new Date(score.date).toLocaleDateString(),
-          grade
+          student ? student.studentNumber : 'N/A',
+          row.subject,
+          score,
+          grade,
+          status
         ];
       });
+      const wsIndividual = XLSX.utils.aoa_to_sheet([individualHeaders, ...individualRows]);
+      XLSX.utils.book_append_sheet(wb, wsIndividual, 'Individual Scores');
 
-      const wsScores = XLSX.utils.aoa_to_sheet([scoresHeaders, ...scoresData]);
-      XLSX.utils.book_append_sheet(wb, wsScores, 'Individual Scores');
-
-      // Generate buffer
       const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-
-      // Set headers for download
-      const filename = `analytics_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const filename = `analytics_report_${reportDate.toISOString().split('T')[0]}.xlsx`;
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(buffer);
