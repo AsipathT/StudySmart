@@ -1,60 +1,47 @@
 import api from './api';
 
 class AuthService {
+  /**
+   * Login user
+   */
   async login(email, password) {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      return response.data;
-    } catch (error) {
-      console.error('Login error:', error);
-      
-      // Handle different error scenarios
-      if (error.code === 'ERR_NETWORK') {
-        return {
-          success: false,
-          message: 'Cannot connect to server. Please check if backend is running.'
-        };
-      }
-      
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        return {
-          success: false,
-          message: error.response.data?.message || 'Login failed'
-        };
-      }
-      
-      return {
-        success: false,
-        message: error.message || 'Login failed'
-      };
+    const response = await api.post('/auth/login', { email, password });
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     }
+    return response.data;
   }
 
+  /**
+   * Register new user
+   */
   async register(userData) {
-    try {
-      const response = await api.post('/auth/register', userData);
-      return response.data;
-    } catch (error) {
-      console.error('Registration error:', error);
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Registration failed'
-      };
-    }
+    const response = await api.post('/auth/register', userData);
+    return response.data;
   }
 
+  /**
+   * Get current user
+   */
   async getCurrentUser() {
-    try {
-      const response = await api.get('/auth/me');
-      return response.data;
-    } catch (error) {
-      console.error('Get user error:', error);
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to get user'
-      };
-    }
+    const response = await api.get('/auth/me');
+    return response.data;
+  }
+
+  /**
+   * Logout user
+   */
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+
+  /**
+   * Get auth token
+   */
+  getToken() {
+    return localStorage.getItem('token');
   }
 }
 

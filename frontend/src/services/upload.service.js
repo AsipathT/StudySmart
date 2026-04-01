@@ -2,39 +2,17 @@ import api from './api';
 
 class UploadService {
   /**
-   * Upload file (PDF / CSV / Excel)
-   *
-   * ✅ Now accepts studentId and appends it to FormData so the backend
-   * can locate and return that specific student's row from anywhere in
-   * the file — not just the first N rows.
-   *
-   * Do NOT manually set Content-Type header. When you set
-   * 'Content-Type': 'multipart/form-data' manually, axios omits the
-   * required boundary parameter. Let axios set it automatically.
+   * Upload file (PDF/CSV)
    */
-  async uploadFile(file, formData, onUploadProgress) {
-    const data = new FormData();
-    data.append('file', file);
+  async uploadFile(file, onUploadProgress) {
+    const formData = new FormData();
+    formData.append('file', file);
 
-    // Append form data
-    Object.keys(formData).forEach(key => {
-      if (formData[key] !== undefined && formData[key] !== null) {
-        data.append(key, formData[key]);
-      }
-    });
-
-    const response = await api.post('/upload/upload', data, {
+    const response = await api.post('/upload/upload', formData, {
       headers: {
-        'Content-Type': undefined, // let axios set multipart/form-data with boundary
+        'Content-Type': 'multipart/form-data',
       },
-      onUploadProgress: (progressEvent) => {
-        if (onUploadProgress && progressEvent.total) {
-          const percent = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          onUploadProgress(percent);
-        }
-      },
+      onUploadProgress,
     });
 
     return response.data;
@@ -49,61 +27,33 @@ class UploadService {
   }
 
   /**
-   * Get extraction history
+   * Poll extraction status until completed
    */
-  async getExtractionHistory() {
-    const response = await api.get('/upload/history');
-    return response.data;
-  }
+  async pollExtractionStatus(extractionId, onStatusUpdate) {
+    return new Promise((resolve, reject) => {
+      const checkStatus = async () => {
+        try {
+          const result = await this.getExtractionStatus(extractionId);
+          
+          if (onStatusUpdate) {
+            onStatusUpdate(result.data);
+          }
 
-  /**
-   * Get extraction statistics
-   */
-  async getExtractionStats() {
-    const response = await api.get('/upload/stats');
-    return response.data;
-  }
+          if (result.data.status === 'completed') {
+            resolve(result.data);
+          } else if (result.data.status === 'failed') {
+            reject(new Error('Extraction failed'));
+          } else {
+            // Continue polling
+            setTimeout(checkStatus, 2000);
+          }
+        } catch (error) {
+          reject(error);
+        }
+      };
 
-  /**
-   * Delete extraction
-   */
-  async deleteExtraction(extractionId) {
-    const response = await api.delete(`/upload/extraction/${extractionId}`);
-    return response.data;
-  }
-
-  /**
-   * Download extracted data
-   */
-  async downloadExtractedData(extractionId, format = 'json') {
-    const response = await api.get(`/upload/download/${extractionId}`, {
-      params: { format },
-      responseType: 'blob',
+      checkStatus();
     });
-    return response.data;
-  }
-
-  /**
-   * Validate file before upload (client-side check before sending)
-   */
-  validateFile(file) {
-    const errors = [];
-    if (file.size > 20 * 1024 * 1024) {
-      errors.push('File size must be less than 20MB');
-    }
-    const validTypes = [
-      'application/pdf',
-      'text/csv',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ];
-    if (
-      !validTypes.includes(file.type) &&
-      !file.name.match(/\.(pdf|csv|xlsx|xls)$/i)
-    ) {
-      errors.push('Only PDF, CSV, and Excel files are allowed');
-    }
-    return { isValid: errors.length === 0, errors };
   }
 }
 
