@@ -1,26 +1,18 @@
-import api from './api';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const predictionAPI = {
   /**
    * Generate performance prediction
    * @param {string} subject - Subject name
-   * @param {array} marksData - Optional marks data array with score/date fields
    * @returns {Promise} Prediction result
    */
-  async generatePrediction(subject, marksData = []) {
+  async generatePrediction(subject) {
     try {
-      const payload = { subject };
-      
-      // Include marks data if available for offline/robust prediction
-      if (marksData && marksData.length > 0) {
-        const scores = marksData.map(m => parseFloat(m.score || 0)).filter(s => s > 0);
-        if (scores.length > 0) {
-          payload.marksData = marksData;
-          payload.scores = scores;
-        }
-      }
-
-      const response = await api.post('/predictions/generate', payload);
+      const response = await axios.post(`${API_BASE_URL}/predictions/generate`, {
+        subject
+      });
       return response.data;
     } catch (error) {
       console.error('Prediction generation error:', error);
@@ -34,7 +26,7 @@ const predictionAPI = {
    */
   async getPredictionHistory() {
     try {
-      const response = await api.get('/predictions/history');
+      const response = await axios.get(`${API_BASE_URL}/predictions/history`);
       return response.data;
     } catch (error) {
       console.error('Get history error:', error);
@@ -49,7 +41,7 @@ const predictionAPI = {
    */
   async getPredictionBySubject(subject) {
     try {
-      const response = await api.get(`/predictions/${subject}`);
+      const response = await axios.get(`${API_BASE_URL}/predictions/${subject}`);
       return response.data;
     } catch (error) {
       console.error('Get prediction error:', error);

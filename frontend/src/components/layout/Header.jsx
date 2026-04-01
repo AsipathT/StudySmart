@@ -1,20 +1,22 @@
 import React from 'react';
-import { Layout, Button, Space, Badge, Avatar, Dropdown } from 'antd';
+import { Layout, Button, Space, Badge, Avatar, Dropdown, Tooltip } from 'antd';
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
   BellOutlined,
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../context/ThemeContext';
 import './Header.css';
 
 const { Header: AntHeader } = Layout;
 
 const Header = ({ collapsed, setCollapsed }) => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const userMenuItems = [
     {
@@ -39,19 +41,25 @@ const Header = ({ collapsed, setCollapsed }) => {
   ];
 
   return (
-    <AntHeader className="site-header" style={{ padding: 0, marginLeft: collapsed ? 80 : 250 }}>
+    <AntHeader className="site-header" style={{ padding: 0, left: collapsed ? 80 : 250 }}>
       <div className="header-left">
-        <Button
-          type="text"
-          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          onClick={() => setCollapsed(!collapsed)}
-          className="collapse-btn"
-        />
         <span className="page-title">StudySmart</span>
       </div>
 
       <div className="header-right">
         <Space size="middle">
+          <Tooltip title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+            <Button
+              type="text"
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              icon={theme === 'dark'
+                ? <SunOutlined style={{ fontSize: 17 }} />
+                : <MoonOutlined style={{ fontSize: 17 }} />
+              }
+            />
+          </Tooltip>
+
           <Badge count={5} dot>
             <Button type="text" icon={<BellOutlined />} className="notification-btn" />
           </Badge>

@@ -1,15 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// SLIIT email format validator
-const validateSLIITEmail = (email) => {
-  if (email === 'admin@nidu.sliit.lk') {
-    return true; // Allow hardcoded admin email
-  }
-  const sliitRegex = /^IT\d{8}@my\.sliit\.lk$/i;
-  return sliitRegex.test(email);
-};
-
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -21,11 +12,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     lowercase: true,
-    trim: true,
-    validate: {
-      validator: validateSLIITEmail,
-      message: 'Email must be in SLIIT format (IT12345678@my.sliit.lk) or admin email'
-    }
+    trim: true
   },
   password: {
     type: String,
@@ -34,11 +21,12 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'admin'],
+    enum: ['student', 'admin', 'teacher'],
     default: 'student'
   },
-  studentId: {
+  studentNumber: {
     type: String,
+    unique: true,
     sparse: true
   },
   profilePicture: String,
