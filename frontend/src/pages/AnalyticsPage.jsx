@@ -23,6 +23,7 @@ import {
 import analyticsService from '../services/analytics.service';
 import profileService from '../services/profile.service';
 import { useAuth } from '../hooks/useAuth';
+import * as XLSX from 'xlsx';
 import './AnalyticsPage.css';
 
 const { Title, Text } = Typography;
@@ -513,6 +514,213 @@ const AnalyticsPage = () => {
   }, [user]);
 
   useEffect(() => { loadAnalyticsData(); }, [loadAnalyticsData]);
+
+  // ── Export analytics report ─────────────────────────────────────────────────
+  const handleExportReport = async () => {
+    try {
+      if (!analyticsData) {
+        Modal.error({
+          title: 'No Data',
+          content: 'No analytics data available to export.',
+          okText: 'OK'
+        });
+        return;
+      }
+
+      const reportDate = new Date();
+      const subjects = analyticsData.subjectPerformance || [];
+
+      const sortedSubjects = [...subjects].sort((a, b) => (b.average || 0) - (a.average || 0));
+      const bestSubject = sortedSubjects[0] || null;
+      const worstSubject = sortedSubjects[sortedSubjects.length - 1] || null;
+      const improvementTip = sortedSubjects.length
+        ? `Focus on ${worstSubject.subject} and track weekly progress with the StudySmart planner.`
+        : 'No subject data available for insights.';
+
+      const wb = XLSX.utils.book_new();
+
+      const summaryData = [
+        ['StudySmart Analytics Report'],
+        ['Generated on', reportDate.toLocaleString()],
+        ['Report Owner', user?.name || 'Unknown'],
+        ['Student ID', user?.studentId || 'Unknown'],
+        ['Selected View', selectedView],
+        ['Selected Subject', selectedSubject],
+        ['Selected Branch', selectedBranch],
+        [''],
+        ['Summary Metrics'],
+        ['Total Subjects Analyzed', subjects.length],
+        ['Total Assessments', analyticsData.summary?.totalAssessments || 0],
+        ['Average Score', analyticsData.summary?.averageScore || 'N/A'],
+        ['Pass Rate (%)', analyticsData.summary?.passRate ? `${analyticsData.summary.passRate}%` : 'N/A'],
+        ['Top Score', analyticsData.summary?.topScore || 'N/A'],
+        ['Bottom Score', analyticsData.summary?.bottomScore || 'N/A'],
+        ['Best Subject', bestSubject ? `${bestSubject.subject} (${bestSubject.average}%)` : 'N/A'],
+        ['Lowest Subject', worstSubject ? `${worstSubject.subject} (${worstSubject.average}%)` : 'N/A'],
+        ['Actionable Tip', improvementTip]
+      ];
+
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Report Overview');
+
+      const subjectHeaders = ['Rank', 'Subject', 'Average Score', 'Grade', 'GPA', 'Status', 'Pass Rate (%)', 'Top Score', 'Bottom Score'];
+      const subjectData = sortedSubjects.map((s, idx) => [
+        idx + 1,
+        s.subject,
+        s.average,
+        s.grade || getLetterGrade(s.average),
+        s.gpa || scoreToGPA(s.average),
+        s.status || (s.average >= 50 ? 'Pass' : 'Fail'),
+        `${(s.passRate || 0).toFixed(1)}%`,
+        s.topScore || 'N/A',
+        s.bottomScore || 'N/A'
+      ]);
+
+      const wsSubjects = XLSX.utils.aoa_to_sheet([subjectHeaders, ...subjectData]);
+      XLSX.utils.book_append_sheet(wb, wsSubjects, 'Subject Performance');
+
+      const gradeDist = analyticsData.gradeDistribution || [];
+      if (gradeDist.length) {
+        const gradeHeaders = ['Grade Range', 'Count', 'Percentage'];
+        const totalStudents = gradeDist.reduce((sum, g) => sum + (g.value || 0), 0) || 1;
+        const gradeData = gradeDist.map(g => [
+          g.name,
+          g.value,
+          `${((g.value || 0) / totalStudents * 100).toFixed(1)}%`
+        ]);
+
+        const wsGrades = XLSX.utils.aoa_to_sheet([gradeHeaders, ...gradeData]);
+        XLSX.utils.book_append_sheet(wb, wsGrades, 'Grade Distribution');
+      }
+
+      const trend = analyticsData.performanceTrend || [];
+      if (trend.length) {
+        const trendHeaders = ['Month', 'Average Score', 'Target Score', 'Active Students'];
+        const trendData = trend.map(t => [
+          t.month,
+          t.average,
+          t.target,
+          t.students
+        ]);
+
+        const wsTrend = XLSX.utils.aoa_to_sheet([trendHeaders, ...trendData]);
+        XLSX.utils.book_append_sheet(wb, wsTrend, 'Performance Trend');
+      }
+
+      if (rawScores && rawScores.length) {
+        const rawHeaders = ['Subject', 'Score', 'Grade', 'Status', 'Student', 'Student Number', 'Branch', 'Date'];
+        const rawRows = rawScores.map(r => [
+          r.subject || 'Unknown',
+          r.score || 0,
+          r.grade || getLetterGrade(r.score),
+          r.status || (r.score >= 50 ? 'Pass' : 'Fail'),
+          r.name || 'Unknown',
+          r.studentNumber || 'N/A',
+          r.branch || selectedBranch || 'N/A',
+          r.date ? new Date(r.date).toLocaleString() : 'N/A'
+        ]);
+
+        const wsRaw = XLSX.utils.aoa_to_sheet([rawHeaders, ...rawRows]);
+        XLSX.utils.book_append_sheet(wb, wsRaw, 'Raw Score Details');
+      }
+
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `studysmart-report-${user?.name?.replace(/\s+/g, '_') || 'user'}-${reportDate.toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      Modal.success({
+        title: 'Download Successful',
+        content: 'A structured, high-quality analytics report is now downloaded.',
+        okText: 'Great!'
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      Modal.error({
+        title: 'Export Failed',
+        content: 'Failed to generate the analytics report. Please try again.',
+        okText: 'OK'
+      });
+    }
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      setLoading(true);
+      const blob = await analyticsService.downloadPdfReport();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `studysmart-analytics-${user?.name?.replace(/\s+/g, '_') || 'user'}-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      // Enhanced success notification with detailed message
+      Modal.success({
+        title: '✅ PDF Report Downloaded Successfully!',
+        icon: <span style={{ fontSize: 32 }}>📄</span>,
+        content: (
+          <div style={{ lineHeight: '1.6' }}>
+            <p>Your professional analytics report has been successfully generated and downloaded.</p>
+            <p style={{ marginTop: 12, color: '#666', fontSize: 13 }}>
+              <strong>Filename:</strong> studysmart-analytics-{user?.name?.replace(/\s+/g, '_') || 'user'}-{new Date().toISOString().split('T')[0]}.pdf
+            </p>
+            <p style={{ marginTop: 8, color: '#666', fontSize: 13 }}>
+              The report contains your academic performance insights, subject rankings, AI recommendations, and growth opportunities.
+            </p>
+          </div>
+        ),
+        okText: 'Great!',
+        okButtonProps: { type: 'primary', size: 'large' },
+        width: 420
+      });
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      
+      let errorContent = 'Failed to generate PDF report.';
+      
+      // More specific error messages based on error type
+      if (error?.response?.status === 404) {
+        errorContent = 'PDF generation endpoint not found. Please restart the backend server and try again.';
+      } else if (error?.response?.status === 500) {
+        errorContent = 'Server error while generating PDF. Ensure Python3 and reportlab are installed: pip3 install reportlab';
+      } else if (error?.message?.includes('Network')) {
+        errorContent = 'Network error. Please check your connection and ensure the backend is running on port 5000.';
+      } else if (error?.message) {
+        errorContent = error.message;
+      }
+      
+      Modal.error({
+        title: '❌ PDF Export Failed',
+        content: (
+          <div style={{ lineHeight: '1.6' }}>
+            <p>{errorContent}</p>
+            <p style={{ marginTop: 12, color: '#d9534f', fontSize: 13 }}>
+              <strong>Troubleshooting:</strong>
+            </p>
+            <ul style={{ marginTop: 8, marginLeft: 20, fontSize: 13 }}>
+              <li>Ensure backend server is running: <code>npm start</code> in backend folder</li>
+              <li>Check Python3: <code>python3 --version</code></li>
+              <li>Verify reportlab: <code>pip3 list | grep reportlab</code></li>
+              <li>Check browser console (F12) for more details</li>
+            </ul>
+          </div>
+        ),
+        okText: 'Got It',
+        width: 480
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Enrich backend data with letter grades / GPA where missing
   function enrichWithSubjectDetails(d) {
@@ -1143,8 +1351,11 @@ const AnalyticsPage = () => {
               <Button icon={<ReloadOutlined />} onClick={loadAnalyticsData} loading={loading}>
                 Refresh
               </Button>
-              <Button type="primary" icon={<DownloadOutlined />}>
-                Export Report
+              <Button type="primary" icon={<DownloadOutlined />} onClick={handleExportReport}>
+                Export Excel
+              </Button>
+              <Button type="default" icon={<DownloadOutlined />} onClick={handleExportPdf} loading={loading}>
+                Download PDF
               </Button>
             </Space>
           </Col>

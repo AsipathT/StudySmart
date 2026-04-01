@@ -34,6 +34,27 @@ class AnalyticsService {
     const response = await api.get(`/analytics/overview?${params}`);
     return response.data;
   }
+
+  /**
+   * Export analytics report as Excel
+   */
+  async exportAnalyticsReport(filters = {}) {
+    const params = new URLSearchParams(filters).toString();
+    const response = await api.get(`/analytics/export?${params}`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  }
+
+  /**
+   * Download PDF analytics report
+   */
+  async downloadPdfReport() {
+    const response = await api.get('/report/pdf', {
+      responseType: 'blob'
+    });
+    return response.data;
+  }
 }
 
 export default new AnalyticsService();

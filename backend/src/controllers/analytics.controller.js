@@ -1,5 +1,6 @@
 const AnalyticsService = require('../services/analytics.service');
 const { QuizScore, Student } = require('../models');
+const XLSX = require('xlsx');
 
 // helper to verify pg connection is alive (copied from upload.controller)
 async function isPostgresUp() {
@@ -319,6 +320,171 @@ class AnalyticsController {
       return res.status(500).json({
         success: false,
         error: { code: 'OVERVIEW_ERROR', message: error.message }
+      });
+    }
+  }
+
+  /**
+   * Export analytics report as Excel
+   */
+  async exportAnalyticsReport(req, res) {
+    try {
+      const { program, year, semester, branch, subject } = req.query;
+      const studentWhere = {};
+      if (program) studentWhere.program = program;
+      if (year) studentWhere.year = year;
+      if (semester) studentWhere.semester = semester;
+      if (branch) studentWhere.branch = branch;
+
+      const students = await Student.findAll({ where: studentWhere });
+
+      const scoreWhere = {};
+      if (subject) scoreWhere.subject = subject;
+      if (students.length > 0) {
+        scoreWhere.studentId = students.map(s => s.id);
+      }
+      const allScores = await QuizScore.findAll({ where: scoreWhere });
+
+      const wb = XLSX.utils.book_new();
+      const reportDate = new Date();
+
+      const allScoreValues = allScores.map(s => parseFloat(s.score));
+      const totalAssessments = allScores.length;
+      const averageScore = allScoreValues.length ? (allScoreValues.reduce((a, b) => a + b, 0) / allScoreValues.length).toFixed(1) : 'N/A';
+      const passRate = allScoreValues.length ? ((allScoreValues.filter(s => s >= 50).length / allScoreValues.length) * 100).toFixed(1) : 'N/A';
+
+      const subjects = [...new Set(allScores.map(s => s.subject))];
+      const subjectAnalytics = subjects.map(sub => {
+        const scores = allScores.filter(s => s.subject === sub).map(s => parseFloat(s.score));
+        const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+        return {
+          subject: sub,
+          average: parseFloat(avg.toFixed(1)),
+          passRate: scores.length ? ((scores.filter(s => s >= 50).length / scores.length) * 100).toFixed(1) : '0.0',
+          top: scores.length ? Math.max(...scores) : 0,
+          bottom: scores.length ? Math.min(...scores) : 0,
+          a: scores.filter(s => s >= 80).length,
+          b: scores.filter(s => s >= 65 && s < 80).length,
+          c: scores.filter(s => s >= 50 && s < 65).length,
+          d: scores.filter(s => s >= 40 && s < 50).length,
+          f: scores.filter(s => s < 40).length,
+          count: scores.length
+        };
+      });
+
+      const sortedSubjects = subjectAnalytics.sort((a, b) => b.average - a.average);
+      const topSubject = sortedSubjects[0] || null;
+      const bottomSubject = sortedSubjects[sortedSubjects.length - 1] || null;
+
+      const summaryData = [
+        ['StudySmart Analytics Export'],
+        ['Generated on', reportDate.toLocaleString()],
+        ['Program', program || 'All'],
+        ['Year', year || 'All'],
+        ['Semester', semester || 'All'],
+        ['Branch', branch || 'All'],
+        ['Subject Filter', subject || 'All'],
+        [''],
+        ['Summary'],
+        ['Total Students', students.length],
+        ['Total Assessments', totalAssessments],
+        ['Average Score', averageScore],
+        ['Pass Rate (%)', passRate],
+        ['Top Score', allScoreValues.length ? Math.max(...allScoreValues) : 'N/A'],
+        ['Bottom Score', allScoreValues.length ? Math.min(...allScoreValues) : 'N/A'],
+        ['Best Subject', topSubject ? `${topSubject.subject} (${topSubject.average})` : 'N/A'],
+        ['Weakest Subject', bottomSubject ? `${bottomSubject.subject} (${bottomSubject.average})` : 'N/A'],
+        ['Suggested Focus', bottomSubject ? `Improve ${bottomSubject.subject} with targeted practice` : 'N/A']
+      ];
+
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Overview');
+
+      const studentHeaders = ['Student ID', 'Name', 'Student Number', 'Program', 'Year', 'Semester', 'Branch', 'Avg Score', 'Assessments', 'Trend'];
+      const studentRows = students.map(student => {
+        const studentScores = allScores.filter(s => s.studentId === student.id).map(s => parseFloat(s.score));
+        const average = studentScores.length ? (studentScores.reduce((a,b) => a+b,0)/studentScores.length).toFixed(1) : 'N/A';
+        const trend = studentScores.length ? (average >= 75 ? 'Improving' : average >= 50 ? 'Stable' : 'Declining') : 'N/A';
+        return [
+          student.id,
+          student.name,
+          student.studentNumber,
+          student.program,
+          student.year,
+          student.semester,
+          student.branch,
+          average,
+          studentScores.length,
+          trend
+        ];
+      });
+      const wsStudents = XLSX.utils.aoa_to_sheet([studentHeaders, ...studentRows]);
+      XLSX.utils.book_append_sheet(wb, wsStudents, 'Student Performance');
+
+      const subjectHeaders = ['Rank', 'Subject', 'Average', 'Pass Rate (%)', 'Students', 'Top', 'Bottom', 'A', 'B', 'C', 'D', 'F'];
+      const subjectRows = sortedSubjects.map((s, idx) => [
+        idx + 1,
+        s.subject,
+        s.average,
+        s.passRate,
+        s.count,
+        s.top,
+        s.bottom,
+        s.a,
+        s.b,
+        s.c,
+        s.d,
+        s.f
+      ]);
+      const wsSubjectPerf = XLSX.utils.aoa_to_sheet([subjectHeaders, ...subjectRows]);
+      XLSX.utils.book_append_sheet(wb, wsSubjectPerf, 'Subject Analysis');
+
+      const branchHeaders = ['Branch', 'Avg Score', 'Pass Rate (%)', 'Students'];
+      const branchValues = [...new Set(students.map(s => s.branch))];
+      const branchRows = branchValues.map(br => {
+        const branchStudents = students.filter(s => s.branch === br).map(s => s.id);
+        const branchScores = allScores.filter(s => branchStudents.includes(s.studentId)).map(s => parseFloat(s.score));
+        const avg = branchScores.length ? (branchScores.reduce((a,b) => a+b,0)/branchScores.length).toFixed(1) : 'N/A';
+        const pass = branchScores.length ? ((branchScores.filter(x => x >= 50).length / branchScores.length) * 100).toFixed(1) : 'N/A';
+        return [br, avg, pass, branchStudents.length];
+      });
+      const wsBranch = XLSX.utils.aoa_to_sheet([branchHeaders, ...branchRows]);
+      XLSX.utils.book_append_sheet(wb, wsBranch, 'Branch Analysis');
+
+      const individualHeaders = ['Date', 'Student', 'Student Number', 'Subject', 'Score', 'Grade', 'Status'];
+      const individualRows = allScores.map(row => {
+        const student = students.find(s => s.id === row.studentId);
+        const score = parseFloat(row.score);
+        let grade = 'F';
+        if (score >= 90) grade = 'A';
+        else if (score >= 80) grade = 'B';
+        else if (score >= 70) grade = 'C';
+        else if (score >= 60) grade = 'D';
+        const status = score >= 50 ? 'Pass' : 'Fail';
+        return [
+          row.date ? new Date(row.date).toLocaleString() : 'N/A',
+          student ? student.name : 'Unknown',
+          student ? student.studentNumber : 'N/A',
+          row.subject,
+          score,
+          grade,
+          status
+        ];
+      });
+      const wsIndividual = XLSX.utils.aoa_to_sheet([individualHeaders, ...individualRows]);
+      XLSX.utils.book_append_sheet(wb, wsIndividual, 'Individual Scores');
+
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const filename = `analytics_report_${reportDate.toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(buffer);
+
+    } catch (error) {
+      console.error('Export error:', error);
+      return res.status(500).json({
+        success: false,
+        error: { code: 'EXPORT_ERROR', message: 'Failed to generate analytics report' }
       });
     }
   }
