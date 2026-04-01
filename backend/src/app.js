@@ -21,6 +21,7 @@ const predictionRoutes= require('./routes/prediction.routes');
 const chatbotRoutes   = require('./routes/chatbot.routes');
 const quizScoreRoutes = require('./routes/quizscore.routes');
 const profileRoutes   = require('./routes/profile.routes');
+const reportRoutes    = require('./routes/report.routes');
 
 app.use('/api/upload',      uploadRoutes);
 app.use('/api/analytics',   analyticsRoutes);
@@ -28,6 +29,7 @@ app.use('/api/predictions', predictionRoutes);
 app.use('/api/chatbot',     chatbotRoutes);
 app.use('/api/quiz-scores', quizScoreRoutes);
 app.use('/api/profile',     profileRoutes);
+app.use('/api/report',      reportRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
