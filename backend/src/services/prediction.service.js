@@ -1,57 +1,83 @@
+
 const DEFAULT_TARGET_SCORE = 75;
 
 class PredictionService {
-  static hasEnoughData(totalStudyHours, quizScoreValues) {
-    return totalStudyHours > 0 || quizScoreValues.length > 0;
+  /**
+   * Aggregate study sessions for a user and subject
+   */
+  static aggregateStudySessions(sessions) {
+    const totalHours = sessions.reduce((sum, s) => sum + (s.hoursStudied || 0), 0);
+    const sessionCount = sessions.length;
+    const latestSessionDate = sessionCount > 0 ? new Date(Math.max(...sessions.map(s => new Date(s.date)))) : null;
+    return { totalHours, sessionCount, latestSessionDate };
   }
 
-  static generatePrediction(totalStudyHours, quizScoreValues) {
-    const quizAverage = quizScoreValues.length > 0
-      ? quizScoreValues.reduce((sum, s) => sum + s, 0) / quizScoreValues.length
-      : 50;
-    const studyImpact = Math.min(totalStudyHours * 2.5, 80);
-    let predictedScore = (quizAverage * 0.7) + (studyImpact * 0.3);
-    if (quizScoreValues.length >= 2) {
-      const trend = this.calculateTrend(quizScoreValues);
-      predictedScore += trend * 5;
+  /**
+   * Aggregate quiz scores for a user and subject
+   */
+  static aggregateQuizScores(quizzes) {
+    const quizCount = quizzes.length;
+    const quizAverage = quizCount > 0 ? quizzes.reduce((sum, q) => sum + (q.score || 0), 0) / quizCount : null;
+    const latestQuizDate = quizCount > 0 ? new Date(Math.max(...quizzes.map(q => new Date(q.date)))) : null;
+    return { quizAverage, quizCount, latestQuizDate };
+  }
+
+  /**
+   * Validate minimum data requirements
+   */
+  static validateMinimumData(sessionCount, quizCount) {
+    if (sessionCount < 3 || quizCount < 2) {
+      return {
+        success: false,
+        error: {
+          code: "INSUFFICIENT_DATA",
+          message: "Minimum 3 sessions and 2 quizzes required."
+        }
+      };
     }
-    predictedScore = Math.max(0, Math.min(100, Math.round(predictedScore * 10) / 10));
+    return { success: true };
+  }
+
+  /**
+   * Improved prediction logic (no ML)
+   */
+  static calculatePrediction({ quizAverage, totalHours }) {
+    // Weighted formula
+    let studyImpact = Math.min((totalHours || 0) * 3, 100);
+    let predictedScore = (quizAverage || 0) * 0.6 + studyImpact * 0.4;
+    predictedScore = Math.max(0, Math.min(100, predictedScore));
+    predictedScore = Math.round(predictedScore * 10) / 10;
+    return predictedScore;
+  }
+
+  /**
+   * Calculate recommended study hours
+   */
+  static calculateRecommendedHours(predictedScore, targetScore = DEFAULT_TARGET_SCORE) {
+    const hoursNeeded = Math.max(0, Math.ceil((targetScore - predictedScore) / 3));
     return {
-      predictedScore,
-      confidence:       this.calculateConfidenceLevel(totalStudyHours, quizScoreValues.length),
-      recommendedHours: this.calculateRecommendedHours(predictedScore),
-      dataPointsUsed:   totalStudyHours + quizScoreValues.length,
-      factors: {
-        quizAverage:  Math.round(quizAverage * 10) / 10,
-        studyImpact:  Math.round(studyImpact * 10) / 10,
-        trend:        quizScoreValues.length >= 2 ? this.calculateTrend(quizScoreValues) : 0,
-      },
+      recommendedHours: hoursNeeded,
+      explanation: hoursNeeded > 0
+        ? `Study ${hoursNeeded} more hours to reach ${targetScore}%`
+        : `Great! You're on track to reach ${targetScore}%`
     };
   }
 
-  static calculateTrend(scores) {
-    if (scores.length < 2) return 0;
-    const recent   = scores.slice(-3);
-    const avgRecent = recent.reduce((s, v) => s + v, 0) / recent.length;
-    const avgAll    = scores.reduce((s, v) => s + v, 0) / scores.length;
-    return (avgRecent - avgAll) / 10;
-  }
-
-  static calculateConfidenceLevel(studyHours, quizCount) {
-    let score = 0;
-    if (studyHours > 0)   score++;
-    if (quizCount >= 1)   score++;
-    if (quizCount >= 3)   score++;
-    if (studyHours >= 10) score++;
-    if (score >= 4) return 'High';
-    if (score >= 2) return 'Medium';
-    return 'Low';
-  }
-
-  static calculateRecommendedHours(predictedScore, target = DEFAULT_TARGET_SCORE) {
-    if (predictedScore >= target) return 0;
-    return Math.ceil((target - predictedScore) / 2.5);
+  /**
+   * Calculate confidence level
+   */
+  static calculateConfidence(sessionCount, quizCount, latestSessionDate, latestQuizDate) {
+    let confidence = "Low";
+    if (sessionCount > 10) confidence = "High";
+    else if (sessionCount >= 5) confidence = "Medium";
+    // Optionally, recent activity can boost confidence
+    // ...
+    return {
+      confidenceLevel: confidence,
+      dataPointsUsed: sessionCount + quizCount
+    };
   }
 }
 
+module.exports = PredictionService;
 module.exports = PredictionService;

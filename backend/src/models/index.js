@@ -1,16 +1,17 @@
-const { sequelize } = require('../../config/database');
 const Student = require('./Student');
+const User = require('./User');
 const QuizScore = require('./QuizScore');
+const StudySession = require('./StudySession');
+const Prediction = require('./Prediction');
 const ExtractedData = require('./ExtractedData');
+const Subject = require('./Subject');
 
-// Define associations
-Student.hasMany(QuizScore, { foreignKey: 'studentId' });
-QuizScore.belongsTo(Student, { foreignKey: 'studentId' });
-
-// Export models and sequelize
 module.exports = {
-  sequelize,
   Student,
+  User,
   QuizScore,
-  ExtractedData
+  StudySession,
+  Prediction,
+  ExtractedData,
+  Subject
 };

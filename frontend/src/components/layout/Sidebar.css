@@ -1,29 +1,78 @@
 .sidebar {
-  min-height: 100vh;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  height: 100vh;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   z-index: 100;
-  overflow: auto;
-  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Thin scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.sidebar .ant-layout-sider-children::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar .ant-layout-sider-children::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar .ant-layout-sider-children::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.sidebar .ant-layout-sider-children::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-logo {
   height: 120px;
-  padding: 20px 16px;
+  padding: 24px 20px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #f0f0f0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
   color: white;
 }
-.sidebar-logo h3.ant-typography {
+
+.sidebar-logo h3 {
   color: white !important;
-  margin-bottom: 0 !important;
+  font-weight: 800 !important;
 }
+
 .sidebar-logo .ant-typography-secondary {
   color: rgba(255, 255, 255, 0.8) !important;
 }
@@ -31,104 +80,73 @@
 .sidebar-user {
   padding: 24px 16px;
   text-align: center;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
+
 .sidebar-user .user-info {
   margin-top: 12px;
 }
+
 .sidebar-user .user-info .ant-typography {
+  color: rgba(255, 255, 255, 0.9) !important;
   display: block;
   line-height: 1.5;
 }
 
-/* ── Menu base ────────────────────────────────────────────────────────── */
+.sidebar-user .user-info .ant-typography-secondary {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
 .sidebar-menu {
+  background: transparent !important;
   border-right: none;
-  padding: 16px 8px;
+  padding: 16px 12px;
 }
 
 .sidebar-menu .ant-menu-item {
-  border-radius: 8px;
-  margin: 4px 0;
+  border-radius: 12px;
+  margin: 6px 0;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* ── Selected leaf item ───────────────────────────────────────────────── */
-.sidebar-menu .ant-menu-item-selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+.sidebar-menu .ant-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
   color: white !important;
 }
-.sidebar-menu .ant-menu-item-selected a,
+
+.sidebar-menu .ant-menu-item-selected {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: white !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.sidebar-menu .ant-menu-item-selected a {
+  color: white !important;
+}
+
 .sidebar-menu .ant-menu-item-selected .anticon {
   color: white !important;
 }
 
-/* ── Sub-menu parent (Performance Predictor) ──────────────────────────── */
-.sidebar-menu .ant-menu-submenu-title {
-  border-radius: 8px;
-  margin: 4px 0;
-  font-weight: 600;
-}
-.sidebar-menu .ant-menu-submenu-title:hover {
-  background: rgba(102, 126, 234, 0.08) !important;
-  color: #667eea !important;
-}
-.sidebar-menu .ant-menu-submenu-title:hover .anticon {
-  color: #667eea !important;
-}
-
-/* Active parent when a child is selected */
-.sidebar-menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  color: #667eea !important;
-  background: rgba(102, 126, 234, 0.08) !important;
-}
-.sidebar-menu .ant-menu-submenu-selected > .ant-menu-submenu-title .anticon {
-  color: #667eea !important;
-}
-
-/* Sub-menu arrow color */
-.sidebar-menu .ant-menu-submenu-arrow {
-  color: #667eea !important;
-}
-
-/* ── Sub-menu inner list ──────────────────────────────────────────────── */
-.sidebar-menu .ant-menu-sub {
-  background: rgba(102, 126, 234, 0.03) !important;
-  border-radius: 8px;
-  padding: 4px 0;
-}
-
-.sidebar-menu .ant-menu-sub .ant-menu-item {
-  border-radius: 6px;
-  margin: 2px 4px;
-  padding-left: 36px !important;
-  font-size: 13px;
-}
-
-.sidebar-menu .ant-menu-sub .ant-menu-item-selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-}
-.sidebar-menu .ant-menu-sub .ant-menu-item-selected .anticon {
-  color: white !important;
-}
-
-/* ── Collapsed state ──────────────────────────────────────────────────── */
+/* Collapsed state */
 .sidebar.ant-layout-sider-collapsed .sidebar-logo {
   height: 80px;
   padding: 20px 0;
 }
+
 .sidebar.ant-layout-sider-collapsed .sidebar-user {
+  padding: 16px 0;
+}
+
+.sidebar.ant-layout-sider-collapsed .sidebar-user .user-info {
   display: none;
 }
 
-/* ── Responsive ───────────────────────────────────────────────────────── */
+/* Responsive */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
     z-index: 1000;
-  }
-  .site-layout {
-    margin-left: 0 !important;
-    width: 100%;
   }
 }

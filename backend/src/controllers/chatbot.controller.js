@@ -1,6 +1,6 @@
 const ChatbotService = require('../services/chatbot.service');
 const AnalyticsService = require('../services/analytics.service');
-const { Student } = require('../models');
+const { Student } = require('../models/postgres');
 const PredictionService = require('../services/prediction.service');
 
 class ChatbotController {

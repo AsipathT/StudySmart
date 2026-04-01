@@ -25,15 +25,6 @@ class AnalyticsService {
     const response = await api.get(`/analytics/class/summary?${params}`);
     return response.data;
   }
-
-  /**
-   * Get overall analytics data
-   */
-  async getAnalyticsData(filters = {}) {
-    const params = new URLSearchParams(filters).toString();
-    const response = await api.get(`/analytics/overview?${params}`);
-    return response.data;
-  }
 }
 
 export default new AnalyticsService();

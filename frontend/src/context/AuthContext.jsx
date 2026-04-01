@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
           const response = await axios.get('http://localhost:5000/api/auth/me', {
             headers: { Authorization: `Bearer ${storedToken}` }
           });
-          setUser(response.data.data.user);
+          setUser(response.data.user);
           setToken(storedToken);
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         } catch (error) {
@@ -38,29 +38,14 @@ export const AuthProvider = ({ children }) => {
         email,
         password
       });
-      console.log('Login response:', response.data);
-      
-      // Handle response structure: { success: true, data: { user, token }, message: ... }
-      const newToken = response.data.data?.token;
-      const userData = response.data.data?.user;
-      
-      if (!newToken || !userData) {
-        console.error('Missing token or user in response:', response.data);
-        return { success: false, error: 'Invalid response from server' };
-      }
-      
+      const { token: newToken, user: userData } = response.data;
       localStorage.setItem('token', newToken);
       setToken(newToken);
       setUser(userData);
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error details:', error.response?.data);
-      // Extract error message from backend response
-      const errorMsg = error.response?.data?.error?.message || 
-                       error.response?.data?.message || 
-                       'Login failed';
-      return { success: false, error: errorMsg };
+      return { success: false, error: error.response?.data?.message || 'Login failed' };
     }
   };
 
@@ -74,29 +59,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/register', userData);
-      console.log('Register response:', response.data);
-      
-      // Handle response structure: { success: true, data: { user, token }, message: ... }
-      const newToken = response.data.data?.token;
-      const regUser = response.data.data?.user;
-      
-      if (!newToken || !regUser) {
-        console.error('Missing token or user in register response:', response.data);
-        return { success: false, error: 'Invalid response from server' };
-      }
-      
-      localStorage.setItem('token', newToken);
-      setToken(newToken);
-      setUser(regUser);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      return { success: true, user: regUser };
+      return { success: true, user: response.data.user };
     } catch (error) {
-      console.error('Register error details:', error.response?.data);
-      // Extract error message from backend response
-      const errorMsg = error.response?.data?.error?.message || 
-                       error.response?.data?.message || 
-                       'Registration failed';
-      return { success: false, error: errorMsg };
+      return { success: false, error: error.response?.data?.message || 'Registration failed' };
     }
   };
 
