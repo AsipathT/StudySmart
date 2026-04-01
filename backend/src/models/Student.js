@@ -9,20 +9,15 @@ const Student = sequelize.define('Student', {
   },
   studentNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    unique: true,
+    allowNull: false
   },
   name: {
     type: DataTypes.STRING,
     allowNull: false
   },
   email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      isEmail: true
-    }
+    type: DataTypes.STRING
   },
   program: {
     type: DataTypes.STRING
@@ -33,9 +28,8 @@ const Student = sequelize.define('Student', {
   semester: {
     type: DataTypes.INTEGER
   },
-  userId: {
-    type: DataTypes.STRING,
-    comment: 'Reference to MongoDB User ID'
+  branch: {
+    type: DataTypes.STRING
   },
   metadata: {
     type: DataTypes.JSONB,
@@ -43,7 +37,8 @@ const Student = sequelize.define('Student', {
   }
 }, {
   timestamps: true,
-  underscored: true
+  tableName: 'students',
+  underscored: true  // ✅ maps studentNumber → student_number etc.
 });
 
 module.exports = Student;

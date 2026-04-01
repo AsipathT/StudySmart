@@ -7,13 +7,10 @@ const QuizScore = sequelize.define('QuizScore', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-  studentId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: 'Students',
-      key: 'id'
-    }
+  userId: {
+    type: DataTypes.STRING,
+    allowNull: true,  // Temporarily allow null for migration
+    field: 'user_id'
   },
   subject: {
     type: DataTypes.STRING,
@@ -22,34 +19,43 @@ const QuizScore = sequelize.define('QuizScore', {
   score: {
     type: DataTypes.DECIMAL(5, 2),
     allowNull: false,
-    validate: {
-      min: 0,
-      max: 100
-    }
+    validate: { min: 0, max: 100 }
   },
   type: {
-    type: DataTypes.ENUM('quiz', 'midterm', 'final', 'assignment'),
-    allowNull: false
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'quiz'
   },
   date: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   },
   sourceFile: {
+    type: DataTypes.STRING,
+    field: 'source_file'
+  },
+  grade: {
+    type: DataTypes.STRING
+  },
+  status: {
     type: DataTypes.STRING
   },
   extractedData: {
-    type: DataTypes.JSONB
+    type: DataTypes.JSONB,
+    field: 'extracted_data',
+    defaultValue: {}
+  },
+  metadata: {
+    type: DataTypes.JSONB,
+    defaultValue: {}
   }
 }, {
   timestamps: true,
+  tableName: 'quiz_scores',
+  underscored: true,
   indexes: [
-    {
-      fields: ['student_id', 'subject']
-    },
-    {
-      fields: ['date']
-    }
+    { fields: ['user_id', 'subject'] },
+    { fields: ['date'] }
   ]
 });
 

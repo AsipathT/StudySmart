@@ -1,52 +1,47 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../../config/database');
 
-const studySessionSchema = new mongoose.Schema({
+const StudySession = sequelize.define('StudySession', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true
+  },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'user_id'
   },
   subject: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  hoursStudied: {
+    type: DataTypes.DECIMAL(5, 2),
+    allowNull: false,
+    field: 'hours_studied'
+  },
+  date: {
+    type: DataTypes.DATE,
+    allowNull: false
   },
   notes: {
-    type: String,
+    type: DataTypes.TEXT,
+    allowNull: true
   },
-  quizScore: {
-    type: Number,
-  },
-  startTime: {
-    type: Date,
-    required: true,
-  },
-  endTime: {
-    type: Date,
-  },
-  duration: {
-    type: Number, // duration in minutes
-  },
-  pomodoroMode: {
-    type: Boolean,
-    default: false,
-  },
-  intervals: {
-    type: Number,
-    default: 0,
-  },
-  unitName: {
-    type: String,
-  },
-  materialName: {
-    type: String,
-  },
-  workedTime: {
-    type: Number, // duration in seconds
-  },
+  sessionType: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'session_type'
+  }
 }, {
   timestamps: true,
+  tableName: 'study_sessions',
+  underscored: true,
+  indexes: [
+    { fields: ['user_id', 'subject'] },
+    { fields: ['date'] }
+  ]
 });
-
-const StudySession = mongoose.model('StudySession', studySessionSchema);
 
 module.exports = StudySession;

@@ -12,19 +12,22 @@ const ExtractedData = sequelize.define('ExtractedData', {
     allowNull: false
   },
   fileType: {
-    type: DataTypes.ENUM('pdf', 'csv'),
-    allowNull: false
+    type: DataTypes.STRING
   },
   filePath: {
     type: DataTypes.STRING
   },
   status: {
-    type: DataTypes.ENUM('pending', 'processing', 'completed', 'failed'),
+    type: DataTypes.STRING,
     defaultValue: 'pending'
+  },
+  recordCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   extractedRecords: {
     type: DataTypes.JSONB,
-    defaultValue: []
+    defaultValue: {}
   },
   normalizedRecords: {
     type: DataTypes.JSONB,
@@ -34,20 +37,20 @@ const ExtractedData = sequelize.define('ExtractedData', {
     type: DataTypes.JSONB,
     defaultValue: []
   },
+  processedAt: {
+    type: DataTypes.DATE
+  },
   metadata: {
     type: DataTypes.JSONB,
     defaultValue: {}
   },
-  processedBy: {
-    type: DataTypes.UUID,
-    references: {
-      model: 'Students',
-      key: 'id'
-    }
-  },
-  processedAt: DataTypes.DATE
+  uploadedBy: {
+    type: DataTypes.STRING
+  }
 }, {
-  timestamps: true
+  timestamps: true,
+  tableName: 'extracted_data',
+  underscored: true  // ✅ maps all camelCase to snake_case columns
 });
 
 module.exports = ExtractedData;
