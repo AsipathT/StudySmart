@@ -6,9 +6,6 @@ const { protect } = require('../middleware/auth');
 // Send message to chatbot
 router.post('/message', protect, ChatbotController.sendMessage);
 
-// Chat performance advice
-router.post('/chat-performance', protect, ChatbotController.chatPerformance);
-
 // Get conversation history
 router.get('/history', protect, ChatbotController.getConversationHistory);
 
