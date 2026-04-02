@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/study-groups", require("./routes/studygroup.routes"));
 
-const staticUploadsPath = path.join(__dirname, '../uploads');
+const staticUploadsPath = path.join(__dirname, 'uploads');
 console.log('📁 Serving static uploads from', staticUploadsPath);
 app.use('/uploads', express.static(staticUploadsPath));
 

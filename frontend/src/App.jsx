@@ -113,7 +113,7 @@ function App() {
                 <Route
                   path="/history"
                   element={
-                    <PrivateRoute>
+                    <PrivateRoute roles={['admin']}>
                       <HistoryPage />
                     </PrivateRoute>
                   }
