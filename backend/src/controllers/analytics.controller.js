@@ -462,9 +462,6 @@ class AnalyticsController {
     }
   }
 
-<<<<<<< HEAD
-module.exports = new AnalyticsController();
-=======
   /**
    * Get user analytics (authenticated user only)
    */
@@ -587,4 +584,3 @@ module.exports = new AnalyticsController();
 }
 
 module.exports = new AnalyticsController();
->>>>>>> e771304 ([MOD] Upload store logic)

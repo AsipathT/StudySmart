@@ -11,10 +11,11 @@ const extractedDataSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   uploadedBy: { type: String, trim: true },
   sourceFile: { type: String, trim: true },
+  fileType: { type: String, trim: true, default: 'unknown' },
   metadata: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, {
   timestamps: true,
   collection: 'extracteddatas'
 });
 
-module.exports = mongoose.model('ExtractedData', extractedDataSchema);
+module.exports = mongoose.models.ExtractedData || mongoose.model('ExtractedData', extractedDataSchema);

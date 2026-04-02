@@ -2,10 +2,6 @@ const fs   = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
 
-<<<<<<< HEAD
-// ── Model imports ─────────────────────────────────────────────────────────────
-const { QuizScore, Student, ExtractedData } = require('../models');
-=======
 // ── Graceful model imports (won't crash if PG is down) ────────────────────────
 let QuizScore, Student, ExtractedData, sequelize;
 let ExtractedDataMongo = null;
@@ -15,23 +11,19 @@ try {
   const models = require('../models');
   QuizScore     = models.QuizScore;
   Student       = models.Student;
-  ExtractedData = models.ExtractedData; // Sequelize version preserved
+  ExtractedData = models.ExtractedData;
   const db      = require('../../config/database');
   sequelize     = db.sequelize;
   pgAvailable   = true;
-
-  try {
-    ExtractedDataMongo = require('../models/ExtractedDataMongo');
-  } catch (e) {
-    console.warn('⚠️  ExtractedData Mongo model not loaded:', e.message);
-  }
 } catch (e) {
   console.warn('⚠️  Models not loaded (PostgreSQL may be down):', e.message);
-  try {
-    ExtractedDataMongo = require('../models/ExtractedDataMongo');
-  } catch (_) {}
 }
->>>>>>> e771304 ([MOD] Upload store logic)
+
+try {
+  ExtractedDataMongo = require('../models/ExtractedDataMongo');
+} catch (e) {
+  console.warn('⚠️  ExtractedData Mongo model not loaded:', e.message);
+}
 
 // ── PDF / CSV services (optional) ────────────────────────────────────────────
 let PDFExtractionService, DataNormalizationService;
@@ -50,20 +42,20 @@ const normalizeStudentId = (val) =>
 
 // ── Helper: safe ExtractedData create ────────────────────────────────────────
 async function createExtractionRecord(data) {
+  if (!(await isPostgresUp())) {
+    return { id: 'no-pg-' + Date.now(), update: async () => {} };
+  }
+
+  if (!data.uploadedBy && data.metadata?.userId) {
+    data.uploadedBy = data.metadata.userId;
+  }
+
   try {
     return await ExtractedData.create(data);
   } catch (e) {
     console.warn('⚠️  ExtractedData.create failed:', e.message);
-    return { _id: 'no-db-' + Date.now(), update: async () => {} };
+    return { id: 'no-db-' + Date.now(), update: async () => {} };
   }
-<<<<<<< HEAD
-=======
-  // Track uploader for per-user history.
-  if (!data.uploadedBy && data.metadata?.userId) {
-    data.uploadedBy = data.metadata.userId;
-  }
-  return ExtractedData.create(data);
->>>>>>> e771304 ([MOD] Upload store logic)
 }
 
 // ── Helper: normalize the ID field inside a row object ───────────────────────
@@ -168,7 +160,7 @@ class UploadController {
       const rows     = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
 
       const normalizedRows = rows.map(normalizeRowId);
-      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId);
+      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId, 'csv');
 
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
@@ -207,7 +199,7 @@ class UploadController {
       const pdfData        = await PDFExtractionService.extractFromPDF(file.path);
       const normalizedData = DataNormalizationService.normalizeData(pdfData.extractedData, 'pdf');
       const normalizedRows = normalizedData.map(normalizeRowId);
-      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId);
+      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId, 'pdf');
 
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
@@ -267,7 +259,7 @@ class UploadController {
       }
 
       const normalizedRows = rows.map(normalizeRowId);
-      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId);
+      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId, 'excel');
 
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
@@ -292,7 +284,7 @@ class UploadController {
   }
 
   // ── Save rows to MongoDB ──────────────────────────────────────────────────
-  async saveRows(rows, filePath, formData = {}) {
+  async saveRows(rows, filePath, formData = {}, userId = '', fileType = 'unknown') {
     const saved = [];
     const mongoRows = [];
 
@@ -364,6 +356,7 @@ class UploadController {
           date: record.date ? new Date(record.date) : new Date(),
           uploadedBy: userId || '',
           sourceFile: filePath,
+          fileType: fileType || 'unknown',
           metadata: { ...record }
         });
       } catch (rowError) {
@@ -408,17 +401,6 @@ class UploadController {
   // ── Get extraction history ───────────────────────────────────────────────────
   async getExtractionHistory(req, res) {
     try {
-<<<<<<< HEAD
-      const extractions = await ExtractedData.find({}).sort({ createdAt: -1 }).limit(50).lean();
-      return res.json({
-        success: true,
-        data: extractions.map(ext => ({
-          id: ext._id, fileName: ext.fileName, fileType: ext.fileType,
-          status: ext.status, uploadedAt: ext.createdAt, processedAt: ext.processedAt,
-          recordCount: ext.recordCount || 0, validationErrors: ext.validationErrors || []
-        }))
-      });
-=======
       const mongoose = require('mongoose');
       const userId = req.user?.id;
 
@@ -443,6 +425,7 @@ class UploadController {
           grade: doc.grade,
           status: doc.status,
           branch: doc.branch,
+          fileType: doc.fileType || 'unknown',
           date: doc.date,
           uploadedAt: doc.createdAt,
           processedAt: doc.updatedAt,
@@ -478,7 +461,6 @@ class UploadController {
       }));
 
       return res.json({ success: true, data: payload });
->>>>>>> e771304 ([MOD] Upload store logic)
     } catch (error) {
       console.error('UploadHistory error:', error);
       return res.status(500).json({ success: false, error: { code: 'HISTORY_ERROR', message: error.message } });

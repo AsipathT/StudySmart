@@ -97,7 +97,9 @@ const HistoryPage = () => {
       title: 'Type',
       dataIndex: 'fileType',
       key: 'fileType',
-      render: (fileType) => <Tag>{fileType.toUpperCase()}</Tag>
+      render: (fileType) => (
+        <Tag>{(fileType || 'unknown').toString().toUpperCase()}</Tag>
+      )
     },
     {
       title: 'Status',
