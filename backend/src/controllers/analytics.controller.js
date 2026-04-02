@@ -2,18 +2,6 @@ const AnalyticsService = require('../services/analytics.service');
 const { QuizScore, Student } = require('../models');
 const XLSX = require('xlsx');
 
-// helper to verify pg connection is alive (copied from upload.controller)
-async function isPostgresUp() {
-  try {
-    const { sequelize } = require('../../config/database');
-    await sequelize.authenticate();
-    return true;
-  } catch (e) {
-    console.warn('PostgreSQL not available for analytics:', e.message);
-    return false;
-  }
-}
-
 class AnalyticsController {
   /**
    * Get student performance dashboard
@@ -21,21 +9,10 @@ class AnalyticsController {
   async getStudentDashboard(req, res) {
     try {
       const { studentId } = req.params;
-      
-      // if PG is down, return empty dashboard rather than error
-      if (!(await isPostgresUp())) {
-        return res.json({
-          success: true,
-          data: {
-            student: null,
-            overall: null,
-            subjects: [],
-            recentActivity: []
-          }
-        });
-      }
-      
-      const student = await Student.findByPk(studentId);
+
+      const student = await Student.findById(studentId).catch(() => null)
+        || await Student.findOne({ studentNumber: studentId }).catch(() => null);
+
       if (!student) {
         return res.status(404).json({
           success: false,
@@ -43,36 +20,32 @@ class AnalyticsController {
         });
       }
 
+      const sid = student._id.toString();
+
       // Get overall analytics
-      const overallAnalytics = await AnalyticsService.calculatePerformanceAnalytics(studentId);
-      
+      const overallAnalytics = await AnalyticsService.calculatePerformanceAnalytics(sid);
+
       // Get subject-wise analytics
-      const subjects = await QuizScore.findAll({
-        where: { studentId },
-        attributes: ['subject'],
-        group: ['subject']
-      });
+      const distinctSubjects = await QuizScore.distinct('subject', { studentId: sid });
 
       const subjectAnalytics = [];
-      for (const { subject } of subjects) {
-        const analytics = await AnalyticsService.calculatePerformanceAnalytics(studentId, subject);
+      for (const subject of distinctSubjects) {
+        const analytics = await AnalyticsService.calculatePerformanceAnalytics(sid, subject);
         if (analytics) {
           subjectAnalytics.push(analytics);
         }
       }
 
       // Get trend data
-      const recentScores = await QuizScore.findAll({
-        where: { studentId },
-        order: [['date', 'DESC']],
-        limit: 10
-      });
+      const recentScores = await QuizScore.find({ studentId: sid })
+        .sort({ date: -1 })
+        .limit(10);
 
       return res.json({
         success: true,
         data: {
           student: {
-            id: student.id,
+            id: student._id,
             name: student.name,
             studentNumber: student.studentNumber,
             program: student.program
@@ -103,9 +76,9 @@ class AnalyticsController {
   async getSubjectAnalytics(req, res) {
     try {
       const { subject } = req.params;
-      
+
       const analytics = await AnalyticsService.calculateSubjectAnalytics(subject);
-      
+
       if (!analytics) {
         return res.status(404).json({
           success: false,
@@ -132,14 +105,14 @@ class AnalyticsController {
   async getClassSummary(req, res) {
     try {
       const { program, year, semester } = req.query;
-      
-      const whereClause = {};
-      if (program) whereClause.program = program;
-      if (year) whereClause.year = year;
-      if (semester) whereClause.semester = semester;
 
-      const students = await Student.findAll({ where: whereClause });
-      
+      const studentWhere = {};
+      if (program) studentWhere.program = program;
+      if (year) studentWhere.year = year;
+      if (semester) studentWhere.semester = semester;
+
+      const students = await Student.find(studentWhere);
+
       if (students.length === 0) {
         return res.json({
           success: true,
@@ -150,11 +123,9 @@ class AnalyticsController {
         });
       }
 
-      const studentIds = students.map(s => s.id);
-      
-      const allScores = await QuizScore.findAll({
-        where: { studentId: studentIds }
-      });
+      const studentIds = students.map(s => s._id.toString());
+
+      const allScores = await QuizScore.find({ studentId: { $in: studentIds } });
 
       // Calculate class statistics
       const scoresBySubject = {};
@@ -206,14 +177,14 @@ class AnalyticsController {
       if (semester) studentWhere.semester = semester;
       if (branch) studentWhere.branch = branch;
 
-      const students = await Student.findAll({ where: studentWhere });
+      const students = await Student.find(studentWhere);
 
       const scoreWhere = {};
       if (subject) scoreWhere.subject = subject;
       if (students.length > 0) {
-        scoreWhere.studentId = students.map(s => s.id);
+        scoreWhere.studentId = { $in: students.map(s => s._id.toString()) };
       }
-      const allScores = await QuizScore.findAll({ where: scoreWhere });
+      const allScores = await QuizScore.find(scoreWhere);
 
       // Performance trend (mock for now, can be improved)
       const performanceTrend = [];
@@ -230,15 +201,15 @@ class AnalyticsController {
       }
 
       // Subject performance
-      const subjects = [...new Set(allScores.map(s => s.subject))];
-      const subjectPerformance = subjects.map(subject => {
-        const scores = allScores.filter(s => s.subject === subject).map(s => parseFloat(s.score));
+      const subjectSet = [...new Set(allScores.map(s => s.subject))];
+      const subjectPerformance = subjectSet.map(subj => {
+        const scores = allScores.filter(s => s.subject === subj).map(s => parseFloat(s.score));
         const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
         return {
-          subject,
+          subject: subj,
           average: parseFloat(avg.toFixed(1)),
           passRate: (scores.filter(s => s >= 50).length / scores.length) * 100,
-          totalStudents: new Set(allScores.filter(s => s.subject === subject).map(s => s.studentId)).size,
+          totalStudents: new Set(allScores.filter(s => s.subject === subj).map(s => s.studentId)).size,
           topScore: Math.max(...scores),
           bottomScore: Math.min(...scores),
           distribution: {
@@ -253,12 +224,12 @@ class AnalyticsController {
 
       // Branch performance
       const branches = [...new Set(students.map(s => s.branch))];
-      const branchPerformance = branches.map(branch => {
-        const branchStudents = students.filter(s => s.branch === branch);
-        const branchScores = allScores.filter(s => branchStudents.some(bs => bs.id === s.studentId)).map(s => parseFloat(s.score));
+      const branchPerformance = branches.map(br => {
+        const branchStudents = students.filter(s => s.branch === br);
+        const branchScores = allScores.filter(s => branchStudents.some(bs => bs._id.toString() === s.studentId)).map(s => parseFloat(s.score));
         const avg = branchScores.length ? branchScores.reduce((a, b) => a + b, 0) / branchScores.length : 0;
         return {
-          branch,
+          branch: br,
           average: parseFloat(avg.toFixed(1)),
           passRate: branchScores.length ? (branchScores.filter(s => s >= 50).length / branchScores.length) * 100 : 0,
           totalStudents: branchStudents.length
@@ -267,10 +238,11 @@ class AnalyticsController {
 
       // Student list
       const studentList = students.map(student => {
-        const studentScores = allScores.filter(s => s.studentId === student.id);
+        const sid = student._id.toString();
+        const studentScores = allScores.filter(s => s.studentId === sid);
         const avg = studentScores.length ? studentScores.reduce((a, b) => a + parseFloat(b.score), 0) / studentScores.length : 0;
         return {
-          id: student.id,
+          id: student._id,
           name: student.name,
           studentNumber: student.studentNumber,
           program: student.program,
@@ -301,7 +273,7 @@ class AnalyticsController {
         data: {
           summary: {
             totalStudents: students.length,
-            activeStudents: students.length, // assuming all are active
+            activeStudents: students.length,
             totalAssessments: allScores.length,
             averageScore: parseFloat(totalAvg.toFixed(1)),
             passRate: parseFloat(passRate.toFixed(1)),
@@ -336,14 +308,14 @@ class AnalyticsController {
       if (semester) studentWhere.semester = semester;
       if (branch) studentWhere.branch = branch;
 
-      const students = await Student.findAll({ where: studentWhere });
+      const students = await Student.find(studentWhere);
 
       const scoreWhere = {};
       if (subject) scoreWhere.subject = subject;
       if (students.length > 0) {
-        scoreWhere.studentId = students.map(s => s.id);
+        scoreWhere.studentId = { $in: students.map(s => s._id.toString()) };
       }
-      const allScores = await QuizScore.findAll({ where: scoreWhere });
+      const allScores = await QuizScore.find(scoreWhere);
 
       const wb = XLSX.utils.book_new();
       const reportDate = new Date();
@@ -353,8 +325,8 @@ class AnalyticsController {
       const averageScore = allScoreValues.length ? (allScoreValues.reduce((a, b) => a + b, 0) / allScoreValues.length).toFixed(1) : 'N/A';
       const passRate = allScoreValues.length ? ((allScoreValues.filter(s => s >= 50).length / allScoreValues.length) * 100).toFixed(1) : 'N/A';
 
-      const subjects = [...new Set(allScores.map(s => s.subject))];
-      const subjectAnalytics = subjects.map(sub => {
+      const subjectList = [...new Set(allScores.map(s => s.subject))];
+      const subjectAnalytics = subjectList.map(sub => {
         const scores = allScores.filter(s => s.subject === sub).map(s => parseFloat(s.score));
         const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
         return {
@@ -402,11 +374,12 @@ class AnalyticsController {
 
       const studentHeaders = ['Student ID', 'Name', 'Student Number', 'Program', 'Year', 'Semester', 'Branch', 'Avg Score', 'Assessments', 'Trend'];
       const studentRows = students.map(student => {
-        const studentScores = allScores.filter(s => s.studentId === student.id).map(s => parseFloat(s.score));
+        const sid = student._id.toString();
+        const studentScores = allScores.filter(s => s.studentId === sid).map(s => parseFloat(s.score));
         const average = studentScores.length ? (studentScores.reduce((a,b) => a+b,0)/studentScores.length).toFixed(1) : 'N/A';
         const trend = studentScores.length ? (average >= 75 ? 'Improving' : average >= 50 ? 'Stable' : 'Declining') : 'N/A';
         return [
-          student.id,
+          student._id,
           student.name,
           student.studentNumber,
           student.program,
@@ -442,18 +415,18 @@ class AnalyticsController {
       const branchHeaders = ['Branch', 'Avg Score', 'Pass Rate (%)', 'Students'];
       const branchValues = [...new Set(students.map(s => s.branch))];
       const branchRows = branchValues.map(br => {
-        const branchStudents = students.filter(s => s.branch === br).map(s => s.id);
-        const branchScores = allScores.filter(s => branchStudents.includes(s.studentId)).map(s => parseFloat(s.score));
+        const branchStudentIds = students.filter(s => s.branch === br).map(s => s._id.toString());
+        const branchScores = allScores.filter(s => branchStudentIds.includes(s.studentId)).map(s => parseFloat(s.score));
         const avg = branchScores.length ? (branchScores.reduce((a,b) => a+b,0)/branchScores.length).toFixed(1) : 'N/A';
         const pass = branchScores.length ? ((branchScores.filter(x => x >= 50).length / branchScores.length) * 100).toFixed(1) : 'N/A';
-        return [br, avg, pass, branchStudents.length];
+        return [br, avg, pass, branchStudentIds.length];
       });
       const wsBranch = XLSX.utils.aoa_to_sheet([branchHeaders, ...branchRows]);
       XLSX.utils.book_append_sheet(wb, wsBranch, 'Branch Analysis');
 
       const individualHeaders = ['Date', 'Student', 'Student Number', 'Subject', 'Score', 'Grade', 'Status'];
       const individualRows = allScores.map(row => {
-        const student = students.find(s => s.id === row.studentId);
+        const student = students.find(s => s._id.toString() === row.studentId);
         const score = parseFloat(row.score);
         let grade = 'F';
         if (score >= 90) grade = 'A';

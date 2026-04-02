@@ -7,14 +7,11 @@ router.get('/', async (req, res) => {
   try {
     const { studentId, subject } = req.query;
     const where = {};
-    
+
     if (studentId) where.studentId = studentId;
     if (subject) where.subject = subject;
 
-    const quizScores = await QuizScore.findAll({
-      where,
-      order: [['date', 'DESC']]
-    });
+    const quizScores = await QuizScore.find(where).sort({ date: -1 });
 
     res.json(quizScores);
   } catch (error) {
@@ -27,10 +24,7 @@ router.get('/', async (req, res) => {
 router.get('/student/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
-    const quizScores = await QuizScore.findAll({
-      where: { studentId },
-      order: [['date', 'DESC']]
-    });
+    const quizScores = await QuizScore.find({ studentId }).sort({ date: -1 });
 
     res.json(quizScores);
   } catch (error) {
@@ -70,19 +64,23 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { score, subject, type } = req.body;
 
-    const quizScore = await QuizScore.findByPk(id);
+    const quizScore = await QuizScore.findById(id);
 
     if (!quizScore) {
       return res.status(404).json({ error: 'Quiz score not found' });
     }
 
-    await quizScore.update({
-      score: score !== undefined ? score : quizScore.score,
-      subject: subject || quizScore.subject,
-      type: type || quizScore.type
-    });
+    const updated = await QuizScore.findByIdAndUpdate(
+      id,
+      {
+        score: score !== undefined ? score : quizScore.score,
+        subject: subject || quizScore.subject,
+        type: type || quizScore.type
+      },
+      { new: true }
+    );
 
-    res.json(quizScore);
+    res.json(updated);
   } catch (error) {
     console.error('Error updating quiz score:', error);
     res.status(500).json({ error: 'Failed to update quiz score' });
@@ -94,13 +92,13 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const quizScore = await QuizScore.findByPk(id);
+    const quizScore = await QuizScore.findById(id);
 
     if (!quizScore) {
       return res.status(404).json({ error: 'Quiz score not found' });
     }
 
-    await quizScore.destroy();
+    await QuizScore.findByIdAndDelete(id);
 
     res.json({ message: 'Quiz score deleted successfully' });
   } catch (error) {

@@ -1,44 +1,12 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../../config/database');
-
-const Student = sequelize.define('Student', {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true
-  },
-  studentNumber: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  email: {
-    type: DataTypes.STRING
-  },
-  program: {
-    type: DataTypes.STRING
-  },
-  year: {
-    type: DataTypes.INTEGER
-  },
-  semester: {
-    type: DataTypes.INTEGER
-  },
-  branch: {
-    type: DataTypes.STRING
-  },
-  metadata: {
-    type: DataTypes.JSONB,
-    defaultValue: {}
-  }
-}, {
-  timestamps: true,
-  tableName: 'students',
-  underscored: true  // ✅ maps studentNumber → student_number etc.
-});
-
-module.exports = Student;
+const mongoose = require('mongoose');
+const studentSchema = new mongoose.Schema({
+  studentNumber: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
+  email: String,
+  program: String,
+  year: Number,
+  semester: Number,
+  branch: String,
+  metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
+}, { timestamps: true });
+module.exports = mongoose.model('Student', studentSchema);

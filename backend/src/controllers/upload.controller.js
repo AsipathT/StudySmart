@@ -2,21 +2,8 @@ const fs   = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
 
-// ── Graceful model imports (won't crash if PG is down) ────────────────────────
-let QuizScore, Student, ExtractedData, sequelize;
-let pgAvailable = false;
-
-try {
-  const models = require('../models');
-  QuizScore     = models.QuizScore;
-  Student       = models.Student;
-  ExtractedData = models.ExtractedData;
-  const db      = require('../../config/database');
-  sequelize     = db.sequelize;
-  pgAvailable   = true;
-} catch (e) {
-  console.warn('⚠️  Models not loaded (PostgreSQL may be down):', e.message);
-}
+// ── Model imports ─────────────────────────────────────────────────────────────
+const { QuizScore, Student, ExtractedData } = require('../models');
 
 // ── PDF / CSV services (optional) ────────────────────────────────────────────
 let PDFExtractionService, DataNormalizationService;
@@ -33,19 +20,14 @@ try {
 const normalizeStudentId = (val) =>
   String(val || '').replace(/\s+/g, '').toUpperCase();
 
-// ── Helper: is Postgres alive? ────────────────────────────────────────────────
-async function isPostgresUp() {
-  if (!pgAvailable || !sequelize) return false;
-  try { await sequelize.authenticate(); return true; }
-  catch { return false; }
-}
-
 // ── Helper: safe ExtractedData create ────────────────────────────────────────
 async function createExtractionRecord(data) {
-  if (!(await isPostgresUp())) {
-    return { id: 'no-pg-' + Date.now(), update: async () => {} };
+  try {
+    return await ExtractedData.create(data);
+  } catch (e) {
+    console.warn('⚠️  ExtractedData.create failed:', e.message);
+    return { _id: 'no-db-' + Date.now(), update: async () => {} };
   }
-  return ExtractedData.create(data);
 }
 
 // ── Helper: normalize the ID field inside a row object ───────────────────────
@@ -88,8 +70,8 @@ class UploadController {
         });
       }
 
-      // ✅ FIX: Accept studentId sent via FormData so the processor can locate
-      // that student's row and return it directly — no slice(0,N) guessing.
+      // Accept studentId sent via FormData so the processor can locate
+      // that student's row and return it directly
       const studentId = normalizeStudentId(req.body?.studentId || '');
 
       const fileExt = path.extname(req.file.originalname).toLowerCase().replace('.', '');
@@ -158,12 +140,11 @@ class UploadController {
         recordCount: savedRecords.length, normalizedRecords: normalizedRows
       });
 
-      // ✅ Find the requesting student's specific row — no arbitrary slice
       const studentRow = findStudentRow(normalizedRows, studentId);
 
       return {
         recordsCount: savedRecords.length,
-        extractionId: extractionRecord.id,
+        extractionId: extractionRecord._id || extractionRecord.id,
         studentFound: !!studentRow,
         preview: studentRow ? [studentRow] : normalizedRows.slice(0, 5)
       };
@@ -198,12 +179,11 @@ class UploadController {
         recordCount: savedRecords.length, normalizedRecords: normalizedRows
       });
 
-      // ✅ Find the requesting student's specific row — no arbitrary slice
       const studentRow = findStudentRow(normalizedRows, studentId);
 
       return {
         recordsCount: savedRecords.length,
-        extractionId: extractionRecord.id,
+        extractionId: extractionRecord._id || extractionRecord.id,
         studentFound: !!studentRow,
         preview: studentRow ? [studentRow] : normalizedRows.slice(0, 5)
       };
@@ -259,12 +239,11 @@ class UploadController {
         recordCount: savedRecords.length, normalizedRecords: normalizedRows
       });
 
-      // ✅ Find the requesting student's specific row — no arbitrary slice
       const studentRow = findStudentRow(normalizedRows, studentId);
 
       return {
         recordsCount: savedRecords.length,
-        extractionId: extractionRecord.id,
+        extractionId: extractionRecord._id || extractionRecord.id,
         sheetName,
         studentFound: !!studentRow,
         preview: studentRow ? [studentRow] : normalizedRows.slice(0, 5)
@@ -275,13 +254,8 @@ class UploadController {
     }
   }
 
-  // ── Save rows to DB (graceful — skips if PG is down) ─────────────────────
+  // ── Save rows to MongoDB ──────────────────────────────────────────────────
   async saveRows(rows, filePath, formData = {}) {
-    if (!(await isPostgresUp())) {
-      console.warn('⚠️  PostgreSQL down — skipping DB save');
-      return rows;
-    }
-
     const saved = [];
     for (const record of rows) {
       try {
@@ -304,7 +278,7 @@ class UploadController {
         const studentSemester = record.semester || record.Semester || formData.semester || null;
         const studentBranch   = record.branch || record.Branch || formData.branch || null;
 
-        let student = await Student.findOne({ where: { studentNumber } });
+        let student = await Student.findOne({ studentNumber });
         if (!student) {
           student = await Student.create({
             studentNumber,
@@ -318,7 +292,7 @@ class UploadController {
           });
         } else {
           // Update existing student with form data or extracted row values
-          await student.update({
+          await Student.findByIdAndUpdate(student._id, {
             name: formData.fullName || record.name || record.Name || student.name,
             email: record.email || record.Email || student.email,
             program: studentProgram || student.program,
@@ -329,7 +303,7 @@ class UploadController {
         }
 
         const quizScore = await QuizScore.create({
-          studentId: student.id, subject, score, type,
+          studentId: student._id.toString(), subject, score, type,
           date: record.date || new Date(),
           sourceFile: filePath, extractedData: record,
           metadata: { grade, status }
@@ -345,17 +319,14 @@ class UploadController {
   // ── Get extraction status ────────────────────────────────────────────────────
   async getExtractionStatus(req, res) {
     try {
-      if (!(await isPostgresUp())) {
-        return res.json({ success: true, data: null, message: 'Database unavailable' });
-      }
-      const extraction = await ExtractedData.findByPk(req.params.extractionId);
+      const extraction = await ExtractedData.findById(req.params.extractionId);
       if (!extraction) {
         return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Extraction not found' } });
       }
       return res.json({
         success: true,
         data: {
-          id: extraction.id, fileName: extraction.fileName,
+          id: extraction._id, fileName: extraction.fileName,
           status: extraction.status, processedAt: extraction.processedAt,
           recordCount: extraction.recordCount || 0, errors: extraction.validationErrors || []
         }
@@ -368,12 +339,11 @@ class UploadController {
   // ── Get extraction history ───────────────────────────────────────────────────
   async getExtractionHistory(req, res) {
     try {
-      if (!(await isPostgresUp())) return res.json({ success: true, data: [] });
-      const extractions = await ExtractedData.findAll({ order: [['createdAt', 'DESC']], limit: 50, raw: true });
+      const extractions = await ExtractedData.find({}).sort({ createdAt: -1 }).limit(50).lean();
       return res.json({
         success: true,
         data: extractions.map(ext => ({
-          id: ext.id, fileName: ext.fileName, fileType: ext.fileType,
+          id: ext._id, fileName: ext.fileName, fileType: ext.fileType,
           status: ext.status, uploadedAt: ext.createdAt, processedAt: ext.processedAt,
           recordCount: ext.recordCount || 0, validationErrors: ext.validationErrors || []
         }))
@@ -386,10 +356,7 @@ class UploadController {
   // ── Get extraction stats ─────────────────────────────────────────────────────
   async getExtractionStats(req, res) {
     try {
-      if (!(await isPostgresUp())) {
-        return res.json({ success: true, data: { totalUploads: 0, successfulExtractions: 0, failedExtractions: 0, totalRecords: 0 } });
-      }
-      const all = await ExtractedData.findAll({ raw: true });
+      const all = await ExtractedData.find({}).lean();
       return res.json({
         success: true,
         data: {
@@ -407,14 +374,10 @@ class UploadController {
   // ── Update extraction ────────────────────────────────────────────────────────
   async updateExtraction(req, res) {
     try {
-      if (!(await isPostgresUp())) {
-        return res.status(503).json({ success: false, error: { code: 'DB_UNAVAILABLE', message: 'Database unavailable' } });
-      }
-      
       const { extractionId } = req.params;
       const { fileName, fileType, status, recordCount } = req.body;
 
-      const extraction = await ExtractedData.findByPk(extractionId);
+      const extraction = await ExtractedData.findById(extractionId);
       if (!extraction) {
         return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Extraction not found' } });
       }
@@ -431,7 +394,7 @@ class UploadController {
         success: true,
         message: 'Extraction updated successfully',
         data: {
-          id: extraction.id,
+          id: extraction._id,
           fileName: extraction.fileName,
           fileType: extraction.fileType,
           status: extraction.status,
@@ -447,13 +410,12 @@ class UploadController {
   // ── Delete extraction ────────────────────────────────────────────────────────
   async deleteExtraction(req, res) {
     try {
-      if (!(await isPostgresUp())) return res.json({ success: true, message: 'Deleted (DB unavailable)' });
-      const extraction = await ExtractedData.findByPk(req.params.extractionId);
+      const extraction = await ExtractedData.findById(req.params.extractionId);
       if (!extraction) {
         return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Extraction not found' } });
       }
       if (extraction.filePath && fs.existsSync(extraction.filePath)) fs.unlinkSync(extraction.filePath);
-      await extraction.destroy();
+      await extraction.deleteOne();
       return res.json({ success: true, message: 'Extraction deleted successfully' });
     } catch (error) {
       return res.status(500).json({ success: false, error: { code: 'DELETE_ERROR', message: error.message } });
@@ -467,19 +429,18 @@ class UploadController {
       if (!studentId) {
         return res.status(400).json({ success: false, error: { code: 'MISSING_PARAM', message: 'Student ID required' } });
       }
-      if (!(await isPostgresUp())) return res.json({ success: true, data: { studentId, marks: [] } });
 
       const normalizedId = normalizeStudentId(studentId);
-      const student = await Student.findOne({ where: { studentNumber: normalizedId } });
+      const student = await Student.findOne({ studentNumber: normalizedId });
       if (!student) return res.json({ success: true, data: { studentId: normalizedId, marks: [] } });
 
-      const marks = await QuizScore.findAll({ where: { studentId: student.id }, order: [['date', 'DESC']] });
+      const marks = await QuizScore.find({ studentId: student._id.toString() }).sort({ date: -1 });
       return res.json({
         success: true,
         data: {
           studentId: normalizedId,
-          student: { id: student.id, name: student.name, number: student.studentNumber },
-          marks: marks.map(m => ({ subject: m.subject, marks: m.score, assessmentType: m.type, date: m.date, id: m.id }))
+          student: { id: student._id, name: student.name, number: student.studentNumber },
+          marks: marks.map(m => ({ subject: m.subject, marks: m.score, assessmentType: m.type, date: m.date, id: m._id }))
         }
       });
     } catch (error) {

@@ -13,7 +13,13 @@ import {
   ThunderboltOutlined,
   UsergroupAddOutlined,
   GroupOutlined,
-  PlusCircleOutlined
+  PlusCircleOutlined,
+  ClockCircleOutlined,
+  PlayCircleOutlined,
+  TrophyOutlined,
+  LineChartOutlined,
+  RiseOutlined,
+  UserAddOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -31,14 +37,20 @@ const AVATAR_KEY = 'sidebarAvatarUrl';
 // Routes that belong under Performance Predictor
 const PREDICTOR_KEYS = ['/upload', '/analytics', '/predictions', '/chatbot', '/history'];
 
+// Routes that belong under Session Tracker
+const SESSION_TRACKER_KEYS = ['/study-tracker', '/quizzes', '/tracking-summary', '/material-mastery', '/create-students'];
+
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const location  = useLocation();
   const navigate  = useNavigate();
   const { user, logout } = useAuth();
   const [selectedKey,  setSelectedKey]  = useState(location.pathname);
-  const [openKeys,     setOpenKeys]     = useState(() =>
-    PREDICTOR_KEYS.includes(location.pathname) ? ['performance-predictor'] : []
-  );
+  const [openKeys,     setOpenKeys]     = useState(() => {
+    const keys = [];
+    if (PREDICTOR_KEYS.includes(location.pathname)) keys.push('performance-predictor');
+    if (SESSION_TRACKER_KEYS.includes(location.pathname)) keys.push('session-tracker');
+    return keys;
+  });
   const [avatarUrl, setAvatarUrl] = useState(
     () => sessionStorage.getItem(AVATAR_KEY) || null
   );
@@ -75,8 +87,11 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   // Sync selected key + auto-open parent when route changes
   useEffect(() => {
     setSelectedKey(location.pathname);
-    if (PREDICTOR_KEYS.includes(location.pathname) && !collapsed) {
-      setOpenKeys(['performance-predictor']);
+    if (!collapsed) {
+      const newKeys = [];
+      if (PREDICTOR_KEYS.includes(location.pathname)) newKeys.push('performance-predictor');
+      if (SESSION_TRACKER_KEYS.includes(location.pathname)) newKeys.push('session-tracker');
+      if (newKeys.length > 0) setOpenKeys(newKeys);
     }
   }, [location.pathname, collapsed]);
 
@@ -137,6 +152,22 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
    
 
 
+    {
+      key: 'session-tracker',
+      icon: <ClockCircleOutlined />,
+      label: 'Session Tracker',
+      children: [
+        { key: '/study-tracker', icon: <PlayCircleOutlined />, label: 'Sessions' },
+        ...(user?.role !== 'admin' ? [
+          { key: '/quizzes', icon: <TrophyOutlined />, label: 'Quizzes' },
+          { key: '/tracking-summary', icon: <LineChartOutlined />, label: 'Tracking Summary' },
+          { key: '/material-mastery', icon: <RiseOutlined />, label: 'Material Mastery' },
+        ] : []),
+        ...(user?.role === 'admin' ? [
+          { key: '/create-students', icon: <UserAddOutlined />, label: 'Create Students' },
+        ] : []),
+      ],
+    },
     { type: 'divider' },
     { key: '/profile',  icon: <UserOutlined />,   label: 'Profile'   },
     { key: '/settings', icon: <SettingOutlined />, label: 'Settings'  },
