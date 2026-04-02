@@ -531,7 +531,7 @@ const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
           <Text strong style={{ fontSize: 13 }}>Your Marks</Text>
           <Table
             dataSource={preview} columns={columns}
-            rowKey={(_, i) => i} size="small"
+            rowKey="studentNumber" size="small"
             pagination={false}
             style={{ marginTop: 10 }}
             scroll={{ x: true }}
@@ -607,9 +607,15 @@ const UploadPage = () => {
     setLoading(true);
     try {
       const data = await uploadService.getExtractionHistory();
-      if (data?.data?.length > 0) setAllExtractions(data.data);
+      const historyData = data?.data ?? [];
+      setAllExtractions(historyData);
+      sessionStorage.setItem('uploadHistory', JSON.stringify(historyData));
     } catch (e) {
       console.error('Failed to load history:', e);
+      const stored = sessionStorage.getItem('uploadHistory');
+      if (stored) {
+        setAllExtractions(JSON.parse(stored));
+      }
     } finally {
       setLoading(false);
     }
@@ -878,7 +884,7 @@ const UploadPage = () => {
               <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>
             ) : (
               <Table
-                dataSource={extractions} columns={columns} rowKey="id" size="small"
+                dataSource={extractions} columns={columns} rowKey="_id" size="small"
                 pagination={{ pageSize: 8, size: 'small' }}
                 locale={{ emptyText: (
                   <Empty image={Empty.PRESENTED_IMAGE_SIMPLE}

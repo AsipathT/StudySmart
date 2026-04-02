@@ -2,8 +2,36 @@ const fs   = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
 
+<<<<<<< HEAD
 // ── Model imports ─────────────────────────────────────────────────────────────
 const { QuizScore, Student, ExtractedData } = require('../models');
+=======
+// ── Graceful model imports (won't crash if PG is down) ────────────────────────
+let QuizScore, Student, ExtractedData, sequelize;
+let ExtractedDataMongo = null;
+let pgAvailable = false;
+
+try {
+  const models = require('../models');
+  QuizScore     = models.QuizScore;
+  Student       = models.Student;
+  ExtractedData = models.ExtractedData; // Sequelize version preserved
+  const db      = require('../../config/database');
+  sequelize     = db.sequelize;
+  pgAvailable   = true;
+
+  try {
+    ExtractedDataMongo = require('../models/ExtractedDataMongo');
+  } catch (e) {
+    console.warn('⚠️  ExtractedData Mongo model not loaded:', e.message);
+  }
+} catch (e) {
+  console.warn('⚠️  Models not loaded (PostgreSQL may be down):', e.message);
+  try {
+    ExtractedDataMongo = require('../models/ExtractedDataMongo');
+  } catch (_) {}
+}
+>>>>>>> e771304 ([MOD] Upload store logic)
 
 // ── PDF / CSV services (optional) ────────────────────────────────────────────
 let PDFExtractionService, DataNormalizationService;
@@ -28,6 +56,14 @@ async function createExtractionRecord(data) {
     console.warn('⚠️  ExtractedData.create failed:', e.message);
     return { _id: 'no-db-' + Date.now(), update: async () => {} };
   }
+<<<<<<< HEAD
+=======
+  // Track uploader for per-user history.
+  if (!data.uploadedBy && data.metadata?.userId) {
+    data.uploadedBy = data.metadata.userId;
+  }
+  return ExtractedData.create(data);
+>>>>>>> e771304 ([MOD] Upload store logic)
 }
 
 // ── Helper: normalize the ID field inside a row object ───────────────────────
@@ -258,6 +294,8 @@ class UploadController {
   // ── Save rows to MongoDB ──────────────────────────────────────────────────
   async saveRows(rows, filePath, formData = {}) {
     const saved = [];
+    const mongoRows = [];
+
     for (const record of rows) {
       try {
         const rawId =
@@ -313,10 +351,37 @@ class UploadController {
           metadata: { grade, status, uploadedBy: userId }
         });
         saved.push(quizScore);
+
+        // Build Mongo row set while we have normalized row data
+        mongoRows.push({
+          name: record.name || record.Name || formData.fullName || `Student ${studentNumber}`,
+          studentNumber,
+          subject,
+          score: Number.isNaN(score) ? 0 : score,
+          grade,
+          status,
+          branch: studentBranch || '',
+          date: record.date ? new Date(record.date) : new Date(),
+          uploadedBy: userId || '',
+          sourceFile: filePath,
+          metadata: { ...record }
+        });
       } catch (rowError) {
         console.warn('⚠️  Skipping row:', rowError.message);
       }
     }
+
+    // Save parsed rows to MongoDB if connected
+    try {
+      if (ExtractedDataMongo && require('mongoose').connection.readyState === 1 && mongoRows.length > 0) {
+        console.log(`Saving ${mongoRows.length} record(s) to MongoDB as ExtractedData`);
+        const inserted = await ExtractedDataMongo.insertMany(mongoRows, { ordered: false });
+        console.log(`Saved to MongoDB: ${inserted.length} records`);
+      }
+    } catch (mongoErr) {
+      console.error('Error saving parsed rows to MongoDB:', mongoErr.message);
+    }
+
     return saved;
   }
 
@@ -343,6 +408,7 @@ class UploadController {
   // ── Get extraction history ───────────────────────────────────────────────────
   async getExtractionHistory(req, res) {
     try {
+<<<<<<< HEAD
       const extractions = await ExtractedData.find({}).sort({ createdAt: -1 }).limit(50).lean();
       return res.json({
         success: true,
@@ -352,7 +418,69 @@ class UploadController {
           recordCount: ext.recordCount || 0, validationErrors: ext.validationErrors || []
         }))
       });
+=======
+      const mongoose = require('mongoose');
+      const userId = req.user?.id;
+
+      // Prefer Mongo history (new design path)
+      if (ExtractedDataMongo && mongoose.connection.readyState === 1) {
+        console.log('[UploadHistory] Fetching history from MongoDB extracteddatas');
+        const query = {};
+        if (req.user && req.user.role !== 'admin') {
+          query.uploadedBy = userId;
+        }
+
+        const docs = await ExtractedDataMongo.find(query).sort({ createdAt: -1 }).limit(100).lean();
+        console.log(`[UploadHistory] Retrieved ${docs.length} records from MongoDB`);
+
+        const payload = docs.map(doc => ({
+          id: doc._id.toString(),
+          _id: doc._id,
+          name: doc.name,
+          studentNumber: doc.studentNumber,
+          subject: doc.subject,
+          score: doc.score,
+          grade: doc.grade,
+          status: doc.status,
+          branch: doc.branch,
+          date: doc.date,
+          uploadedAt: doc.createdAt,
+          processedAt: doc.updatedAt,
+          uploadedBy: doc.uploadedBy,
+          sourceFile: doc.sourceFile,
+          metadata: doc.metadata
+        }));
+
+        return res.json({ success: true, data: payload });
+      }
+
+      // Fallback to PostgreSQL if Mongo is not available
+      if (!(await isPostgresUp())) return res.json({ success: true, data: [] });
+
+      const where = {};
+      if (req.user && req.user.role !== 'admin') {
+        where.uploadedBy = req.user.id;
+      }
+      const extractions = await ExtractedData.findAll({ where, order: [['createdAt', 'DESC']], limit: 100, raw: true });
+      const payload = extractions.map(ext => ({
+        id: ext.id,
+        _id: ext.id,
+        fileName: ext.fileName,
+        fileType: ext.fileType,
+        status: ext.status,
+        uploadedAt: ext.createdAt,
+        processedAt: ext.processedAt,
+        recordCount: ext.recordCount || 0,
+        validationErrors: ext.validationErrors || [],
+        studentId: ext.metadata?.studentId || null,
+        uploadedBy: ext.uploadedBy || ext.metadata?.userId || null,
+        preview: ext.normalizedRecords || []
+      }));
+
+      return res.json({ success: true, data: payload });
+>>>>>>> e771304 ([MOD] Upload store logic)
     } catch (error) {
+      console.error('UploadHistory error:', error);
       return res.status(500).json({ success: false, error: { code: 'HISTORY_ERROR', message: error.message } });
     }
   }
@@ -581,5 +709,6 @@ module.exports = {
   getExtractionStats:   controller.getExtractionStats.bind(controller),
   updateExtraction:     controller.updateExtraction.bind(controller),
   deleteExtraction:     controller.deleteExtraction.bind(controller),
+  getUserMarks:         controller.getUserMarks.bind(controller),
   getStudentMarks:      controller.getStudentMarks.bind(controller),
 };
