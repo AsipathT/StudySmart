@@ -7,11 +7,14 @@ const allowRoles = require('../middleware/role');
 // ── Safe auth middleware ───────────────────────────────────────────────────────
 // If the auth module fails to load or no token is present,
 // requests still pass through (no hard crash / 401 block).
-let protect;
+let protect, optionalProtect;
 try {
-  protect = require('../middleware/auth').protect;
+  const auth = require('../middleware/auth');
+  protect = auth.protect;
+  optionalProtect = auth.optionalProtect;
 } catch {
   protect = (req, res, next) => next(); // no-op fallback
+  optionalProtect = (req, res, next) => next();
 }
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -25,11 +28,11 @@ router.get('/user-marks', protect, UploadController.getUserMarks);
 // GET  /api/upload/student-marks/:studentId
 router.get('/student-marks/:studentId', protect, UploadController.getStudentMarks);
 
-// GET  /api/upload/history — Admin only
-router.get('/history', protect, allowRoles('admin'), UploadController.getExtractionHistory);
+// GET  /api/upload/history — allow authenticated users + fallback for dev
+router.get('/history', optionalProtect, UploadController.getExtractionHistory);
 
 // GET  /api/upload/stats
-router.get('/stats', protect, UploadController.getExtractionStats);
+router.get('/stats', optionalProtect, UploadController.getExtractionStats);
 
 // GET  /api/upload/extraction/:extractionId
 router.get('/extraction/:extractionId', protect, UploadController.getExtractionStatus);

@@ -462,4 +462,129 @@ class AnalyticsController {
     }
   }
 
+<<<<<<< HEAD
 module.exports = new AnalyticsController();
+=======
+  /**
+   * Get user analytics (authenticated user only)
+   */
+  async getUserAnalytics(req, res) {
+    try {
+      const userId = req.user?.id || req.user?._id?.toString();
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'User not authenticated' }
+        });
+      }
+
+      if (!(await isPostgresUp())) {
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            overallAverage: 0,
+            gpa: 0,
+            subjects: [],
+            recentActivity: []
+          }
+        });
+      }
+
+      // Get all quiz scores for this user
+      const quizScores = await QuizScore.findAll({
+        where: { userId },
+        order: [['date', 'DESC']]
+      });
+
+      if (quizScores.length === 0) {
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            overallAverage: 0,
+            gpa: 0,
+            subjects: [],
+            recentActivity: []
+          }
+        });
+      }
+
+      // Calculate overall statistics
+      const allScores = quizScores.map(q => parseFloat(q.score || 0));
+      const overallAvg = allScores.reduce((a, b) => a + b, 0) / allScores.length;
+      const gpa = this.calculateGPA(allScores);
+
+      // Group by subject
+      const subjectMap = {};
+      for (const score of quizScores) {
+        if (!subjectMap[score.subject]) {
+          subjectMap[score.subject] = [];
+        }
+        subjectMap[score.subject].push(parseFloat(score.score || 0));
+      }
+
+      // Calculate subject analytics
+      const subjectAnalytics = Object.entries(subjectMap).map(([subject, scores]) => {
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        return {
+          subject,
+          average: parseFloat(avg.toFixed(2)),
+          count: scores.length,
+          max: Math.max(...scores),
+          min: Math.min(...scores),
+          grade: this.getGradeForScore(avg),
+          trend: scores.slice(-3)  // last 3 scores for trend
+        };
+      }).sort((a, b) => b.average - a.average);
+
+      return res.json({
+        success: true,
+        data: {
+          userId,
+          overallAverage: parseFloat(overallAvg.toFixed(2)),
+          gpa: parseFloat(gpa.toFixed(2)),
+          totalMarks: quizScores.length,
+          subjects: subjectAnalytics,
+          recentActivity: quizScores.slice(0, 10).map(s => ({
+            subject: s.subject,
+            score: s.score,
+            type: s.type,
+            date: s.date
+          }))
+        }
+      });
+
+    } catch (error) {
+      console.error('User analytics error:', error);
+      return res.status(500).json({
+        success: false,
+        error: { code: 'ANALYTICS_ERROR', message: error.message }
+      });
+    }
+  }
+
+  // ── Helper: Get grade for score ──────────────────────────────────────────────
+  getGradeForScore(score) {
+    if (score >= 90) return 'A+';
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'B+';
+    if (score >= 65) return 'B';
+    if (score >= 60) return 'C+';
+    if (score >= 55) return 'C';
+    if (score >= 50) return 'D';
+    return 'F';
+  }
+
+  // ── Helper: Calculate GPA (0-4.0 scale) ──────────────────────────────────────
+  calculateGPA(scores = []) {
+    if (!scores.length) return 0;
+    const avg = scores.reduce((s, q) => s + parseFloat(q || 0), 0) / scores.length;
+    // Linear mapping: 100% → 4.0, 40% → 0
+    const gpa = Math.max(0, ((avg - 40) / 60) * 4.0);
+    return parseFloat(gpa.toFixed(2));
+  }
+}
+
+module.exports = new AnalyticsController();
+>>>>>>> e771304 ([MOD] Upload store logic)
