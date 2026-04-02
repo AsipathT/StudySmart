@@ -404,6 +404,46 @@ class UploadController {
     }
   }
 
+  // ── Update extraction ────────────────────────────────────────────────────────
+  async updateExtraction(req, res) {
+    try {
+      if (!(await isPostgresUp())) {
+        return res.status(503).json({ success: false, error: { code: 'DB_UNAVAILABLE', message: 'Database unavailable' } });
+      }
+      
+      const { extractionId } = req.params;
+      const { fileName, fileType, status, recordCount } = req.body;
+
+      const extraction = await ExtractedData.findByPk(extractionId);
+      if (!extraction) {
+        return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Extraction not found' } });
+      }
+
+      // Update allowed fields
+      if (fileName) extraction.fileName = fileName;
+      if (fileType) extraction.fileType = fileType;
+      if (status) extraction.status = status;
+      if (recordCount !== undefined) extraction.recordCount = recordCount;
+
+      await extraction.save();
+
+      return res.json({
+        success: true,
+        message: 'Extraction updated successfully',
+        data: {
+          id: extraction.id,
+          fileName: extraction.fileName,
+          fileType: extraction.fileType,
+          status: extraction.status,
+          recordCount: extraction.recordCount,
+          uploadedAt: extraction.createdAt
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({ success: false, error: { code: 'UPDATE_ERROR', message: error.message } });
+    }
+  }
+
   // ── Delete extraction ────────────────────────────────────────────────────────
   async deleteExtraction(req, res) {
     try {
@@ -459,6 +499,7 @@ module.exports = {
   getExtractionStatus:  controller.getExtractionStatus.bind(controller),
   getExtractionHistory: controller.getExtractionHistory.bind(controller),
   getExtractionStats:   controller.getExtractionStats.bind(controller),
+  updateExtraction:     controller.updateExtraction.bind(controller),
   deleteExtraction:     controller.deleteExtraction.bind(controller),
   getStudentMarks:      controller.getStudentMarks.bind(controller),
 };

@@ -73,6 +73,14 @@ class UploadService {
   }
 
   /**
+   * Update extraction (Admin only)
+   */
+  async updateExtraction(extractionId, data) {
+    const response = await api.put(`/upload/extraction/${extractionId}`, data);
+    return response.data;
+  }
+
+  /**
    * Download extracted data
    */
   async downloadExtractedData(extractionId, format = 'json') {

@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Tag, Empty, Button, Row, Col, Space, Typography, Tooltip } from 'antd';
-import { DeleteOutlined, EyeOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Table, Tag, Empty, Button, Row, Col, Space, Typography, Tooltip, Modal, Form, Input, Select, message, Result } from 'antd';
+import { DeleteOutlined, EyeOutlined, DownloadOutlined, ReloadOutlined, EditOutlined } from '@ant-design/icons';
+import { useAuth } from '../hooks/useAuth';
 import uploadService from '../services/upload.service';
 
 const { Title, Text } = Typography;
 
 const HistoryPage = () => {
+  const { user } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm] = Form.useForm();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentRecord, setCurrentRecord] = useState(null);
+
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     loadHistory();
@@ -20,9 +29,56 @@ const HistoryPage = () => {
       setHistory(data.data || []);
     } catch (error) {
       console.error('Failed to load history:', error);
+      message.error('Failed to load history');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (record) => {
+    setCurrentRecord(record);
+    setEditingId(record.id);
+    editForm.setFieldsValue({
+      fileName: record.fileName,
+      fileType: record.fileType,
+      status: record.status,
+      recordCount: record.recordCount
+    });
+    setIsModalVisible(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      await uploadService.updateExtraction(currentRecord.id, values);
+      message.success('Record updated successfully');
+      setIsModalVisible(false);
+      setEditingId(null);
+      loadHistory();
+    } catch (error) {
+      console.error('Failed to update record:', error);
+      message.error('Failed to update record');
+    }
+  };
+
+  const handleDelete = (record) => {
+    Modal.confirm({
+      title: 'Delete Record',
+      content: `Are you sure you want to delete "${record.fileName}"? This action cannot be undone.`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await uploadService.deleteExtraction(record.id);
+          message.success('Record deleted successfully');
+          loadHistory();
+        } catch (error) {
+          console.error('Failed to delete record:', error);
+          message.error('Failed to delete record');
+        }
+      }
+    });
   };
 
   const columns = [
@@ -73,13 +129,43 @@ const HistoryPage = () => {
           <Tooltip title="Download">
             <Button type="text" icon={<DownloadOutlined />} size="small" />
           </Tooltip>
-          <Tooltip title="Delete">
-            <Button type="text" danger icon={<DeleteOutlined />} size="small" />
-          </Tooltip>
+          {isAdmin && (
+            <>
+              <Tooltip title="Edit">
+                <Button 
+                  type="text" 
+                  icon={<EditOutlined />} 
+                  size="small"
+                  onClick={() => handleEdit(record)}
+                />
+              </Tooltip>
+              <Tooltip title="Delete">
+                <Button 
+                  type="text" 
+                  danger 
+                  icon={<DeleteOutlined />} 
+                  size="small"
+                  onClick={() => handleDelete(record)}
+                />
+              </Tooltip>
+            </>
+          )}
         </Space>
       )
     }
   ];
+
+
+  // Admin access check
+  if (!isAdmin) {
+    return (
+      <Result
+        status="403"
+        title="Access Denied"
+        subTitle="Only administrators can access the upload history."
+      />
+    );
+  }
 
   return (
     <div className="history-page">
@@ -109,6 +195,59 @@ const HistoryPage = () => {
           />
         )}
       </Card>
+
+      {/* Edit Modal */}
+      <Modal
+        title="Edit Upload Record"
+        visible={isModalVisible}
+        onOk={handleSaveEdit}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setEditingId(null);
+        }}
+        okText="Save"
+        cancelText="Cancel"
+      >
+        <Form form={editForm} layout="vertical">
+          <Form.Item
+            name="fileName"
+            label="File Name"
+            rules={[{ required: true, message: 'Please input file name' }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="fileType"
+            label="File Type"
+            rules={[{ required: true, message: 'Please select file type' }]}
+          >
+            <Select options={[
+              { label: 'CSV', value: 'csv' },
+              { label: 'EXCEL', value: 'excel' },
+              { label: 'PDF', value: 'pdf' }
+            ]} />
+          </Form.Item>
+          <Form.Item
+            name="status"
+            label="Status"
+            rules={[{ required: true, message: 'Please select status' }]}
+          >
+            <Select options={[
+              { label: 'Pending', value: 'pending' },
+              { label: 'Processing', value: 'processing' },
+              { label: 'Completed', value: 'completed' },
+              { label: 'Failed', value: 'failed' }
+            ]} />
+          </Form.Item>
+          <Form.Item
+            name="recordCount"
+            label="Record Count"
+            rules={[{ required: true, message: 'Please input record count' }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

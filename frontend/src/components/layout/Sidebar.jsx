@@ -118,7 +118,9 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         { key: '/analytics',   icon: <BarChartOutlined />, label: 'Analytics'     },
         { key: '/predictions', icon: <BookOutlined />,     label: 'Predictions'   },
         { key: '/chatbot',     icon: <RobotOutlined />,    label: 'AI Assistant'  },
-        { key: '/history',     icon: <HistoryOutlined />,  label: 'History'       },
+        ...(user?.role === 'admin' ? [
+          { key: '/history',     icon: <HistoryOutlined />,  label: 'History'       },
+        ] : []),
       ],
     },{
   key: 'study-buddy',
