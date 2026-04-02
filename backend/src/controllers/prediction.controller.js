@@ -51,6 +51,36 @@ async function findQuizScores(mongoUser, whereExtra = {}) {
 
 const PredictionController = {
 
+  // GET /api/predictions/user/subjects - Get all subjects with marks
+  async getUserSubjects(req, res) {
+    try {
+      const userId = req.user?.id || req.user?._id?.toString();
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'User not authenticated' });
+      }
+
+      const allScores = await QuizScore.findAll({ where: { userId } });
+      const subjects  = [...new Set(allScores.map(r => r.subject).filter(Boolean))];
+      
+      // Get stats for each subject
+      const subjectStats = subjects.map(subject => {
+        const scores = allScores.filter(s => s.subject === subject).map(s => parseFloat(s.score));
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        return {
+          subject,
+          average: parseFloat(avg.toFixed(2)),
+          count: scores.length,
+          highest: Math.max(...scores),
+          lowest: Math.min(...scores)
+        };
+      });
+
+      return res.json({ success: true, data: subjectStats });
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  },
+
   // GET /api/predictions/subjects
   async getStudentSubjects(req, res) {
     try {

@@ -19,6 +19,9 @@ try {
 // POST /api/upload/upload  — upload a file
 router.post('/upload', protect, upload.single('file'), UploadController.uploadFile);
 
+// GET  /api/upload/user-marks — get marks for authenticated user
+router.get('/user-marks', protect, UploadController.getUserMarks);
+
 // GET  /api/upload/student-marks/:studentId
 router.get('/student-marks/:studentId', protect, UploadController.getStudentMarks);
 

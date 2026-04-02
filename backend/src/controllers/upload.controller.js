@@ -73,20 +73,21 @@ class UploadController {
       // Accept studentId sent via FormData so the processor can locate
       // that student's row and return it directly
       const studentId = normalizeStudentId(req.body?.studentId || '');
+      const userId = req.user?.id || req.user?._id?.toString() || req.body?.userId || '';
 
       const fileExt = path.extname(req.file.originalname).toLowerCase().replace('.', '');
       let result;
 
       switch (fileExt) {
         case 'csv':
-          result = await this.processCSV(req.file, studentId, req.body);
+          result = await this.processCSV(req.file, studentId, req.body, userId);
           break;
         case 'pdf':
-          result = await this.processPDF(req.file, studentId, req.body);
+          result = await this.processPDF(req.file, studentId, req.body, userId);
           break;
         case 'xls':
         case 'xlsx':
-          result = await this.processExcel(req.file, studentId, req.body);
+          result = await this.processExcel(req.file, studentId, req.body, userId);
           break;
         default:
           if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
@@ -118,11 +119,11 @@ class UploadController {
   }
 
   // ── Process CSV ─────────────────────────────────────────────────────────────
-  async processCSV(file, studentId = '', formData = {}) {
+  async processCSV(file, studentId = '', formData = {}, userId = '') {
     const extractionRecord = await createExtractionRecord({
       fileName: file.originalname, fileType: 'csv',
       filePath: file.path, status: 'processing',
-      metadata: { size: file.size }
+      metadata: { size: file.size, userId }
     });
 
     try {
@@ -131,7 +132,7 @@ class UploadController {
       const rows     = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
 
       const normalizedRows = rows.map(normalizeRowId);
-      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData);
+      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId);
 
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
@@ -155,7 +156,7 @@ class UploadController {
   }
 
   // ── Process PDF ─────────────────────────────────────────────────────────────
-  async processPDF(file, studentId = '', formData = {}) {
+  async processPDF(file, studentId = '', formData = {}, userId = '') {
     if (!PDFExtractionService || !DataNormalizationService) {
       throw new Error('PDF processing service not available.');
     }
@@ -163,14 +164,14 @@ class UploadController {
     const extractionRecord = await createExtractionRecord({
       fileName: file.originalname, fileType: 'pdf',
       filePath: file.path, status: 'processing',
-      metadata: { size: file.size }
+      metadata: { size: file.size, userId }
     });
 
     try {
       const pdfData        = await PDFExtractionService.extractFromPDF(file.path);
       const normalizedData = DataNormalizationService.normalizeData(pdfData.extractedData, 'pdf');
       const normalizedRows = normalizedData.map(normalizeRowId);
-      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData);
+      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId);
 
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
@@ -194,11 +195,11 @@ class UploadController {
   }
 
   // ── Process Excel (xlsx / xls) ──────────────────────────────────────────────
-  async processExcel(file, studentId = '', formData = {}) {
+  async processExcel(file, studentId = '', formData = {}, userId = '') {
     const extractionRecord = await createExtractionRecord({
       fileName: file.originalname, fileType: 'excel',
       filePath: file.path, status: 'processing',
-      metadata: { size: file.size }
+      metadata: { size: file.size, userId }
     });
 
     try {
@@ -230,7 +231,7 @@ class UploadController {
       }
 
       const normalizedRows = rows.map(normalizeRowId);
-      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData);
+      const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId);
 
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
 
@@ -288,7 +289,7 @@ class UploadController {
             year:     studentYear || null,
             semester: studentSemester || null,
             branch:   studentBranch || null,
-            metadata: { source: 'file_upload' }
+            metadata: { source: 'file_upload', userId }
           });
         } else {
           // Update existing student with form data or extracted row values
@@ -298,15 +299,18 @@ class UploadController {
             program: studentProgram || student.program,
             year: studentYear || student.year,
             semester: studentSemester || student.semester,
-            branch: studentBranch || student.branch
+            branch: studentBranch || student.branch,
+            metadata: { ...student.metadata, userId }
           });
         }
 
+        // ✅ Create QuizScore with proper userId linkage
         const quizScore = await QuizScore.create({
           studentId: student._id.toString(), subject, score, type,
           date: record.date || new Date(),
-          sourceFile: filePath, extractedData: record,
-          metadata: { grade, status }
+          sourceFile: filePath,
+          extractedData: record,
+          metadata: { grade, status, uploadedBy: userId }
         });
         saved.push(quizScore);
       } catch (rowError) {
@@ -446,6 +450,121 @@ class UploadController {
     } catch (error) {
       return res.status(500).json({ success: false, error: { code: 'FETCH_ERROR', message: error.message } });
     }
+  }
+
+  // ── Get marks by userId (for authenticated user) ──────────────────────────────
+  async getUserMarks(req, res) {
+    try {
+      const userId = req.user?.id || req.user?._id?.toString();
+      if (!userId) {
+        return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'User not authenticated' } });
+      }
+
+      if (!(await isPostgresUp())) {
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            subjects: [],
+            totalMarks: 0,
+            averageMarks: 0,
+            gpa: 0
+          }
+        });
+      }
+
+      // Find all marks for this user
+      const marks = await QuizScore.findAll({
+        where: { userId },
+        order: [['date', 'DESC']]
+      });
+
+      if (marks.length === 0) {
+        return res.json({
+          success: true,
+          data: {
+            userId,
+            subjects: [],
+            totalMarks: 0,
+            averageMarks: 0,
+            gpa: 0
+          }
+        });
+      }
+
+      // Group by subject
+      const bySubject = {};
+      for (const mark of marks) {
+        if (!bySubject[mark.subject]) {
+          bySubject[mark.subject] = [];
+        }
+        bySubject[mark.subject].push(parseFloat(mark.score));
+      }
+
+      // Calculate subject averages and statistics
+      const subjectStats = [];
+      for (const [subject, scores] of Object.entries(bySubject)) {
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const max = Math.max(...scores);
+        const min = Math.min(...scores);
+        subjectStats.push({
+          subject,
+          average: parseFloat(avg.toFixed(2)),
+          max,
+          min,
+          count: scores.length,
+          grade: this.getGradeForScore(avg)
+        });
+      }
+
+      // Calculate overall average
+      const allScores = marks.map(m => parseFloat(m.score));
+      const overallAvg = allScores.reduce((a, b) => a + b, 0) / allScores.length;
+
+      // Calculate GPA (0-4.0 scale)
+      const gpa = this.calculateGPA(allScores);
+
+      return res.json({
+        success: true,
+        data: {
+          userId,
+          subjects: subjectStats.sort((a, b) => b.average - a.average),
+          totalMarks: marks.length,
+          averageMarks: parseFloat(overallAvg.toFixed(2)),
+          gpa: parseFloat(gpa.toFixed(2)),
+          marks: marks.map(m => ({
+            id: m.id,
+            subject: m.subject,
+            score: m.score,
+            type: m.type,
+            date: m.date
+          }))
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({ success: false, error: { code: 'FETCH_ERROR', message: error.message } });
+    }
+  }
+
+  // ── Helper: Get grade for score ──────────────────────────────────────────────
+  getGradeForScore(score) {
+    if (score >= 90) return 'A+';
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'B+';
+    if (score >= 65) return 'B';
+    if (score >= 60) return 'C+';
+    if (score >= 55) return 'C';
+    if (score >= 50) return 'D';
+    return 'F';
+  }
+
+  // ── Helper: Calculate GPA (0-4.0 scale) ──────────────────────────────────────
+  calculateGPA(scores = []) {
+    if (!scores.length) return 0;
+    const avg = scores.reduce((s, q) => s + parseFloat(q || 0), 0) / scores.length;
+    // Linear mapping: 100% → 4.0, 40% → 0
+    const gpa = Math.max(0, ((avg - 40) / 60) * 4.0);
+    return parseFloat(gpa.toFixed(2));
   }
 }
 

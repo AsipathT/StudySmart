@@ -2,6 +2,14 @@ import api from './api';
 
 class AnalyticsService {
   /**
+   * Get user analytics (for authenticated user with uploaded marks)
+   */
+  async getUserAnalytics() {
+    const response = await api.get('/analytics/user');
+    return response.data;
+  }
+
+  /**
    * Get student dashboard
    */
   async getStudentDashboard(studentId) {
