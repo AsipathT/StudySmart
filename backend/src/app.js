@@ -67,6 +67,27 @@ try {
   console.warn('⚠️ quizscore.routes:', e.message);
 }
 
+try {
+  app.use('/api/study-session', require('../src/routes/sessionTracker.routes'));
+  console.log('✅ study-session (session tracker) routes');
+} catch (e) {
+  console.warn('⚠️ sessionTracker.routes:', e.message);
+}
+
+try {
+  app.use('/api/subjects', require('../src/routes/subject.routes'));
+  console.log('✅ subjects routes');
+} catch (e) {
+  console.warn('⚠️ subject.routes:', e.message);
+}
+
+try {
+  app.use('/api/quizzes', require('../src/routes/quiz.routes'));
+  console.log('✅ quizzes routes');
+} catch (e) {
+  console.warn('⚠️ quiz.routes:', e.message);
+}
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({

@@ -1,17 +1,16 @@
 const { QuizScore, Student, StudySession } = require('../models');
 const PredictionService = require('../services/prediction.service');
-const { Op } = require('sequelize');
 
-// ── Helper: find postgres student by mongo user ───────────────────────────────
+// ── Helper: find student by mongo user ───────────────────────────────────────
 async function findStudent(mongoUser) {
   if (!mongoUser) return null;
   try {
     let s = null;
     if (mongoUser.studentId) {
-      s = await Student.findOne({ where: { studentNumber: mongoUser.studentId } });
+      s = await Student.findOne({ studentNumber: mongoUser.studentId });
     }
     if (!s && mongoUser.email) {
-      s = await Student.findOne({ where: { email: mongoUser.email } });
+      s = await Student.findOne({ email: mongoUser.email });
     }
     return s;
   } catch (e) {
@@ -26,28 +25,24 @@ async function findQuizScores(mongoUser, whereExtra = {}) {
 
   // Build a list of possible userId/studentId values to search by
   const possibleIds = new Set();
-  if (student?.id)           possibleIds.add(student.id);
+  if (student?._id)          possibleIds.add(student._id.toString());
   if (mongoUser?.id)         possibleIds.add(mongoUser.id);
   if (mongoUser?._id)        possibleIds.add(String(mongoUser._id));
   if (mongoUser?.studentId)  possibleIds.add(mongoUser.studentId);
   if (mongoUser?.email)      possibleIds.add(mongoUser.email);
 
-  // Try studentId (PG FK) first, then userId (string field)
-  if (student?.id) {
-    const rows = await QuizScore.findAll({
-      where: { studentId: student.id, ...whereExtra },
-      order: [['date', 'ASC']],
-    });
+  // Try studentId (FK) first
+  if (student?._id) {
+    const rows = await QuizScore.find({ studentId: student._id.toString(), ...whereExtra })
+      .sort({ date: 1 });
     if (rows.length > 0) return rows;
   }
 
   // Fallback: search by userId string field
   for (const id of possibleIds) {
     try {
-      const rows = await QuizScore.findAll({
-        where: { userId: id, ...whereExtra },
-        order: [['date', 'ASC']],
-      });
+      const rows = await QuizScore.find({ userId: id, ...whereExtra })
+        .sort({ date: 1 });
       if (rows.length > 0) return rows;
     } catch (_) {}
   }
@@ -90,8 +85,9 @@ const PredictionController = {
       // ── Fetch study sessions (if any) ─────────────────────────────────────
       let studySessions = [];
       try {
-        studySessions = await StudySession.findAll({
-          where: { userId: mongoUser.id || mongoUser._id?.toString() || '', subject },
+        studySessions = await StudySession.find({
+          userId: mongoUser.id || mongoUser._id?.toString() || '',
+          subject,
         });
       } catch (_) {}
 

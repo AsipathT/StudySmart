@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from 'antd';
 import { AuthProvider } from './context/AuthContext';
+import { SessionThemeProvider, useSessionTheme } from './context/SessionThemeContext';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import PrivateRoute from './components/common/PrivateRoute';
+
+const SessionDarkWrapper = ({ children }) => {
+  const { isDark } = useSessionTheme();
+  return isDark
+    ? <div style={{ background: '#020617', margin: '-24px', padding: 0, borderRadius: 8, overflow: 'hidden', minHeight: 'calc(100% + 48px)' }}>{children}</div>
+    : <>{children}</>;
+};
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -23,6 +31,11 @@ import MyGroups from "./pages/MyGroups";
 import JoinedGroups from "./pages/JoinedGroups";
 import AllGroups from "./pages/AllGroups";
 import CreateGroup from "./pages/CreateGroup";
+import StudySessionPage from "./pages/StudySessionPage";
+import TrackingSummaryPage from "./pages/TrackingSummaryPage";
+import QuizPage from "./pages/QuizPage";
+import MaterialMasteryPage from "./pages/MaterialMasteryPage";
+import CreateStudentsPage from "./pages/CreateStudentsPage";
 
 import './App.css';
 
@@ -33,6 +46,7 @@ function App() {
 
   return (
     <AuthProvider>
+      <SessionThemeProvider>
       <Router future={{ v7_relativeSplatPath: true }}>
         <Layout style={{ minHeight: '100vh' }}>
           <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
@@ -172,6 +186,61 @@ function App() {
     </PrivateRoute>
   }
 />
+
+<Route
+  path="/study-tracker"
+  element={
+    <PrivateRoute>
+      <SessionDarkWrapper>
+        <StudySessionPage />
+      </SessionDarkWrapper>
+    </PrivateRoute>
+  }
+/>
+
+<Route
+  path="/quizzes"
+  element={
+    <PrivateRoute>
+      <SessionDarkWrapper>
+        <QuizPage />
+      </SessionDarkWrapper>
+    </PrivateRoute>
+  }
+/>
+
+<Route
+  path="/tracking-summary"
+  element={
+    <PrivateRoute>
+      <SessionDarkWrapper>
+        <TrackingSummaryPage />
+      </SessionDarkWrapper>
+    </PrivateRoute>
+  }
+/>
+
+<Route
+  path="/material-mastery"
+  element={
+    <PrivateRoute>
+      <SessionDarkWrapper>
+        <MaterialMasteryPage />
+      </SessionDarkWrapper>
+    </PrivateRoute>
+  }
+/>
+
+<Route
+  path="/create-students"
+  element={
+    <PrivateRoute roles={['admin']}>
+      <SessionDarkWrapper>
+        <CreateStudentsPage />
+      </SessionDarkWrapper>
+    </PrivateRoute>
+  }
+/>
                 
 
 
@@ -181,6 +250,7 @@ function App() {
           </Layout>
         </Layout>
       </Router>
+      </SessionThemeProvider>
     </AuthProvider>
   );
 }

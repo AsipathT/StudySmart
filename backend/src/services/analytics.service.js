@@ -2,7 +2,7 @@
  * profile-analytics.service.js  —  Backend
  *
  * Reusable calculation methods called by profile.controller.js
- * Handles missing data, PostgreSQL being down, and edge cases gracefully.
+ * Handles missing data and edge cases gracefully.
  */
 const { QuizScore, StudySession, Student } = require('../models');
 
@@ -66,15 +66,11 @@ function getProductiveDays(sessions = []) {
 // ── Subject performance ───────────────────────────────────────────────────────
 async function getSubjectPerformance(studentId) {
   try {
-    const subjects = await QuizScore.findAll({
-      where: { studentId },
-      attributes: ['subject'],
-      group: ['subject'],
-    });
+    const distinctSubjects = await QuizScore.distinct('subject', { studentId });
 
     const results = [];
-    for (const { subject } of subjects) {
-      const rows = await QuizScore.findAll({ where: { studentId, subject } });
+    for (const subject of distinctSubjects) {
+      const rows = await QuizScore.find({ studentId, subject });
       if (!rows.length) continue;
       const avg = rows.reduce((s, q) => s + parseFloat(q.score || 0), 0) / rows.length;
       results.push({
@@ -98,7 +94,7 @@ async function getSubjectPerformance(studentId) {
 // ── Grade distribution ────────────────────────────────────────────────────────
 async function getGradeDistribution(studentId) {
   try {
-    const rows = await QuizScore.findAll({ where: { studentId } });
+    const rows = await QuizScore.find({ studentId });
     const dist = { 'A+':0, A:0, 'B+':0, B:0, 'C+':0, C:0, D:0, F:0 };
     for (const r of rows) {
       const g = getGrade(parseFloat(r.score || 0));
@@ -118,11 +114,9 @@ async function getGradeDistribution(studentId) {
 // ── Performance trend (last 12 quiz scores, grouped by month) ────────────────
 async function getPerformanceTrend(studentId) {
   try {
-    const rows = await QuizScore.findAll({
-      where:   { studentId },
-      order:   [['date', 'ASC']],
-      limit:   24,
-    });
+    const rows = await QuizScore.find({ studentId })
+      .sort({ date: 1 })
+      .limit(24);
     if (!rows.length) return [];
 
     // Group by calendar month
@@ -147,10 +141,7 @@ async function getPerformanceTrend(studentId) {
 // ── Semester GPA trend (for dashboard) ────────────────────────────────────────
 async function getSemesterGpaTrend(studentId) {
   try {
-    const rows = await QuizScore.findAll({
-      where: { studentId },
-      order: [['date', 'ASC']],
-    });
+    const rows = await QuizScore.find({ studentId }).sort({ date: 1 });
     if (!rows.length) return [];
 
     // Group scores into chunks of ~10 as "semesters"
@@ -158,7 +149,6 @@ async function getSemesterGpaTrend(studentId) {
     const semesters= [];
     for (let i = 0; i < rows.length; i += semSize) {
       const chunk = rows.slice(i, i + semSize);
-      const avg   = chunk.reduce((s,r)=>s+parseFloat(r.score||0),0)/chunk.length;
       const semNum= semesters.length + 1;
       semesters.push({
         sem: `S${semNum > 2 ? (semNum%2||2) : semNum} Y${Math.ceil(semNum/2)}`,
@@ -173,7 +163,7 @@ async function getSemesterGpaTrend(studentId) {
 async function calculatePerformanceAnalytics(studentId, subject = null) {
   try {
     const where = subject ? { studentId, subject } : { studentId };
-    const rows  = await QuizScore.findAll({ where });
+    const rows  = await QuizScore.find(where);
     if (!rows.length) return null;
 
     const scores = rows.map(r => parseFloat(r.score || 0));
@@ -193,7 +183,7 @@ async function calculatePerformanceAnalytics(studentId, subject = null) {
 // ── Subject-level analytics (called by analytics routes) ─────────────────────
 async function calculateSubjectAnalytics(subject) {
   try {
-    const rows = await QuizScore.findAll({ where: { subject } });
+    const rows = await QuizScore.find({ subject });
     if (!rows.length) return null;
     const scores = rows.map(r => parseFloat(r.score || 0));
     return {
@@ -230,8 +220,8 @@ async function buildProfileAnalytics(studentId, userId) {
     gradeDistribution,
     semesterGpaTrend,
   ] = await Promise.allSettled([
-    QuizScore.findAll({ where:{ studentId }, order:[['date','DESC']] }).catch(()=>[]),
-    StudySession.findAll({ where:{ userId }, order:[['date','DESC']] }).catch(()=>[]),
+    QuizScore.find({ studentId }).sort({ date: -1 }).catch(()=>[]),
+    StudySession.find({ userId }).sort({ date: -1 }).catch(()=>[]),
     getSubjectPerformance(studentId),
     getPerformanceTrend(studentId),
     getGradeDistribution(studentId),
