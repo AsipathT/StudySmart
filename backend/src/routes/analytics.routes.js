@@ -6,6 +6,9 @@ const { protect, authorize } = require('../middleware/auth');
 // Student dashboard (students can access their own)
 router.get('/student/:studentId', protect, AnalyticsController.getStudentDashboard);
 
+// User analytics (authenticated user only) - uses uploaded marks
+router.get('/user', protect, AnalyticsController.getUserAnalytics);
+
 // Subject analytics (teachers/admins only)
 router.get('/subject/:subject', protect, authorize('teacher', 'admin'), AnalyticsController.getSubjectAnalytics);
 
