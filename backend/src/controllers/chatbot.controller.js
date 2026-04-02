@@ -27,7 +27,7 @@ class ChatbotController {
         try {
           const [analytics, student] = await Promise.all([
             AnalyticsService.calculatePerformanceAnalytics(studentId),
-            Student.findByPk(studentId),
+            Student.findById(studentId).catch(() => null),
           ]);
 
           const avg = analytics?.statistics?.average

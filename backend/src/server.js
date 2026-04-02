@@ -12,13 +12,6 @@ const startServer = async () => {
     console.warn('⚠️ MongoDB unavailable:', e.message);
   }
 
-  try {
-    const { connectPostgreSQL } = require('../config/database');
-    await connectPostgreSQL();
-  } catch (e) {
-    console.warn('⚠️ PostgreSQL unavailable:', e.message);
-  }
-
   app.listen(PORT, () => {
     console.log(`\n✅ Server running on port ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/health`);

@@ -9,16 +9,16 @@ const { Student, QuizScore, StudySession } = require('../models');
 const path = require('path');
 const fs   = require('fs');
 
-// ── find postgres student — NO userId column ──────────────────────────────────
+// ── find student by mongo user ────────────────────────────────────────────────
 async function findStudent(mongoUser) {
   if (!mongoUser) return null;
   try {
     let s = null;
     if (mongoUser.studentId) {
-      s = await Student.findOne({ where: { studentNumber: mongoUser.studentId } });
+      s = await Student.findOne({ studentNumber: mongoUser.studentId });
     }
     if (!s && mongoUser.email) {
-      s = await Student.findOne({ where: { email: mongoUser.email } });
+      s = await Student.findOne({ email: mongoUser.email });
     }
     return s;
   } catch (e) {
@@ -85,12 +85,10 @@ function weeklyTotal(sessions = []) {
 // ── subject performance from QuizScore ────────────────────────────────────────
 async function getSubjectPerf(studentId) {
   try {
-    const subjects = await QuizScore.findAll({
-      where: { studentId }, attributes: ['subject'], group: ['subject'],
-    });
+    const distinctSubjects = await QuizScore.distinct('subject', { studentId });
     const out = [];
-    for (const { subject } of subjects) {
-      const rows = await QuizScore.findAll({ where: { studentId, subject } });
+    for (const subject of distinctSubjects) {
+      const rows = await QuizScore.find({ studentId, subject });
       const avg  = rows.reduce((s, q) => s + parseFloat(q.score || 0), 0) / rows.length;
       // Include grade from metadata if available (uploaded Excel had Grade column)
       const latestGrade = rows[0]?.metadata?.grade || getLetterGrade(avg);
@@ -116,9 +114,9 @@ async function getSubjectPerf(studentId) {
 // ── performance trend by month ─────────────────────────────────────────────────
 async function getPerfTrend(studentId) {
   try {
-    const rows = await QuizScore.findAll({
-      where: { studentId }, order: [['date','ASC']], limit: 24,
-    });
+    const rows = await QuizScore.find({ studentId })
+      .sort({ date: 1 })
+      .limit(24);
     if (!rows.length) return [];
     const byMonth = {};
     for (const r of rows) {
@@ -160,13 +158,14 @@ class ProfileController {
       let quizScores = [], studySessions = [], subjectPerf = [], perfTrend = [];
       try {
         if (student) {
+          const sid = student._id.toString();
           [quizScores, studySessions] = await Promise.all([
-            QuizScore.findAll({ where:{ studentId: student.id }, order:[['date','DESC']] }),
-            StudySession.findAll({ where:{ userId: req.user.id }, order:[['date','DESC']] }).catch(()=>[]),
+            QuizScore.find({ studentId: sid }).sort({ date: -1 }),
+            StudySession.find({ userId: req.user.id }).sort({ date: -1 }).catch(()=>[]),
           ]);
           [subjectPerf, perfTrend] = await Promise.all([
-            getSubjectPerf(student.id),
-            getPerfTrend(student.id),
+            getSubjectPerf(sid),
+            getPerfTrend(sid),
           ]);
         }
       } catch (e) { console.warn('analytics (non-fatal):', e.message); }
@@ -278,10 +277,10 @@ class ProfileController {
             if (v !== undefined) metaMerge[k] = v;
           }
           pgFields.metadata = { ...student.metadata, ...metaMerge };
-          await Student.update(pgFields, { where: { id: student.id } });
+          await Student.findByIdAndUpdate(student._id, pgFields);
         }
-      } catch (pgErr) {
-        console.warn('PG update (non-fatal):', pgErr.message);
+      } catch (updateErr) {
+        console.warn('Student update (non-fatal):', updateErr.message);
       }
 
       return res.json({ success:true, message:'Profile updated successfully' });
@@ -310,7 +309,7 @@ class ProfileController {
             const old = path.join(__dirname, '..', cleanPath);
             if (fs.existsSync(old)) fs.unlinkSync(old);
           }
-          await Student.update({ metadata: { ...student.metadata, avatarUrl: avatarPath } }, { where: { id: student.id } });
+          await Student.findByIdAndUpdate(student._id, { metadata: { ...student.metadata, avatarUrl: avatarPath } });
           updated = true;
         }
       } catch (err) {
@@ -363,13 +362,14 @@ class ProfileController {
       const mongoUser = await User.findById(req.user.id).select('studentId email');
       const student   = await findStudent(mongoUser);
       if (!student) return res.json({ success:true, data:[] });
+      const sid = student._id.toString();
       const [quizzes, sessions] = await Promise.all([
-        QuizScore.findAll({ where:{ studentId: student.id }, order:[['date','DESC']], limit:10 }),
-        StudySession.findAll({ where:{ userId: req.user.id }, order:[['date','DESC']], limit:10 }).catch(()=>[]),
+        QuizScore.find({ studentId: sid }).sort({ date: -1 }).limit(10),
+        StudySession.find({ userId: req.user.id }).sort({ date: -1 }).limit(10).catch(()=>[]),
       ]);
       const activities = [
-        ...quizzes.map(q=>({ id:`q${q.id}`, type:'quiz', action:`Completed ${q.subject}`, score:parseFloat(q.score), date:q.date })),
-        ...sessions.map(s=>({ id:`s${s.id}`, type:'study', action:`Studied ${s.subject||'session'}`, hours:parseFloat(s.hoursStudied||0), date:s.date })),
+        ...quizzes.map(q=>({ id:`q${q._id}`, type:'quiz', action:`Completed ${q.subject}`, score:parseFloat(q.score), date:q.date })),
+        ...sessions.map(s=>({ id:`s${s._id}`, type:'study', action:`Studied ${s.subject||'session'}`, hours:parseFloat(s.hoursStudied||0), date:s.date })),
       ].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,15);
       return res.json({ success:true, data:activities });
     } catch (err) {
@@ -384,7 +384,8 @@ class ProfileController {
       const student   = await findStudent(mongoUser);
       const ach = [{ id:1, name:'Profile Created', icon:'✅', date: mongoUser.createdAt?.toISOString().split('T')[0]||'', color:'#059669' }];
       if (student) {
-        const scores = await QuizScore.findAll({ where:{ studentId: student.id } });
+        const sid = student._id.toString();
+        const scores = await QuizScore.find({ studentId: sid });
         if (scores.length>=1)  ach.push({ id:2, name:'First Upload',    icon:'📁', date:'', color:'#2563eb' });
         if (scores.length>=10) ach.push({ id:3, name:'Quiz Veteran',    icon:'🎯', date:'', color:'#7c3aed' });
         const avg = scores.length ? scores.reduce((s,q)=>s+parseFloat(q.score||0),0)/scores.length : 0;
@@ -398,7 +399,7 @@ class ProfileController {
   // ── GET /api/profile/study-stats ─────────────────────────────────────────────
   async getStudyStats(req, res) {
     try {
-      const sessions = await StudySession.findAll({ where:{ userId:req.user.id }, order:[['date','DESC']] }).catch(()=>[]);
+      const sessions = await StudySession.find({ userId: req.user.id }).sort({ date: -1 }).catch(()=>[]);
       const total = sessions.reduce((s,ss)=>s+parseFloat(ss.hoursStudied||0),0);
       return res.json({ success:true, data:{
         dailyAverage: sessions.length ? parseFloat((total/sessions.length).toFixed(1)) : 0,
@@ -415,7 +416,7 @@ class ProfileController {
     try {
       const u = await User.findById(req.user.id).select('studentId email');
       const s = await findStudent(u);
-      if (s) await Student.update({ metadata:{ ...s.metadata, notificationSettings:req.body } }, { where:{ id:s.id } });
+      if (s) await Student.findByIdAndUpdate(s._id, { metadata:{ ...s.metadata, notificationSettings:req.body } });
       return res.json({ success:true, message:'Settings saved' });
     } catch { return res.status(500).json({ success:false, message:'Failed' }); }
   }
@@ -425,7 +426,7 @@ class ProfileController {
     try {
       const u = await User.findById(req.user.id).select('studentId email');
       const s = await findStudent(u);
-      if (s) await Student.update({ metadata:{ ...s.metadata, privacySettings:req.body } }, { where:{ id:s.id } });
+      if (s) await Student.findByIdAndUpdate(s._id, { metadata:{ ...s.metadata, privacySettings:req.body } });
       return res.json({ success:true, message:'Settings saved' });
     } catch { return res.status(500).json({ success:false, message:'Failed' }); }
   }
@@ -439,7 +440,7 @@ class ProfileController {
       if (s) {
         const linked = s.metadata?.linkedAccounts || {};
         linked[provider] = { connected:true, connectedAt:new Date().toISOString(), ...req.body };
-        await Student.update({ metadata:{ ...s.metadata, linkedAccounts:linked } }, { where:{ id:s.id } });
+        await Student.findByIdAndUpdate(s._id, { metadata:{ ...s.metadata, linkedAccounts:linked } });
       }
       return res.json({ success:true, message:`${provider} linked` });
     } catch { return res.status(500).json({ success:false, message:'Failed' }); }
@@ -453,7 +454,7 @@ class ProfileController {
       if (s) {
         const linked = s.metadata?.linkedAccounts || {};
         delete linked[provider];
-        await Student.update({ metadata:{ ...s.metadata, linkedAccounts:linked } }, { where:{ id:s.id } });
+        await Student.findByIdAndUpdate(s._id, { metadata:{ ...s.metadata, linkedAccounts:linked } });
       }
       return res.json({ success:true, message:`${provider} unlinked` });
     } catch { return res.status(500).json({ success:false, message:'Failed' }); }

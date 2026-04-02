@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Button, Space, Badge, Avatar, Dropdown } from 'antd';
+import { Layout, Button, Space, Badge, Avatar, Dropdown, Tooltip } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -7,35 +7,36 @@ import {
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
+  BulbOutlined,
+  BulbFilled,
 } from '@ant-design/icons';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useSessionTheme } from '../../context/SessionThemeContext';
 import './Header.css';
 
 const { Header: AntHeader } = Layout;
 
+const SESSION_TRACKER_ROUTES = [
+  '/study-tracker',
+  '/quizzes',
+  '/tracking-summary',
+  '/material-mastery',
+  '/create-students',
+];
+
 const Header = ({ collapsed, setCollapsed }) => {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useSessionTheme();
+  const location = useLocation();
+
+  const isSessionRoute = SESSION_TRACKER_ROUTES.includes(location.pathname);
 
   const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
-    },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Settings',
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: logout,
-    },
+    { key: 'profile',  icon: <UserOutlined />,   label: 'Profile'  },
+    { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
+    { type: 'divider' },
+    { key: 'logout', icon: <LogoutOutlined />, label: 'Logout', onClick: logout },
   ];
 
   return (
@@ -52,6 +53,22 @@ const Header = ({ collapsed, setCollapsed }) => {
 
       <div className="header-right">
         <Space size="middle">
+
+          {isSessionRoute && (
+            <Tooltip title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}>
+              <Button
+                type="text"
+                onClick={toggleTheme}
+                className="theme-toggle-btn"
+                icon={
+                  isDark
+                    ? <BulbFilled style={{ color: '#facc15', fontSize: 18 }} />
+                    : <BulbOutlined style={{ fontSize: 18 }} />
+                }
+              />
+            </Tooltip>
+          )}
+
           <Badge count={5} dot>
             <Button type="text" icon={<BellOutlined />} className="notification-btn" />
           </Badge>

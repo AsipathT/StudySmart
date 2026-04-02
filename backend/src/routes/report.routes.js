@@ -20,16 +20,16 @@ const { Student, QuizScore, StudySession } = require('../models');
 // script:    backend/src/scripts/generate_report.py
 const SCRIPT = path.resolve(__dirname, '..', 'scripts', 'generate_report.py');
 
-// ── Helper: find postgres student ────────────────────────────────────────────
+// ── Helper: find student ─────────────────────────────────────────────────────
 async function findStudent(mongoUser) {
   if (!mongoUser) return null;
   try {
     let s = null;
     if (mongoUser.studentId) {
-      s = await Student.findOne({ where: { studentNumber: mongoUser.studentId } });
+      s = await Student.findOne({ studentNumber: mongoUser.studentId });
     }
     if (!s && mongoUser.email) {
-      s = await Student.findOne({ where: { email: mongoUser.email } });
+      s = await Student.findOne({ email: mongoUser.email });
     }
     return s;
   } catch { return null; }
@@ -73,8 +73,8 @@ router.get('/pdf', protect, async (req, res) => {
     if (student) {
       try {
         [quizScores, studySessions] = await Promise.all([
-          QuizScore.findAll({ where: { studentId: student.id }, order: [['date', 'ASC']] }),
-          StudySession.findAll({ where: { userId: req.user.id } }).catch(() => []),
+          QuizScore.find({ studentId: student._id.toString() }).sort({ date: 1 }),
+          StudySession.find({ userId: req.user.id }).catch(() => []),
         ]);
 
         // Group by subject
