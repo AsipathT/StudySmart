@@ -163,25 +163,46 @@
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.mastery-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* Per-tile gradients */
+.mastery-stat-card[data-stat="total"] {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border: none;
+}
+.mastery-stat-card[data-stat="mastered"] {
+  background: linear-gradient(135deg, #4ade80, #16a34a);
+  border: none;
+}
+.mastery-stat-card[data-stat="in-progress"] {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  border: none;
+}
+.mastery-stat-card[data-stat="not-started"] {
+  background: linear-gradient(135deg, #f87171, #dc2626);
+  border: none;
+}
+.mastery-stat-card[data-stat="avg"] {
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  border: none;
 }
 .mastery-stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--stat-color, #818cf8);
-  opacity: 0.7;
-  border-radius: 14px 14px 0 0;
+  display: none;
 }
 .mastery-stat-icon {
   font-size: 14px;
-  color: var(--stat-color, #818cf8);
+  color: rgba(255,255,255,0.85);
   margin-bottom: 8px;
 }
 .mastery-stat-value {
   font-size: 24px;
   font-weight: 900;
-  color: var(--stat-color, #818cf8);
+  color: #fff;
   line-height: 1;
   font-family: 'SF Mono', 'Fira Code', monospace;
   margin-bottom: 4px;
@@ -189,7 +210,7 @@
 .mastery-stat-label {
   font-size: 10px;
   font-weight: 700;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.75);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -609,4 +630,113 @@
   text-align: center;
   padding: 80px 0;
   color: rgba(255,255,255,0.25);
+}
+
+/* ══════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+══════════════════════════════════════════════════════ */
+
+.mastery-page.light-theme {
+  color: #000;
+}
+
+.light-theme .mastery-title {
+  color: #000;
+}
+.light-theme .mastery-subtitle {
+  color: rgba(0,0,0,0.5);
+}
+.light-theme .mastery-refresh-btn {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.12);
+  color: rgba(0,0,0,0.55);
+}
+.light-theme .mastery-refresh-btn:hover {
+  background: rgba(0,0,0,0.08);
+  color: #000;
+}
+
+/* Light theme — soft pastel-to-medium gradients */
+.light-theme .mastery-stat-card[data-stat="total"] {
+  background: linear-gradient(135deg, #c7d2fe, #a5b4fc);
+}
+.light-theme .mastery-stat-card[data-stat="mastered"] {
+  background: linear-gradient(135deg, #bbf7d0, #86efac);
+}
+.light-theme .mastery-stat-card[data-stat="in-progress"] {
+  background: linear-gradient(135deg, #fef08a, #fde047);
+}
+.light-theme .mastery-stat-card[data-stat="not-started"] {
+  background: linear-gradient(135deg, #fecaca, #fca5a5);
+}
+.light-theme .mastery-stat-card[data-stat="avg"] {
+  background: linear-gradient(135deg, #bae6fd, #93c5fd);
+}
+.light-theme .mastery-stat-value,
+.light-theme .mastery-stat-icon {
+  color: #1e293b;
+}
+.light-theme .mastery-stat-label {
+  color: rgba(15,23,42,0.6);
+}
+.light-theme .mastery-stat-label {
+  color: rgba(0,0,0,0.45);
+}
+
+.light-theme .mastery-card {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(0,0,0,0.08);
+}
+.light-theme .mastery-card-header {
+  color: #000;
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+
+.light-theme .mastery-subject-section {
+  background: rgba(255,255,255,0.8);
+  border-color: rgba(0,0,0,0.08);
+}
+
+.light-theme .mastery-mat-row {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.07);
+}
+.light-theme .mastery-mat-row:hover {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.12);
+}
+.light-theme .mastery-mat-name {
+  color: #000;
+}
+.light-theme .mastery-mat-unit {
+  color: rgba(0,0,0,0.45);
+}
+
+.light-theme .mastery-breakdown-item {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.07);
+}
+.light-theme .mastery-breakdown-label {
+  color: #000;
+}
+.light-theme .mastery-breakdown-desc {
+  color: rgba(0,0,0,0.5);
+}
+
+.light-theme .mastery-legend-name {
+  color: rgba(0,0,0,0.6);
+}
+
+.light-theme .mastery-empty {
+  color: rgba(0,0,0,0.35);
+}
+
+.light-theme .mastery-heat-cell {
+  border-color: rgba(0,0,0,0.06);
+}
+.light-theme .mastery-heat-count {
+  color: rgba(0,0,0,0.6);
+}
+.light-theme .mastery-legend-cell {
+  border-color: rgba(0,0,0,0.06);
 }

@@ -18,11 +18,14 @@ import {
   RightOutlined,
   CloseOutlined,
   CheckCircleOutlined,
+  SortAscendingOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import axios from 'axios';
 import studySessionService from '../services/studySessionService';
 import subjectService from '../services/subjectService';
 import { useAuth } from '../hooks/useAuth';
+import { useSessionTheme } from '../context/SessionThemeContext';
 import './TrackingSummaryPage.css';
 
 const { RangePicker } = DatePicker;
@@ -74,6 +77,15 @@ const fmtDateFull = (d) => d ? new Date(d).toLocaleDateString([], { weekday: 'lo
 
 // ── Detail Modal ──────────────────────────────────────────────────────────────
 const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
+  const { isDark } = useSessionTheme();
+  const t = {
+    primary:   isDark ? '#f1f5f9'                : '#000',
+    body:      isDark ? '#e2e8f0'                : '#000',
+    muted:     isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.55)',
+    dim:       isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.45)',
+    faint:     isDark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.38)',
+    veryfaint: isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.28)',
+  };
   if (!session) return null;
 
   const subj         = subjects.find(s => s.name === session.subject);
@@ -103,7 +115,7 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
       width={660}
       closable={false}
       styles={{
-        content: { background: '#0b1222', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 0, overflow: 'hidden', maxHeight: '90vh', overflowY: 'auto' },
+        content: { background: isDark ? '#0b1222' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.1)', borderRadius: 20, padding: 0, overflow: 'hidden', maxHeight: '90vh', overflowY: 'auto' },
         mask:    { backdropFilter: 'blur(6px)', background: 'rgba(0,0,0,0.65)' },
       }}
     >
@@ -161,8 +173,8 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
         {isAdmin && session.userId && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 10, marginBottom: 14 }}>
             <UserOutlined style={{ color: '#818cf8', fontSize: 14 }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>{session.userId.name || 'Unknown'}</span>
-            {session.userId.email && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginLeft: 6 }}>{session.userId.email}</span>}
+            <span style={{ fontSize: 13, fontWeight: 700, color: t.body }}>{session.userId.name || 'Unknown'}</span>
+            {session.userId.email && <span style={{ fontSize: 11, color: t.dim, marginLeft: 6 }}>{session.userId.email}</span>}
           </div>
         )}
 
@@ -173,10 +185,10 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ClockCircleOutlined style={{ color: '#60a5fa', fontSize: 13 }} />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Total Session</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Total Session</span>
             </div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#60a5fa', fontFamily: 'monospace' }}>{formatTime(session.duration)}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>Wall-clock time</div>
+            <div style={{ fontSize: 11, color: t.faint, marginTop: 3 }}>Wall-clock time</div>
           </div>
 
           <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 16, padding: '16px 18px' }}>
@@ -184,10 +196,10 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ThunderboltOutlined style={{ color: '#34d399', fontSize: 13 }} />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Time</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Time</span>
             </div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#34d399', fontFamily: 'monospace' }}>{formatTime(session.workedTime || 0)}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>Active pomodoro time</div>
+            <div style={{ fontSize: 11, color: t.faint, marginTop: 3 }}>Active pomodoro time</div>
           </div>
 
           <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 16, padding: '16px 18px' }}>
@@ -195,10 +207,10 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(251,191,36,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <PauseCircleOutlined style={{ color: '#fbbf24', fontSize: 13 }} />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Break / Idle</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Break / Idle</span>
             </div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#fbbf24', fontFamily: 'monospace' }}>{formatTime(breakTime)}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>Non-focus time</div>
+            <div style={{ fontSize: 11, color: t.faint, marginTop: 3 }}>Non-focus time</div>
           </div>
 
           <div style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 16, padding: '16px 18px' }}>
@@ -206,10 +218,10 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <TrophyOutlined style={{ color: '#818cf8', fontSize: 13 }} />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Rate</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Rate</span>
             </div>
             <div style={{ fontSize: 22, fontWeight: 900, color: '#818cf8', fontFamily: 'monospace' }}>{focusRate}%</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: t.faint, marginTop: 3 }}>
               {focusRate >= 70 ? 'Excellent' : focusRate >= 40 ? 'Good' : focusRate > 0 ? 'Can improve' : 'No pomodoro used'}
             </div>
           </div>
@@ -219,7 +231,7 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
         <div style={{ background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.15)', borderRadius: 16, padding: '18px 20px', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 16 }}>🍅</span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#f1f5f9', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pomodoro Summary</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: t.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pomodoro Summary</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 12 }}>
             {[
@@ -229,14 +241,14 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
               { label: 'Avg / Interval', value: avgPerInterval > 0 ? `${avgPerInterval}m` : '—',   sub: 'avg per round',   color: '#f43f5e' },
             ].map(s => (
               <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '11px 13px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.32)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{s.label}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{s.label}</div>
                 <div style={{ fontSize: 19, fontWeight: 900, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)', marginTop: 1 }}>{s.sub}</div>
+                <div style={{ fontSize: 10, color: t.veryfaint, marginTop: 1 }}>{s.sub}</div>
               </div>
             ))}
           </div>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.32)', marginBottom: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: t.dim, marginBottom: 4 }}>
               <span>Focus efficiency</span><span style={{ fontWeight: 700 }}>{focusRate}%</span>
             </div>
             <div style={{ height: 6, borderRadius: 100, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
@@ -247,7 +259,7 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
 
         {/* ── Session Details ── */}
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '18px 20px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>Session Details</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>Session Details</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
             {[
               { label: 'Subject',          value: session.subject },
@@ -258,8 +270,8 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
               { label: 'Date',             value: startTime ? startTime.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '—' },
             ].map(d => (
               <div key={d.label}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{d.label}</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.value}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{d.label}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: t.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.value}</div>
               </div>
             ))}
           </div>
@@ -272,76 +284,115 @@ const SessionDetailModal = ({ session, subjects, isAdmin, onClose }) => {
 
 // ── Compact Session Tile ──────────────────────────────────────────────────────
 const SessionTile = ({ session, subjects, isAdmin, onClick }) => {
-  const subj      = subjects.find(s => s.name === session.subject);
-  const gradient  = getSubjectGradient(subj?.color);
-  const icon      = getSubjectIcon(subj?.icon);
-  const hasWork   = (session.workedTime || 0) > 0;
-  const focusRate = hasWork && session.duration > 0
+  const { isDark } = useSessionTheme();
+  const t = {
+    primary:   isDark ? '#f1f5f9'               : '#0f172a',
+    muted:     isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)',
+    dim:       isDark ? 'rgba(255,255,255,0.32)' : 'rgba(0,0,0,0.42)',
+    faint:     isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.3)',
+    veryfaint: isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.22)',
+  };
+
+  const subj       = subjects.find(s => s.name === session.subject);
+  const gradient   = getSubjectGradient(subj?.color);
+  const accentColor = subj?.color?.startsWith('#') ? subj.color : '#6366f1';
+  const icon       = getSubjectIcon(subj?.icon);
+  const hasWork    = (session.workedTime || 0) > 0;
+  const focusRate  = hasWork && session.duration > 0
     ? Math.round((session.workedTime / session.duration) * 100) : null;
 
-  const rateColor = focusRate === null ? 'rgba(255,255,255,0.25)'
+  const focusColor = focusRate === null ? t.dim
     : focusRate >= 70 ? '#4ade80'
     : focusRate >= 40 ? '#818cf8'
     : '#fbbf24';
 
+  const focusBg = focusRate === null ? 'transparent'
+    : focusRate >= 70 ? 'rgba(74,222,128,0.12)'
+    : focusRate >= 40 ? 'rgba(129,140,248,0.12)'
+    : 'rgba(251,191,36,0.12)';
+
   return (
-    <div className="ts-compact-tile" onClick={onClick}>
-      {/* Left gradient bar */}
-      <div style={{ width: 4, background: gradient, borderRadius: '12px 0 0 12px', flexShrink: 0, alignSelf: 'stretch' }} />
+    <div className="ts-compact-tile" onClick={onClick} style={{ '--accent': accentColor }}>
+
+      {/* Left accent bar */}
+      <div className="ts-tile-bar" style={{ background: gradient }} />
 
       {/* Subject icon */}
-      <div style={{
-        width: 32, height: 32, borderRadius: 9, background: gradient, flexShrink: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 14, color: '#fff',
-      }}>{icon}</div>
+      <div className="ts-tile-icon" style={{ background: gradient }}>
+        {icon}
+      </div>
 
-      {/* Subject + Unit */}
+      {/* Main info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#818cf8', letterSpacing: '0.3px' }}>
+        {/* Row 1: subject name + admin user */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: t.primary, letterSpacing: '-0.2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {session.subject}
           </span>
+          {session.unitName && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 100,
+              background: `${accentColor}1a`, color: accentColor,
+              border: `1px solid ${accentColor}33`, whiteSpace: 'nowrap', flexShrink: 0,
+            }}>{session.unitName}</span>
+          )}
           {isAdmin && session.userId?.name && (
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ fontSize: 10, color: t.dim, display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
               <UserOutlined style={{ fontSize: 9 }} />{session.userId.name}
             </span>
           )}
         </div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
-          {session.unitName || '—'}
+        {/* Row 2: material name */}
+        <div style={{ fontSize: 11, color: t.dim, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>
+          {session.materialName
+            ? <><FilePdfOutlined style={{ fontSize: 10, color: '#f87171' }} />{session.materialName}</>
+            : <span style={{ color: t.faint }}>General session</span>
+          }
         </div>
       </div>
 
-      {/* Date */}
-      <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 72 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)' }}>{fmtDate(session.startTime)}</div>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>{fmtTime(session.startTime)}</div>
+      {/* Date + time */}
+      <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 76 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: t.muted }}>{fmtDate(session.startTime)}</div>
+        <div style={{ fontSize: 10, color: t.faint, marginTop: 1 }}>{fmtTime(session.startTime)}</div>
       </div>
 
-      {/* Duration badge */}
+      {/* Duration */}
       <div style={{
-        fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#60a5fa',
-        background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.18)',
-        padding: '3px 10px', borderRadius: 8, flexShrink: 0, whiteSpace: 'nowrap',
-      }}>{formatDur(session.duration)}</div>
+        display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, minWidth: 52,
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 900, color: '#60a5fa', fontFamily: 'monospace', lineHeight: 1 }}>
+          {formatDur(session.duration)}
+        </div>
+        <div style={{ fontSize: 9, color: t.faint, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px', marginTop: 2 }}>total</div>
+      </div>
 
-      {/* Focus rate badge */}
+      {/* Focus rate */}
       <div style={{
-        fontSize: 11, fontWeight: 800, color: rateColor,
-        background: 'rgba(255,255,255,0.04)', border: `1px solid ${rateColor}33`,
-        padding: '3px 9px', borderRadius: 8, flexShrink: 0, minWidth: 44, textAlign: 'center',
-      }}>{focusRate !== null ? `${focusRate}%` : '—'}</div>
+        display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, minWidth: 48,
+        background: focusBg, borderRadius: 9, padding: '4px 8px',
+        border: `1px solid ${focusColor}30`,
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 900, color: focusColor, lineHeight: 1 }}>
+          {focusRate !== null ? `${focusRate}%` : '—'}
+        </div>
+        <div style={{ fontSize: 9, color: t.faint, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px', marginTop: 2 }}>focus</div>
+      </div>
 
-      {/* Pomodoro count */}
+      {/* Pomodoro */}
       {(session.intervals || 0) > 0 && (
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span>🍅</span><span>{session.intervals}</span>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
+          background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.2)',
+          padding: '3px 8px', borderRadius: 8,
+        }}>
+          <span style={{ fontSize: 11 }}>🍅</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fb7185' }}>{session.intervals}</span>
         </div>
       )}
 
       {/* Chevron */}
-      <RightOutlined style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', flexShrink: 0, transition: 'color 0.15s, transform 0.15s' }} className="ts-tile-arrow" />
+      <RightOutlined className="ts-tile-arrow" style={{ fontSize: 12, color: t.veryfaint, flexShrink: 0, transition: 'color 0.15s, transform 0.15s' }} />
     </div>
   );
 };
@@ -349,11 +400,19 @@ const SessionTile = ({ session, subjects, isAdmin, onClick }) => {
 // ── TrackingSummaryPage ───────────────────────────────────────────────────────
 const TrackingSummaryPage = () => {
   const { user }   = useAuth();
+  const { isDark } = useSessionTheme();
+  const t = {
+    primary:   isDark ? '#f1f5f9'                : '#000',
+    muted:     isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.55)',
+    dim:       isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.45)',
+    faint:     isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)',
+    veryfaint: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.25)',
+  };
   const [history, setHistory]       = useState([]);
   const [subjects, setSubjects]     = useState([]);
   const [loading, setLoading]       = useState(false);
   const [usersList, setUsersList]   = useState([]);
-  const [filters, setFilters]       = useState({ subject: null, userId: null, dateRange: [] });
+  const [filters, setFilters]       = useState({ subject: null, userId: null, dateRange: [], sortBy: 'newest', minDuration: 0 });
   const [selected, setSelected]     = useState(null); // session for detail modal
 
   useEffect(() => { fetchInitialData(); }, []);
@@ -386,6 +445,40 @@ const TrackingSummaryPage = () => {
     finally { setLoading(false); }
   };
 
+  // Quick date preset helper
+  const applyPreset = (preset) => {
+    const now = new Date();
+    const start = new Date();
+    if (preset === 'today')   { start.setHours(0,0,0,0); }
+    else if (preset === 'yesterday') { start.setDate(start.getDate()-1); start.setHours(0,0,0,0); now.setDate(now.getDate()-1); now.setHours(23,59,59,999); }
+    else if (preset === '7d') { start.setDate(start.getDate()-6); start.setHours(0,0,0,0); }
+    else if (preset === '30d'){ start.setDate(start.getDate()-29); start.setHours(0,0,0,0); }
+    else if (preset === 'month') { start.setDate(1); start.setHours(0,0,0,0); }
+    setFilters(f => ({ ...f, dateRange: [start, now] }));
+  };
+
+  // Client-side sort + min-duration filter
+  const displayHistory = [...history]
+    .filter(h => (h.duration || 0) >= filters.minDuration)
+    .sort((a, b) => {
+      if (filters.sortBy === 'newest')     return new Date(b.startTime) - new Date(a.startTime);
+      if (filters.sortBy === 'oldest')     return new Date(a.startTime) - new Date(b.startTime);
+      if (filters.sortBy === 'longest')    return (b.duration || 0) - (a.duration || 0);
+      if (filters.sortBy === 'shortest')   return (a.duration || 0) - (b.duration || 0);
+      if (filters.sortBy === 'focus-high') return ((b.workedTime||0)/(b.duration||1)) - ((a.workedTime||0)/(a.duration||1));
+      if (filters.sortBy === 'focus-low')  return ((a.workedTime||0)/(a.duration||1)) - ((b.workedTime||0)/(b.duration||1));
+      return 0;
+    });
+
+  // Active filter count (excluding defaults)
+  const activeFilterCount = [
+    filters.subject,
+    filters.userId,
+    filters.dateRange?.length === 2,
+    filters.sortBy !== 'newest',
+    filters.minDuration > 0,
+  ].filter(Boolean).length;
+
   // Aggregate stats
   const totalSessions  = history.length;
   const totalDuration  = history.reduce((s, h) => s + (h.duration  || 0), 0);
@@ -394,7 +487,7 @@ const TrackingSummaryPage = () => {
   const avgFocusRate   = totalDuration > 0 ? Math.round((totalFocus / totalDuration) * 100) : 0;
 
   return (
-    <div className="tracking-summary-container">
+    <div className={`tracking-summary-container${isDark ? '' : ' light-theme'}`}>
 
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -407,8 +500,8 @@ const TrackingSummaryPage = () => {
           <HistoryOutlined style={{ color: '#fff', fontSize: 18 }} />
         </div>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.5px' }}>Study Tracking Summary</h1>
-          <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: t.primary, letterSpacing: '-0.5px' }}>Study Tracking Summary</h1>
+          <p style={{ margin: 0, fontSize: 12, color: t.muted }}>
             {totalSessions} session{totalSessions !== 1 ? 's' : ''} recorded · click any row to see details
           </p>
         </div>
@@ -427,7 +520,7 @@ const TrackingSummaryPage = () => {
             <div key={s.label} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 12, padding: '12px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: s.color }}>{s.icon}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.32)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.label}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.label}</span>
               </div>
               <div style={{ fontSize: 16, fontWeight: 900, color: s.color, fontFamily: 'monospace' }}>{s.value}</div>
             </div>
@@ -436,51 +529,119 @@ const TrackingSummaryPage = () => {
       )}
 
       {/* Filters */}
-      <div style={{ background: 'rgba(15,23,41,0.6)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 18px', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-          <FilterOutlined style={{ color: '#818cf8', fontSize: 12 }} />
-          <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Filters</span>
+      <div style={{ background: isDark ? 'rgba(15,23,41,0.6)' : 'rgba(255,255,255,0.85)', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)', borderRadius: 16, padding: '16px 18px', marginBottom: 14 }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <FilterOutlined style={{ color: '#818cf8', fontSize: 13 }} />
+          <span style={{ fontSize: 12, fontWeight: 800, color: t.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Filters</span>
+          {activeFilterCount > 0 && (
+            <span style={{ marginLeft: 2, background: '#6366f1', color: '#fff', fontSize: 10, fontWeight: 800, padding: '1px 7px', borderRadius: 100 }}>
+              {activeFilterCount} active
+            </span>
+          )}
+          <button
+            onClick={() => setFilters({ subject: null, userId: null, dateRange: [], sortBy: 'newest', minDuration: 0 })}
+            style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 8, border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', background: 'transparent', color: t.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+          >
+            <ClearOutlined style={{ fontSize: 10 }} /> Reset
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+
+        {/* Row 1: Subject, Student, Date Range */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
           <div style={{ flex: '1 1 140px', minWidth: 120 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Subject</div>
-            <Select style={{ width: '100%' }} placeholder="All" allowClear value={filters.subject} onChange={(v) => setFilters({ ...filters, subject: v })}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Subject</div>
+            <Select style={{ width: '100%' }} placeholder="All subjects" allowClear value={filters.subject} onChange={(v) => setFilters({ ...filters, subject: v })}>
               {subjects.map(s => <Select.Option key={s._id} value={s.name}>{s.name}</Select.Option>)}
             </Select>
           </div>
           {user.role === 'admin' && (
             <div style={{ flex: '1 1 140px', minWidth: 120 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Student</div>
-              <Select style={{ width: '100%' }} placeholder="All" allowClear value={filters.userId} onChange={(v) => setFilters({ ...filters, userId: v })} showSearch optionFilterProp="children">
+              <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Student</div>
+              <Select style={{ width: '100%' }} placeholder="All students" allowClear value={filters.userId} onChange={(v) => setFilters({ ...filters, userId: v })} showSearch optionFilterProp="children">
                 {usersList.map(u => <Select.Option key={u._id} value={u._id}>{u.name}</Select.Option>)}
               </Select>
             </div>
           )}
           <div style={{ flex: '2 1 200px', minWidth: 180 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Date Range</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Date Range</div>
             <RangePicker style={{ width: '100%' }} onChange={(dates) => setFilters({ ...filters, dateRange: dates || [] })} />
           </div>
-          <button onClick={() => setFilters({ subject: null, userId: null, dateRange: [] })} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '6px 13px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.1)',
-            background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)',
-            fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
-          }}>
-            <ClearOutlined style={{ fontSize: 10 }} /> Reset
-          </button>
         </div>
+
+        {/* Row 2: Quick presets */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+          <CalendarOutlined style={{ color: t.dim, fontSize: 11 }} />
+          <span style={{ fontSize: 10, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: '0.4px', marginRight: 2 }}>Quick</span>
+          {[
+            { label: 'Today',      key: 'today' },
+            { label: 'Yesterday',  key: 'yesterday' },
+            { label: 'Last 7 days',key: '7d' },
+            { label: 'Last 30 days',key: '30d' },
+            { label: 'This Month', key: 'month' },
+          ].map(p => (
+            <button
+              key={p.key}
+              onClick={() => applyPreset(p.key)}
+              style={{
+                padding: '4px 11px', borderRadius: 100, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                border: isDark ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(99,102,241,0.25)',
+                background: isDark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.07)',
+                color: '#818cf8', transition: 'background 0.15s',
+              }}
+            >{p.label}</button>
+          ))}
+        </div>
+
+        {/* Row 3: Sort + Min Duration */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 160px', minWidth: 140 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <SortAscendingOutlined /> Sort By
+            </div>
+            <Select style={{ width: '100%' }} value={filters.sortBy} onChange={(v) => setFilters({ ...filters, sortBy: v })}>
+              <Select.Option value="newest">Newest First</Select.Option>
+              <Select.Option value="oldest">Oldest First</Select.Option>
+              <Select.Option value="longest">Longest Session</Select.Option>
+              <Select.Option value="shortest">Shortest Session</Select.Option>
+              <Select.Option value="focus-high">Highest Focus Rate</Select.Option>
+              <Select.Option value="focus-low">Lowest Focus Rate</Select.Option>
+            </Select>
+          </div>
+          <div style={{ flex: '1 1 140px', minWidth: 120 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: t.dim, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <ClockCircleOutlined /> Min Duration
+            </div>
+            <Select style={{ width: '100%' }} value={filters.minDuration} onChange={(v) => setFilters({ ...filters, minDuration: v })}>
+              <Select.Option value={0}>Any duration</Select.Option>
+              <Select.Option value={300}>5+ minutes</Select.Option>
+              <Select.Option value={900}>15+ minutes</Select.Option>
+              <Select.Option value={1800}>30+ minutes</Select.Option>
+              <Select.Option value={3600}>1+ hour</Select.Option>
+            </Select>
+          </div>
+          {/* Results count */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 1 }}>
+            <span style={{ fontSize: 12, color: t.dim, fontWeight: 600 }}>
+              {displayHistory.length} result{displayHistory.length !== 1 ? 's' : ''}
+              {displayHistory.length !== history.length && <span style={{ color: t.veryfaint }}> of {history.length}</span>}
+            </span>
+          </div>
+        </div>
+
       </div>
 
       {/* Column header */}
-      {history.length > 0 && !loading && (
+      {displayHistory.length > 0 && !loading && (
         <div className="ts-tile-header">
-          <div style={{ width: 4, flexShrink: 0 }} />
-          <div style={{ width: 32, flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>Subject · Unit</div>
-          <div style={{ minWidth: 72, textAlign: 'right' }}>Date</div>
-          <div style={{ minWidth: 52 }}>Duration</div>
-          <div style={{ minWidth: 44 }}>Focus</div>
-          <div style={{ minWidth: 30 }}>Pomo</div>
+          <div style={{ width: 5, flexShrink: 0 }} />
+          <div style={{ width: 38, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>Subject · Material</div>
+          <div style={{ minWidth: 76, textAlign: 'right' }}>Date</div>
+          <div style={{ minWidth: 52, textAlign: 'center' }}>Duration</div>
+          <div style={{ minWidth: 48, textAlign: 'center' }}>Focus</div>
+          <div style={{ minWidth: 40 }}>Pomo</div>
           <div style={{ width: 16 }} />
         </div>
       )}
@@ -490,15 +651,19 @@ const TrackingSummaryPage = () => {
         <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
           <Spin size="large" />
         </div>
-      ) : history.length === 0 ? (
-        <div style={{ background: 'rgba(15,23,41,0.5)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '56px 32px', textAlign: 'center' }}>
-          <HistoryOutlined style={{ fontSize: 44, color: 'rgba(255,255,255,0.1)', marginBottom: 14 }} />
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.2)', marginBottom: 5 }}>No sessions found</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.12)' }}>Complete a study session to see it here.</div>
+      ) : displayHistory.length === 0 ? (
+        <div style={{ background: isDark ? 'rgba(15,23,41,0.5)' : 'rgba(255,255,255,0.7)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', borderRadius: 14, padding: '56px 32px', textAlign: 'center' }}>
+          <HistoryOutlined style={{ fontSize: 44, color: t.faint, marginBottom: 14 }} />
+          <div style={{ fontSize: 15, fontWeight: 700, color: t.faint, marginBottom: 5 }}>
+            {history.length > 0 ? 'No sessions match your filters' : 'No sessions found'}
+          </div>
+          <div style={{ fontSize: 12, color: t.veryfaint }}>
+            {history.length > 0 ? 'Try adjusting or resetting your filters.' : 'Complete a study session to see it here.'}
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {history.map((session) => (
+          {displayHistory.map((session) => (
             <SessionTile
               key={session._id}
               session={session}

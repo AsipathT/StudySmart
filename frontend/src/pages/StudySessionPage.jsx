@@ -191,8 +191,37 @@ const StudySessionPage = () => {
   const [initialPomodoroTime, setInitialPomodoroTime] = useState(0);
   const [intervalsCompleted, setIntervalsCompleted] = useState(0);
 
+  const pomodoroStatusRef = useRef('inactive'); // always mirrors pomodoroStatus for interval closures
   const pomodoroIntervalRef = useRef(null);
   const pomodoroFiredRef = useRef(false);
+
+  // Synchronously update both state and ref to avoid stale closure in the upTime interval
+  const setPomodoroStatusSync = (status) => {
+    pomodoroStatusRef.current = status;
+    setPomodoroStatus(status);
+  };
+
+  // Play a short ascending tone using Web Audio API
+  const playPomodoroSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + i * 0.18;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.35, start + 0.05);
+        gain.gain.linearRampToValueAtTime(0, start + 0.18);
+        osc.start(start);
+        osc.stop(start + 0.2);
+      });
+    } catch (_) {}
+  };
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
@@ -223,13 +252,13 @@ const StudySessionPage = () => {
     if (sessionStatus === 'active') {
       const id = setInterval(() => {
         setUpTime((prev) => prev + 1);
-        if (pomodoroStatus === 'active') {
+        if (pomodoroStatusRef.current === 'active') {
           setWorkedTime((prev) => prev + 1);
         }
       }, 1000);
       return () => clearInterval(id);
     }
-  }, [sessionStatus, pomodoroStatus]);
+  }, [sessionStatus]);
 
   const fetchSubjects = async () => {
     setLoading(true);
@@ -330,14 +359,14 @@ const StudySessionPage = () => {
     setSessionStatus('paused');
     if (pomodoroStatus === 'active') {
       clearInterval(pomodoroIntervalRef.current);
-      setPomodoroStatus('inactive');
+      setPomodoroStatusSync('inactive');
     }
   };
 
   const stopSession = () => {
     setSessionStatus('inactive');
     clearInterval(pomodoroIntervalRef.current);
-    setPomodoroStatus('inactive');
+    setPomodoroStatusSync('inactive');
     // Find total pages of the material being studied
     const mat = selectedUnit?.materials?.find(m => m.name === materialBeingStudied);
     setPagesCompleted(0);
@@ -377,7 +406,7 @@ const StudySessionPage = () => {
     if (sessionStatus !== 'active') {
         startSession();
     }
-    setPomodoroStatus('active');
+    setPomodoroStatusSync('active');
     pomodoroFiredRef.current = false;
     pomodoroIntervalRef.current = setInterval(() => {
       setPomodoroTime((prev) => {
@@ -385,11 +414,15 @@ const StudySessionPage = () => {
           if (!pomodoroFiredRef.current) {
             pomodoroFiredRef.current = true;
             clearInterval(pomodoroIntervalRef.current);
-            setPomodoroStatus('inactive');
+            setPomodoroStatusSync('inactive');
             setIntervalsCompleted((prevCount) => prevCount + 1);
-            message.success('Interval completed!');
+            playPomodoroSound();
+            message.success({
+              content: '🍅 Pomodoro complete! Great work — take a break.',
+              duration: 5,
+            });
           }
-          return 0;
+          return initialPomodoroTime; // reset so the button stays enabled for next round
         }
         return prev - 1;
       });
@@ -474,7 +507,7 @@ const StudySessionPage = () => {
     setPomodoroTime(0);
     setIntervalsCompleted(0);
     setSessionStatus('inactive');
-    setPomodoroStatus('inactive');
+    setPomodoroStatusSync('inactive');
     setSessionPagesData(null);
     setPagesCompleted(0);
   };
@@ -1589,7 +1622,7 @@ const StudySessionPage = () => {
         closable={false}
         rootClassName="adm-new-subj-drawer"
         styles={{
-          body: { padding: 0, background: '#0b1222', display: 'flex', flexDirection: 'column', height: '100%' },
+          body: { padding: 0, background: isDark ? '#0b1222' : '#f8fafc', display: 'flex', flexDirection: 'column', height: '100%' },
           wrapper: { boxShadow: '-8px 0 40px rgba(0,0,0,0.5)' },
         }}
       >
@@ -1654,9 +1687,9 @@ const StudySessionPage = () => {
                       style={{
                         flex: 1, textAlign: 'center', padding: '10px 0',
                         borderRadius: 12, cursor: 'pointer', fontSize: 13, fontWeight: 700,
-                        border: `1.5px solid ${isSelected ? colorMap[d] : 'rgba(255,255,255,0.08)'}`,
-                        background: isSelected ? `${colorMap[d]}22` : 'rgba(255,255,255,0.03)',
-                        color: isSelected ? colorMap[d] : 'rgba(255,255,255,0.4)',
+                        border: `1.5px solid ${isSelected ? colorMap[d] : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)')}`,
+                        background: isSelected ? `${colorMap[d]}22` : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'),
+                        color: isSelected ? colorMap[d] : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)'),
                         transition: 'all 0.2s',
                       }}
                     >
@@ -1683,8 +1716,8 @@ const StudySessionPage = () => {
                       width: 48, height: 48,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 18, cursor: 'pointer',
-                      border: `2px solid ${selectedShape === shape.key ? '#6366f1' : 'rgba(255,255,255,0.1)'}`,
-                      background: selectedShape === shape.key ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
+                      border: `2px solid ${selectedShape === shape.key ? '#6366f1' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)')}`,
+                      background: selectedShape === shape.key ? 'rgba(99,102,241,0.18)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
                       transition: 'all 0.2s',
                       boxShadow: selectedShape === shape.key ? '0 0 0 3px rgba(99,102,241,0.2)' : 'none',
                       ...shape.style,
@@ -1710,8 +1743,8 @@ const StudySessionPage = () => {
                       borderRadius: 10,
                       background: g.value,
                       cursor: 'pointer',
-                      border: `2px solid ${selectedGradient === g.value ? '#fff' : 'transparent'}`,
-                      boxShadow: selectedGradient === g.value ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 2px 8px rgba(0,0,0,0.3)',
+                      border: `2px solid ${selectedGradient === g.value ? (isDark ? '#fff' : '#1e293b') : 'transparent'}`,
+                      boxShadow: selectedGradient === g.value ? (isDark ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 0 0 3px rgba(0,0,0,0.2)') : '0 2px 8px rgba(0,0,0,0.3)',
                       transition: 'all 0.2s',
                       transform: selectedGradient === g.value ? 'scale(1.2)' : 'scale(1)',
                     }}
@@ -1747,11 +1780,11 @@ const StudySessionPage = () => {
         closable={false}
         rootClassName="admin-manage-drawer"
         styles={{
-          body: { padding: 0, background: '#0b1222', position: 'relative' },
+          body: { padding: 0, background: isDark ? '#0b1222' : '#f8fafc', position: 'relative' },
           wrapper: { boxShadow: '-12px 0 50px rgba(0,0,0,0.6)' },
         }}
       >
-        <div className="adm-inner" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0b1222' }}>
+        <div className="adm-inner" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: isDark ? '#0b1222' : '#f8fafc' }}>
 
         {/* Header — live preview updates with edit tab selections */}
         <div style={{
@@ -1782,7 +1815,7 @@ const StudySessionPage = () => {
         </div>
 
         {/* Custom tab bar */}
-        <div className="adm-tabbar" style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+        <div className="adm-tabbar" style={{ display: 'flex', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, flexShrink: 0 }}>
           {[
             { key: 'edit',      label: 'Edit',      icon: <EditOutlined /> },
             { key: 'units',     label: 'Units',     icon: <AppstoreOutlined /> },
@@ -1795,7 +1828,7 @@ const StudySessionPage = () => {
               data-active={activeManageTab === tab.key}
               style={{
                 flex: 1, padding: '12px 0', border: 'none', background: 'transparent',
-                color: activeManageTab === tab.key ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                color: activeManageTab === tab.key ? '#818cf8' : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)'),
                 borderBottom: `2px solid ${activeManageTab === tab.key ? '#818cf8' : 'transparent'}`,
                 cursor: 'pointer', fontSize: 12, fontWeight: activeManageTab === tab.key ? 700 : 500,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -1813,7 +1846,7 @@ const StudySessionPage = () => {
           {/* ── Edit Tab ── */}
           {activeManageTab === 'edit' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>EDIT SUBJECT</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>EDIT SUBJECT</div>
               <Form form={editForm} onFinish={handleEditSubject} layout="vertical" requiredMark={false}>
                 <Form.Item
                   name="name"
@@ -1838,8 +1871,8 @@ const StudySessionPage = () => {
                           width: 48, height: 48,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 18, cursor: 'pointer',
-                          border: `2px solid ${editShape === shape.key ? '#818cf8' : 'rgba(255,255,255,0.1)'}`,
-                          background: editShape === shape.key ? 'rgba(129,140,248,0.18)' : 'rgba(255,255,255,0.04)',
+                          border: `2px solid ${editShape === shape.key ? '#818cf8' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)')}`,
+                          background: editShape === shape.key ? 'rgba(129,140,248,0.18)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
                           transition: 'all 0.2s',
                           boxShadow: editShape === shape.key ? '0 0 0 3px rgba(129,140,248,0.2)' : 'none',
                           ...shape.style,
@@ -1862,8 +1895,8 @@ const StudySessionPage = () => {
                         title={g.label}
                         style={{
                           width: 36, height: 36, borderRadius: 10, background: g.value, cursor: 'pointer',
-                          border: `2px solid ${editGradient === g.value ? '#fff' : 'transparent'}`,
-                          boxShadow: editGradient === g.value ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 2px 8px rgba(0,0,0,0.3)',
+                          border: `2px solid ${editGradient === g.value ? (isDark ? '#fff' : '#1e293b') : 'transparent'}`,
+                          boxShadow: editGradient === g.value ? (isDark ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 0 0 3px rgba(0,0,0,0.2)') : '0 2px 8px rgba(0,0,0,0.3)',
                           transition: 'all 0.2s',
                           transform: editGradient === g.value ? 'scale(1.2)' : 'scale(1)',
                         }}
@@ -1887,7 +1920,7 @@ const StudySessionPage = () => {
           {/* ── Units Tab ── */}
           {activeManageTab === 'units' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ADD UNIT</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ADD UNIT</div>
               <Form form={unitForm} onFinish={handleCreateModule} layout="vertical" requiredMark={false}>
                 <Form.Item name="name" rules={[{ required: true, message: 'Enter unit name' }, { min: 2, message: 'At least 2 characters' }]} style={{ marginBottom: 12 }}>
                   <Input placeholder="Unit name (e.g. Algebra Basics)" style={inputStyle} />
@@ -1901,16 +1934,16 @@ const StudySessionPage = () => {
               </Form>
               {(selectedSubject?.units?.length || 0) > 0 && (
                 <div style={{ marginTop: 28 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
                     EXISTING UNITS ({selectedSubject.units.length})
                   </div>
                   {selectedSubject.units.map((unit, i) => (
-                    <div key={unit._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, marginBottom: 8 }}>
+                    <div key={unit._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 12, marginBottom: 8 }}>
                       <div>
-                        <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 14 }}>{unit.name}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginTop: 2 }}>{unit.durationMinutes} min</div>
+                        <div style={{ color: tc.primary, fontWeight: 600, fontSize: 14 }}>{unit.name}</div>
+                        <div style={{ color: tc.muted, fontSize: 11, marginTop: 2 }}>{unit.durationMinutes} min</div>
                       </div>
-                      <ClockCircleOutlined style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14 }} />
+                      <ClockCircleOutlined style={{ color: tc.dim, fontSize: 14 }} />
                     </div>
                   ))}
                 </div>
@@ -1921,7 +1954,7 @@ const StudySessionPage = () => {
           {/* ── Students Tab ── */}
           {activeManageTab === 'students' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ASSIGN STUDENTS</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ASSIGN STUDENTS</div>
 
               {/* Search box */}
               <input
@@ -1931,8 +1964,8 @@ const StudySessionPage = () => {
                 onChange={e => setStudentSearch(e.target.value)}
                 style={{
                   width: '100%', padding: '9px 14px', marginBottom: 10,
-                  background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)',
-                  borderRadius: 10, color: '#f1f5f9', fontSize: 13, outline: 'none',
+                  background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                  borderRadius: 10, color: tc.primary, fontSize: 13, outline: 'none',
                   boxSizing: 'border-box',
                 }}
               />
@@ -1948,7 +1981,7 @@ const StudySessionPage = () => {
                   u.email.toLowerCase().includes(studentSearch.toLowerCase())
                 );
                 if (filtered.length === 0) return (
-                  <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, textAlign: 'center', padding: '18px 0' }}>
+                  <div style={{ color: tc.muted, fontSize: 13, textAlign: 'center', padding: '18px 0' }}>
                     {available.length === 0 ? 'All students already assigned' : 'No students match your search'}
                   </div>
                 );
@@ -1966,30 +1999,30 @@ const StudySessionPage = () => {
                           style={{
                             display: 'flex', alignItems: 'center', gap: 12,
                             padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
-                            background: isSelected ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
-                            border: isSelected ? '1.5px solid rgba(99,102,241,0.5)' : '1.5px solid rgba(255,255,255,0.07)',
+                            background: isSelected ? 'rgba(99,102,241,0.18)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                            border: isSelected ? '1.5px solid rgba(99,102,241,0.5)' : `1.5px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`,
                             transition: 'all 0.15s',
                           }}
                         >
                           {/* Avatar */}
                           <div style={{
                             width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-                            background: isSelected ? 'linear-gradient(135deg,#6366f1,#4f46e5)' : 'rgba(255,255,255,0.1)',
+                            background: isSelected ? 'linear-gradient(135deg,#6366f1,#4f46e5)' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'),
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontWeight: 800, fontSize: 13, color: '#fff',
+                            fontWeight: 800, fontSize: 13, color: isSelected ? '#fff' : tc.primary,
                           }}>
                             {(u.name || '?')[0].toUpperCase()}
                           </div>
                           {/* Info */}
                           <div style={{ flex: 1, overflow: 'hidden' }}>
-                            <div style={{ color: isSelected ? '#a5b4fc' : '#e2e8f0', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</div>
+                            <div style={{ color: isSelected ? '#a5b4fc' : tc.body, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
+                            <div style={{ color: tc.muted, fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</div>
                           </div>
                           {/* Checkmark */}
                           <div style={{
                             width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-                            background: isSelected ? '#6366f1' : 'rgba(255,255,255,0.08)',
-                            border: isSelected ? '2px solid #6366f1' : '2px solid rgba(255,255,255,0.18)',
+                            background: isSelected ? '#6366f1' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+                            border: isSelected ? '2px solid #6366f1' : `2px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)'}`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             transition: 'all 0.15s',
                           }}>
@@ -2016,20 +2049,20 @@ const StudySessionPage = () => {
               </Button>
               {(selectedSubject?.students?.length || 0) > 0 && (
                 <div style={{ marginTop: 28 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
                     ASSIGNED ({selectedSubject.students.length})
                   </div>
                   {selectedSubject.students.map((student, i) => {
                     const name = student.name || 'Student';
                     const email = student.email || '';
                     return (
-                      <div key={student._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, marginBottom: 8 }}>
+                      <div key={student._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 12, marginBottom: 8 }}>
                         <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#fff', flexShrink: 0 }}>
                           {name[0].toUpperCase()}
                         </div>
                         <div style={{ overflow: 'hidden' }}>
-                          <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
-                          <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
+                          <div style={{ color: tc.primary, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+                          <div style={{ color: tc.muted, fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
                         </div>
                       </div>
                     );
@@ -2042,7 +2075,7 @@ const StudySessionPage = () => {
           {/* ── Materials Tab ── */}
           {activeManageTab === 'materials' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>UPLOAD MATERIAL</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>UPLOAD MATERIAL</div>
               <Select
                 style={{ width: '100%', marginBottom: 12 }}
                 placeholder="Assign to unit (or subject-wide)"
@@ -2072,7 +2105,7 @@ const StudySessionPage = () => {
                   {selectedSubject.units.map((unit, i) => (
                     (unit.materials?.length || 0) > 0 && (
                       <div key={unit._id || i} style={{ marginBottom: 20 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>
                           {unit.name}
                         </div>
                         {unit.materials.map((mat) => (
@@ -2090,7 +2123,7 @@ const StudySessionPage = () => {
                   ))}
                   {(selectedSubject?.materials?.length || 0) > 0 && (
                     <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>SUBJECT-WIDE</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>SUBJECT-WIDE</div>
                       {selectedSubject.materials.map((mat) => (
                         <MaterialRow
                           key={mat._id}
@@ -2110,7 +2143,7 @@ const StudySessionPage = () => {
         </div>
 
         {/* Pinned delete footer — always visible */}
-        <div className="adm-footer" style={{ flexShrink: 0, padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.07)', background: '#0b1222' }}>
+        <div className="adm-footer" style={{ flexShrink: 0, padding: '14px 24px', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, background: isDark ? '#0b1222' : '#f8fafc' }}>
           <Button
             block
             icon={<DeleteOutlined />}

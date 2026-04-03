@@ -40,33 +40,56 @@
 .ts-compact-tile {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: rgba(15,23,41,0.65);
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-  padding: 0 14px 0 0;
-  min-height: 56px;
+  border-radius: 14px;
+  padding: 0 16px 0 0;
+  min-height: 68px;
   cursor: pointer;
   overflow: hidden;
-  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.18s, background 0.18s;
 }
 .ts-compact-tile:hover {
+  transform: translateY(-2px);
   background: rgba(99,102,241,0.07);
-  border-color: rgba(99,102,241,0.22);
-  box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+  border-color: var(--accent, rgba(99,102,241,0.35));
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(99,102,241,0.12);
 }
 .ts-compact-tile:hover .ts-tile-arrow {
-  color: rgba(255,255,255,0.5) !important;
-  transform: translateX(3px);
+  color: rgba(255,255,255,0.6) !important;
+  transform: translateX(4px);
+}
+
+/* Left accent bar */
+.ts-tile-bar {
+  width: 5px;
+  border-radius: 14px 0 0 14px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+/* Subject icon */
+.ts-tile-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
 }
 
 /* Column header row */
 .ts-tile-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 14px 0 0;
-  margin-bottom: 4px;
+  gap: 12px;
+  padding: 0 16px 0 17px;
+  margin-bottom: 6px;
   font-size: 9px;
   font-weight: 700;
   color: rgba(255,255,255,0.22);
@@ -97,3 +120,46 @@
 .tracking-summary-container::-webkit-scrollbar { width: 5px; }
 .tracking-summary-container::-webkit-scrollbar-track { background: transparent; }
 .tracking-summary-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+/* ══════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+══════════════════════════════════════════════════════ */
+
+.tracking-summary-container.light-theme {
+  color: #000;
+}
+
+.light-theme .ts-compact-tile {
+  background: rgba(255,255,255,0.9);
+  border-color: rgba(0,0,0,0.07);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.light-theme .ts-compact-tile:hover {
+  background: #fff;
+  border-color: var(--accent, rgba(99,102,241,0.4));
+  box-shadow: 0 6px 24px rgba(0,0,0,0.1), 0 0 0 1px rgba(99,102,241,0.1);
+}
+.light-theme .ts-compact-tile:hover .ts-tile-arrow {
+  color: rgba(0,0,0,0.5) !important;
+}
+
+.light-theme .ts-tile-header {
+  color: rgba(0,0,0,0.35);
+}
+
+/* Ant Design light overrides */
+.light-theme .ant-select-selector {
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.15) !important;
+  color: #000 !important;
+}
+.light-theme .ant-select-selection-placeholder { color: rgba(0,0,0,0.35) !important; }
+.light-theme .ant-select-arrow { color: rgba(0,0,0,0.35) !important; }
+.light-theme .ant-picker {
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.15) !important;
+  color: #000 !important;
+}
+.light-theme .ant-picker-input > input { color: #000 !important; }
+.light-theme .ant-picker-suffix,
+.light-theme .ant-picker-separator { color: rgba(0,0,0,0.35) !important; }

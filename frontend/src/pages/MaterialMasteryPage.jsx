@@ -21,6 +21,7 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
+import { useSessionTheme } from '../context/SessionThemeContext';
 import subjectService from '../services/subjectService';
 import studySessionService from '../services/studySessionService';
 import quizService from '../services/quizService';
@@ -128,6 +129,11 @@ const MiniRing = ({ pct, color, size = 44 }) => {
 // ── MaterialMasteryPage ───────────────────────────────────────────────────────
 const MaterialMasteryPage = () => {
   const { user } = useAuth();
+  const { isDark } = useSessionTheme();
+  const t = {
+    dim:       isDark ? 'rgba(255,255,255,0.3)'  : 'rgba(0,0,0,0.45)',
+    veryfaint: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)',
+  };
   const [subjects,    setSubjects]    = useState([]);
   const [sessions,    setSessions]    = useState([]);
   const [quizHistory, setQuizHistory] = useState([]);
@@ -246,7 +252,7 @@ const MaterialMasteryPage = () => {
   );
 
   return (
-    <div className="mastery-page">
+    <div className={`mastery-page${isDark ? '' : ' light-theme'}`}>
 
       {/* ── Static background ── */}
       <div className="mastery-bg" aria-hidden="true">
@@ -337,11 +343,11 @@ const MaterialMasteryPage = () => {
             ))}
           </div>
           <div className="mastery-heatmap-legend">
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>Less</span>
+            <span style={{ color: t.dim, fontSize: 11 }}>Less</span>
             {[0, 14, 29, 59, 60].map((min, i) => (
               <div key={i} className="mastery-legend-cell" style={{ background: heatColor(min + 1) }} />
             ))}
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>More</span>
+            <span style={{ color: t.dim, fontSize: 11 }}>More</span>
           </div>
         </div>
 
@@ -350,7 +356,7 @@ const MaterialMasteryPage = () => {
           <div className="mastery-empty">
             <BookOutlined style={{ fontSize: 52, marginBottom: 16, display: 'block' }} />
             <p style={{ fontSize: 16, margin: 0 }}>No materials found.</p>
-            <p style={{ fontSize: 13, marginTop: 6, color: 'rgba(255,255,255,0.25)' }}>Add materials to your subjects to start tracking mastery.</p>
+            <p style={{ fontSize: 13, marginTop: 6, color: t.veryfaint }}>Add materials to your subjects to start tracking mastery.</p>
           </div>
         ) : (
           subjectSections.map(subj => {

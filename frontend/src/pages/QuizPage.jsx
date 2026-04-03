@@ -18,6 +18,7 @@ import {
   HistoryOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
+import { useSessionTheme } from '../context/SessionThemeContext';
 import subjectService from '../services/subjectService';
 import quizService from '../services/quizService';
 import './QuizPage.css';
@@ -65,6 +66,18 @@ const getScoreConfig = (pct) => {
 // ── QuizPage ─────────────────────────────────────────────────────────────────
 const QuizPage = () => {
   const { user } = useAuth();
+  const { isDark } = useSessionTheme();
+
+  // Colour palette — flips with theme
+  const t = {
+    primary:   isDark ? '#f1f5f9'                : '#000',
+    body:      isDark ? '#e2e8f0'                : '#000',
+    secondary: isDark ? '#cbd5e1'                : '#334155',
+    muted:     isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.55)',
+    dim:       isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.45)',
+    faint:     isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)',
+    veryfaint: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.25)',
+  };
   const [subjects, setSubjects]               = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [quizzes, setQuizzes]                 = useState([]);
@@ -182,7 +195,7 @@ const QuizPage = () => {
   const scoreConfig = getScoreConfig(pct);
 
   return (
-    <div className="quiz-page-container">
+    <div className={`quiz-page-container${isDark ? '' : ' light-theme'}`}>
 
       {/* ── Static background visuals ── */}
       <div className="quiz-bg" aria-hidden="true">
@@ -219,10 +232,10 @@ const QuizPage = () => {
                   <RobotOutlined style={{ color: '#fff', fontSize: 18 }} />
                 </div>
                 <div>
-                  <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.5px' }}>
+                  <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: t.primary, letterSpacing: '-0.5px' }}>
                     AI-Powered Quizzes
                   </h1>
-                  <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: t.muted }}>
                     Select a subject to take or generate quizzes
                   </p>
                 </div>
@@ -274,7 +287,7 @@ const QuizPage = () => {
           </div>
 
           {subjects.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.3)' }}>
+            <div style={{ textAlign: 'center', padding: '80px 0', color: t.dim }}>
               <RobotOutlined style={{ fontSize: 48, marginBottom: 16 }} />
               <p style={{ fontSize: 16 }}>No subjects available yet.</p>
             </div>
@@ -316,7 +329,7 @@ const QuizPage = () => {
               </div>
 
               {quizzes.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.25)' }}>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: t.faint }}>
                   <RobotOutlined style={{ fontSize: 36, marginBottom: 10 }} />
                   <p style={{ fontSize: 13 }}>No quizzes yet. Generate one from a material →</p>
                 </div>
@@ -325,9 +338,9 @@ const QuizPage = () => {
                   {quizzes.map((q, i) => (
                     <div key={q._id || i} className="quiz-list-item">
                       <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#f1f5f9', marginBottom: 4 }}>{q.title}</div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: t.primary, marginBottom: 4 }}>{q.title}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                          <span style={{ fontSize: 11, color: t.dim }}>
                             <FilePdfOutlined style={{ marginRight: 4 }} />{q.materialName}
                           </span>
                           <span className="quiz-q-badge">{q.questions.length} Qs</span>
@@ -348,7 +361,7 @@ const QuizPage = () => {
                 <RobotOutlined style={{ color: '#818cf8' }} />
                 Generate with AI
               </div>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 16, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: t.dim, marginBottom: 16, lineHeight: 1.6 }}>
                 Upload PDFs via Manage Subject, then generate AI quizzes below.
               </p>
 
@@ -359,7 +372,7 @@ const QuizPage = () => {
                   {selectedSubject.materials.map((mat, i) => (
                     <div key={i} className="quiz-mat-row">
                       <FilePdfOutlined style={{ color: '#f87171', fontSize: 14, flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: 13, color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mat.name}</span>
+                      <span style={{ flex: 1, fontSize: 13, color: t.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mat.name}</span>
                       <button
                         className="quiz-gen-btn"
                         disabled={generating}
@@ -383,7 +396,7 @@ const QuizPage = () => {
                     {unit.materials.map((m, j) => (
                       <div key={j} className="quiz-mat-row">
                         <FilePdfOutlined style={{ color: '#f87171', fontSize: 14, flexShrink: 0 }} />
-                        <span style={{ flex: 1, fontSize: 13, color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</span>
+                        <span style={{ flex: 1, fontSize: 13, color: t.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</span>
                         <button
                           className="quiz-gen-btn"
                           disabled={generating}
@@ -401,7 +414,7 @@ const QuizPage = () => {
               ))}
 
               {!(selectedSubject?.materials?.length) && !selectedSubject?.units?.some(u => u.materials?.length) && (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: '24px 0', color: t.faint, fontSize: 13 }}>
                   No PDF materials uploaded yet.
                 </div>
               )}
@@ -429,10 +442,10 @@ const QuizPage = () => {
               <ArrowLeftOutlined style={{ fontSize: 12 }} /> Exit
             </button>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: t.muted }}>
                 Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>{activeQuiz.title}</div>
+              <div style={{ fontSize: 11, color: t.faint, marginTop: 2 }}>{activeQuiz.title}</div>
             </div>
             {/* Step dots */}
             <div style={{ display: 'flex', gap: 5 }}>
@@ -529,8 +542,8 @@ const QuizPage = () => {
                   <HistoryOutlined style={{ color: '#fff', fontSize: 16 }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.4px' }}>Quiz History</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: t.primary, letterSpacing: '-0.4px' }}>Quiz History</div>
+                  <div style={{ fontSize: 12, color: t.muted }}>
                     {totalAttempts} attempt{totalAttempts !== 1 ? 's' : ''} recorded
                   </div>
                 </div>
@@ -547,7 +560,7 @@ const QuizPage = () => {
                 ].map(s => (
                   <div key={s.label} className="quiz-hist-stat">
                     <div style={{ fontSize: 26, fontWeight: 900, color: s.color }}>{s.value}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', marginTop: 3 }}>{s.label}</div>
+                    <div style={{ fontSize: 11, color: t.dim, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', marginTop: 3 }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -559,10 +572,10 @@ const QuizPage = () => {
                 <Spin size="large" />
               </div>
             ) : totalAttempts === 0 ? (
-              <div style={{ textAlign: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.25)' }}>
+              <div style={{ textAlign: 'center', padding: '80px 0', color: t.faint }}>
                 <HistoryOutlined style={{ fontSize: 48, marginBottom: 16, display: 'block' }} />
                 <p style={{ fontSize: 16, margin: 0 }}>No quiz attempts yet.</p>
-                <p style={{ fontSize: 13, marginTop: 6, color: 'rgba(255,255,255,0.18)' }}>Complete a quiz to see your history here.</p>
+                <p style={{ fontSize: 13, marginTop: 6, color: t.veryfaint }}>Complete a quiz to see your history here.</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -607,7 +620,7 @@ const QuizPage = () => {
                       {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 700, fontSize: 14, color: '#f1f5f9' }}>{quizTitle}</span>
+                          <span style={{ fontWeight: 700, fontSize: 14, color: t.primary }}>{quizTitle}</span>
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', padding: '1px 8px',
                             borderRadius: 100, fontSize: 10, fontWeight: 800,
@@ -616,7 +629,7 @@ const QuizPage = () => {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                           {materialName && (
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                            <span style={{ fontSize: 11, color: t.dim }}>
                               <FilePdfOutlined style={{ marginRight: 3 }} />{materialName}
                             </span>
                           )}
@@ -641,7 +654,7 @@ const QuizPage = () => {
                           {attempt.score}/{attempt.totalQuestions}
                         </div>
                         {dateStr && (
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'right', lineHeight: 1.4 }}>
+                          <div style={{ fontSize: 11, color: t.dim, textAlign: 'right', lineHeight: 1.4 }}>
                             {dateStr}<br /><span style={{ fontSize: 10, opacity: 0.7 }}>{timeStr}</span>
                           </div>
                         )}
@@ -683,7 +696,7 @@ const QuizPage = () => {
                 </svg>
                 <div className="quiz-score-inner">
                   <div style={{ fontSize: 32, fontWeight: 900, color: scoreConfig.color, lineHeight: 1 }}>{pct}%</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600, marginTop: 3 }}>SCORE</div>
+                  <div style={{ fontSize: 11, color: t.dim, fontWeight: 600, marginTop: 3 }}>SCORE</div>
                 </div>
               </div>
 
@@ -697,7 +710,7 @@ const QuizPage = () => {
                 <TrophyOutlined /> {scoreConfig.label}
               </div>
 
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 32 }}>
+              <div style={{ fontSize: 13, color: t.muted, marginBottom: 32 }}>
                 {quizScore} correct out of {activeQuiz.questions.length} questions
               </div>
 
@@ -710,14 +723,14 @@ const QuizPage = () => {
                 ].map(s => (
                   <div key={s.label} className="quiz-result-stat">
                     <div style={{ fontSize: 26, fontWeight: 900, color: s.color }}>{s.value}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{s.label}</div>
+                    <div style={{ fontSize: 11, color: t.dim, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
                 ))}
               </div>
 
               {/* Answer breakdown */}
               <div className="quiz-breakdown">
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 12, textAlign: 'left' }}>Answer Review</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: t.dim, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 12, textAlign: 'left' }}>Answer Review</div>
                 {activeQuiz.questions.map((q, i) => {
                   const correct = userAnswers[i] === q.correctAnswer;
                   return (
@@ -728,9 +741,9 @@ const QuizPage = () => {
                           : <CloseCircleOutlined style={{ color: '#f87171', fontSize: 14 }} />}
                       </div>
                       <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <div style={{ fontSize: 13, color: '#e2e8f0', fontWeight: 600, marginBottom: 2 }}>Q{i + 1}: {q.question}</div>
+                        <div style={{ fontSize: 13, color: t.body, fontWeight: 600, marginBottom: 2 }}>Q{i + 1}: {q.question}</div>
                         {!correct && (
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                          <div style={{ fontSize: 11, color: t.muted }}>
                             Correct: <span style={{ color: '#4ade80', fontWeight: 700 }}>{q.options[q.correctAnswer]}</span>
                           </div>
                         )}
