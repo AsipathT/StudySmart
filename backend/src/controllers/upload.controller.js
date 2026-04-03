@@ -297,6 +297,7 @@ class UploadController {
           date:          record.date ? new Date(record.date) : new Date(),
           uploadedBy:    userId || '',
           sourceFile:    filePath,
+          fileName:      path.basename(filePath) || 'unknown',
           fileType:      fileType || 'unknown',
           metadata:      { ...record },
         });
@@ -348,24 +349,30 @@ class UploadController {
         const docs = await ExtractedDataMongo.find(query).sort({ createdAt:-1 }).limit(200).lean();
         console.log(`[History] ${docs.length} records from MongoDB for user ${userId}`);
 
-        const payload = docs.map(doc => ({
-          id:            doc._id.toString(),
-          _id:           doc._id,
-          name:          doc.name,
-          studentNumber: doc.studentNumber,
-          subject:       doc.subject,
-          score:         doc.score,       // ← 'score' field (number), not 'CA Marks'
-          grade:         doc.grade,
-          status:        doc.status,
-          branch:        doc.branch,
-          fileType:      doc.fileType || 'unknown',
-          date:          doc.date,
-          uploadedAt:    doc.createdAt,
-          processedAt:   doc.updatedAt,
-          uploadedBy:    doc.uploadedBy,
-          sourceFile:    doc.sourceFile,
-          metadata:      doc.metadata,
-        }));
+        const payload = docs.map(doc => {
+          const sourceFile = doc.sourceFile || '';
+          const baseFileName = sourceFile ? path.basename(sourceFile) : 'unknown';
+          const fileName = doc.fileName || baseFileName;
+          const fileType = doc.fileType || (fileName && fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : 'unknown');
+          return {
+            id:            doc._id.toString(),
+            _id:           doc._id,
+            fileName,
+            fileType,
+            studentNumber: doc.studentNumber,
+            subject:       doc.subject,
+            score:         doc.score,
+            grade:         doc.grade,
+            status:        doc.status,
+            branch:        doc.branch,
+            date:          doc.date,
+            uploadedAt:    doc.createdAt,
+            processedAt:   doc.updatedAt,
+            uploadedBy:    doc.uploadedBy,
+            sourceFile:    doc.sourceFile,
+            metadata:      doc.metadata,
+          };
+        });
 
         return res.json({ success:true, data:payload });
       }
@@ -376,10 +383,17 @@ class UploadController {
       if (req.user && req.user.role !== 'admin') where.uploadedBy = req.user.id;
       const extractions = await ExtractedData.findAll({ where, order:[['createdAt','DESC']], limit:100, raw:true });
       const payload = extractions.map(ext => ({
-        id:ext.id, _id:ext.id, fileName:ext.fileName, fileType:ext.fileType,
-        status:ext.status, uploadedAt:ext.createdAt, processedAt:ext.processedAt,
-        recordCount:ext.recordCount||0, validationErrors:ext.validationErrors||[],
-        studentId:ext.metadata?.studentId||null, uploadedBy:ext.uploadedBy||ext.metadata?.userId||null,
+        id:ext.id,
+        _id:ext.id,
+        fileName:ext.fileName || ext.name || 'unknown',
+        fileType:ext.fileType || (ext.fileName ? ext.fileName.split('.').pop().toLowerCase() : 'unknown'),
+        status:ext.status,
+        uploadedAt:ext.createdAt,
+        processedAt:ext.processedAt,
+        recordCount:ext.recordCount||0,
+        validationErrors:ext.validationErrors||[],
+        studentId:ext.metadata?.studentId||null,
+        uploadedBy:ext.uploadedBy||ext.metadata?.userId||null,
         preview:ext.normalizedRecords||[],
       }));
       return res.json({ success:true, data:payload });

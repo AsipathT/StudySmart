@@ -850,6 +850,244 @@ class AnalyticsController {
       });
     }
   }
+
+  /**
+   * Get admin dashboard with real student data, predictions, GPA, and analytics
+   */
+  async getAdminDashboard(req, res) {
+    try {
+      // Get all students from database
+      const students = await Student.find({}).lean();
+
+      if (students.length === 0) {
+        return res.json({
+          success: true,
+          data: {
+            totalStudents: 0,
+            totalAssessments: 0,
+            averageScore: 0,
+            averageGPA: 0,
+            students: [],
+            topStudents: [],
+            atRiskStudents: [],
+            performanceTrend: [],
+            subjectPerformance: [],
+          },
+        });
+      }
+
+      // Get quiz scores for all students
+      const allScores = await QuizScore.find({}).lean();
+
+      // Store reference to this for use in async callbacks
+      const self = this;
+
+      // Build student details with analytics
+      const studentDetails = await Promise.all(
+        students.map(async (student) => {
+          const studentId = student._id.toString();
+          // Try to match scores by multiple criteria: by ID or by studentNumber
+          let studentScores = allScores.filter(s => s.studentId === studentId);
+          
+          // If no scores found by ID, try matching by other identifiers that might be in the data
+          if (studentScores.length === 0) {
+            // This handles cases where scores might have been added with different ID references
+            // Try to find any scores and check if we can correlate them
+            studentScores = allScores.filter(s => {
+              // Could be stored as studentNumber or other field
+              return s.studentId === student.studentNumber || 
+                     (s.studentId && student.studentNumber && s.studentId.toString().includes(student.studentNumber));
+            });
+          }
+
+          if (studentScores.length === 0) {
+            return {
+              id: student._id,
+              name: student.name,
+              studentNumber: student.studentNumber,
+              email: student.email || '',
+              program: student.program || '',
+              branch: student.branch || '',
+              year: student.year || '',
+              semester: student.semester || '',
+              latestScore: 0,
+              averageScore: 0,
+              gpa: 0,
+              totalAssessments: 0,
+              subjects: [],
+              status: 'No Data',
+              predictedScore: 0,
+              trend: 'stable',
+            };
+          }
+
+          // Calculate aggregated scores
+          const scores = studentScores.map(s => parseFloat(s.score || 0));
+          const latestScore = scores[scores.length - 1] || 0;
+          const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+          const gpa = Math.max(0, Math.min(4.0, ((averageScore - 40) / 60) * 4.0));
+
+          // Get subject breakdown
+          const subjectMap = {};
+          studentScores.forEach(score => {
+            const subject = score.subject || 'Unknown';
+            if (!subjectMap[subject]) {
+              subjectMap[subject] = [];
+            }
+            subjectMap[subject].push(parseFloat(score.score || 0));
+          });
+
+          const subjects = Object.entries(subjectMap).map(([subject, scores]) => ({
+            name: subject,
+            average: parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)),
+            count: scores.length,
+          }));
+
+          // Predict score based on trend
+          const predictedScore = self.predictNextScore(scores);
+
+          // Determine status
+          let status = 'Excellent';
+          if (averageScore < 50) status = 'At Risk';
+          else if (averageScore < 65) status = 'Below Average';
+          else if (averageScore < 75) status = 'Good';
+          else status = 'Excellent';
+
+          return {
+            id: student._id,
+            name: student.name,
+            studentNumber: student.studentNumber,
+            email: student.email,
+            program: student.program,
+            branch: student.branch,
+            year: student.year,
+            semester: student.semester,
+            latestScore: parseFloat(latestScore.toFixed(1)),
+            averageScore: parseFloat(averageScore.toFixed(1)),
+            gpa: parseFloat(gpa.toFixed(2)),
+            totalAssessments: studentScores.length,
+            subjects,
+            status,
+            predictedScore: parseFloat(predictedScore.toFixed(1)),
+          };
+        })
+      );
+
+      // Calculate overall analytics
+      const allScoresValues = allScores.map(s => parseFloat(s.score || 0));
+      const overallAverage = allScoresValues.length
+        ? allScoresValues.reduce((a, b) => a + b, 0) / allScoresValues.length
+        : 0;
+      const overallGPA = Math.max(0, Math.min(4.0, ((overallAverage - 40) / 60) * 4.0));
+
+      // Get top and at-risk students
+      const topStudents = studentDetails
+        .sort((a, b) => b.averageScore - a.averageScore)
+        .slice(0, 10);
+
+      const atRiskStudents = studentDetails
+        .filter(s => s.status === 'At Risk' || s.status === 'Below Average')
+        .sort((a, b) => a.averageScore - b.averageScore)
+        .slice(0, 10);
+
+      // Performance trend by month
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const performanceTrend = months.map((month, idx) => {
+        const monthScores = allScores.filter(s => {
+          const date = new Date(s.date);
+          return date.getMonth() === idx;
+        });
+
+        const monthAvg = monthScores.length
+          ? monthScores.reduce((sum, s) => sum + parseFloat(s.score || 0), 0) / monthScores.length
+          : 0;
+
+        return {
+          month,
+          average: parseFloat(monthAvg.toFixed(1)),
+          assessments: monthScores.length,
+          students: new Set(monthScores.map(s => s.studentId)).size,
+        };
+      });
+
+      // Subject performance
+      const subjectMap = {};
+      allScores.forEach(score => {
+        const subject = score.subject || 'Unknown';
+        if (!subjectMap[subject]) {
+          subjectMap[subject] = [];
+        }
+        subjectMap[subject].push(parseFloat(score.score || 0));
+      });
+
+      const subjectPerformance = Object.entries(subjectMap)
+        .map(([subject, scores]) => {
+          const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+          return {
+            name: subject,
+            average: parseFloat(avg.toFixed(1)),
+            gpa: Math.max(0, Math.min(4.0, ((avg - 40) / 60) * 4.0)),
+            passRate: parseFloat(((scores.filter(s => s >= 50).length / scores.length) * 100).toFixed(1)),
+            totalAssessments: scores.length,
+            distribution: {
+              A: scores.filter(s => s >= 80).length,
+              B: scores.filter(s => s >= 65 && s < 80).length,
+              C: scores.filter(s => s >= 50 && s < 65).length,
+              D: scores.filter(s => s >= 40 && s < 50).length,
+              F: scores.filter(s => s < 40).length,
+            },
+          };
+        })
+        .sort((a, b) => b.average - a.average);
+
+      return res.json({
+        success: true,
+        data: {
+          summary: {
+            totalStudents: students.length,
+            totalAssessments: allScores.length,
+            averageScore: parseFloat(overallAverage.toFixed(1)),
+            averageGPA: parseFloat(overallGPA.toFixed(2)),
+            passRate: allScoresValues.length
+              ? parseFloat(((allScoresValues.filter(s => s >= 50).length / allScoresValues.length) * 100).toFixed(1))
+              : 0,
+          },
+          students: studentDetails,
+          topStudents,
+          atRiskStudents,
+          performanceTrend,
+          subjectPerformance,
+        },
+      });
+    } catch (error) {
+      console.error('Admin dashboard error:', error);
+      return res.status(500).json({
+        success: false,
+        error: { code: 'DASHBOARD_ERROR', message: error.message },
+      });
+    }
+  }
+
+  /**
+   * Predict next score based on trend
+   */
+  predictNextScore(scores) {
+    if (scores.length === 0) return 50;
+    if (scores.length === 1) return scores[0];
+
+    // Simple linear regression for trend prediction
+    const n = scores.length;
+    const sumX = (n * (n + 1)) / 2;
+    const sumY = scores.reduce((a, b) => a + b, 0);
+    const sumXY = scores.reduce((sum, y, i) => sum + (i + 1) * y, 0);
+    const sumX2 = (n * (n + 1) * (2 * n + 1)) / 6;
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const nextIndex = n + 1;
+    return Math.max(0, Math.min(100, intercept + slope * nextIndex));
+  }
 }
 
 module.exports = new AnalyticsController();

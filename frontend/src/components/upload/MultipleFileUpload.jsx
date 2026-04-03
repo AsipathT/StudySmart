@@ -53,9 +53,11 @@ const MultipleFileUpload = ({ onUploadComplete, onAnalyticsUpdate }) => {
       });
 
       if (result.success) {
+        const extension = file.name?.split('.').pop()?.toLowerCase() || 'unknown';
         const uploadRecord = {
           id: result.data.extractionId,
           fileName: file.name,
+          fileType: extension,
           status: 'success',
           recordsCount: result.data.recordsCount,
           studentFound: result.data.studentFound,
@@ -115,6 +117,12 @@ const MultipleFileUpload = ({ onUploadComplete, onAnalyticsUpdate }) => {
       dataIndex: 'fileName',
       key: 'fileName',
       render: (text) => <Text ellipsis>{text}</Text>
+    },
+    {
+      title: 'Type',
+      dataIndex: 'fileType',
+      key: 'fileType',
+      render: (type) => <Tag color="blue">{(type || 'unknown').toUpperCase()}</Tag>
     },
     {
       title: 'Status',

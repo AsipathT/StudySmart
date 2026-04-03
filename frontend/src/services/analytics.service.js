@@ -73,6 +73,14 @@ class AnalyticsService {
     });
     return response.data;
   }
+
+  /**
+   * Get admin dashboard with real student data
+   */
+  async getAdminDashboard() {
+    const response = await api.get('/analytics/admin/dashboard');
+    return response.data;
+  }
 }
 
 export default new AnalyticsService();

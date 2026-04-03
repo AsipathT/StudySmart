@@ -1195,7 +1195,37 @@ const AnalyticsPage = () => {
               </Select>
             }
           >
-            <Table dataSource={filteredSubjectPerf} columns={subjectColumns} rowKey="subject" size="small"
+            <Table dataSource={filteredSubjectPerf} columns={[
+              ...subjectColumns,
+              {
+                title: 'Action',
+                key: 'action',
+                render: (_, record) => (
+                  <Button
+                    type="link"
+                    danger
+                    size="small"
+                    onClick={() => {
+                      Modal.confirm({
+                        title: 'Delete Subject',
+                        content: `Are you sure you want to delete "${record.subject}"?`,
+                        okText: 'Delete',
+                        okType: 'danger',
+                        onOk() {
+                          const updatedScores = rawScores.filter(s => s.subject !== record.subject);
+                          setRawScores(updatedScores);
+                          sessionStorage.setItem('analyticsScores', JSON.stringify(updatedScores));
+                          setAnalyticsData(buildAnalyticsFromScores(updatedScores));
+                          message.success('Subject deleted successfully');
+                        },
+                      });
+                    }}
+                  >
+                    Delete
+                  </Button>
+                ),
+              },
+            ]} rowKey="subject" size="small"
               pagination={{ pageSize: 10 }} locale={{ emptyText: <Empty description="No subject data. Upload a marks file to see this data." /> }} />
           </Card>
         </Col>
