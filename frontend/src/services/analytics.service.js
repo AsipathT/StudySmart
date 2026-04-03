@@ -58,7 +58,17 @@ class AnalyticsService {
    * Download PDF analytics report
    */
   async downloadPdfReport() {
-    const response = await api.get('/report/pdf', {
+    const response = await api.get('/analytics/export/pdf', {
+      responseType: 'blob'
+    });
+    return response.data;
+  }
+
+  /**
+   * Download CSV analytics report
+   */
+  async downloadCsvReport() {
+    const response = await api.get('/analytics/export/csv', {
       responseType: 'blob'
     });
     return response.data;

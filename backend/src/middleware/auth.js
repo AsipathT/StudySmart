@@ -22,6 +22,7 @@ const isMongoUp = () => mongoose.connection.readyState === 1;
 
 async function protect(req, res, next) {
   try {
+    console.log('protect middleware called for:', req.path);
     // ── 1. Extract token ──────────────────────────────────────────────────────
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
