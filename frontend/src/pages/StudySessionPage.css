@@ -580,3 +580,80 @@
     margin: 10px;
   }
 }
+
+/* ══════════════════════════════════════════════════════
+   LIGHT MODE OVERRIDES
+══════════════════════════════════════════════════════ */
+.session-tracker-container.light-mode {
+  background: #f8fafc;
+}
+
+/* Page title */
+.light-mode h2.ant-typography {
+  background: linear-gradient(to right, #1e293b, #4f46e5) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: #1e293b !important;
+}
+
+/* Secondary / subtitle text */
+.light-mode .ant-typography-secondary {
+  color: rgba(15,23,42,0.55) !important;
+}
+
+/* Timer */
+.light-mode .timer-up {
+  background: linear-gradient(to bottom, #1e293b, #475569) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Stat cards */
+.light-mode .summary-stat-card {
+  background: rgba(0,0,0,0.03) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+}
+.light-mode .summary-stat-card .ant-statistic-title {
+  color: rgba(15,23,42,0.5) !important;
+}
+.light-mode .summary-stat-card .ant-statistic-content-value {
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+
+/* Table */
+.light-mode .ant-table { color: #1e293b !important; }
+.light-mode .ant-table-thead > tr > th {
+  background: rgba(0,0,0,0.03) !important;
+  color: rgba(15,23,42,0.6) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+}
+.light-mode .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+  color: #1e293b !important;
+}
+.light-mode .ant-table-row:hover > td {
+  background: rgba(0,0,0,0.02) !important;
+}
+
+/* Unit row cards (shown outside subject cards) */
+.light-mode .unit-row-card {
+  background: rgba(0,0,0,0.03) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+
+/* Dot grid too visible on light bg — tone down */
+.light-mode .sess-dots {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px) !important;
+}
+
+/* ── Assign-students dropdown: selected checkmark always visible ── */
+.student-assign-popup .ant-select-item-option-selected {
+  background: rgba(99, 102, 241, 0.12) !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+.student-assign-popup .ant-select-item-option-selected .ant-select-item-option-state {
+  color: #6366f1 !important;
+  font-size: 14px !important;
+}

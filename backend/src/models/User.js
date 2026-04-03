@@ -3,8 +3,8 @@ const bcrypt = require('bcryptjs');
 
 // SLIIT email format validator
 const validateSLIITEmail = (email) => {
-  if (email === 'admin@nidu.sliit.lk') {
-    return true; // Allow hardcoded admin email
+  if (email === 'admin@nidu.sliit.lk' || email === 'demo@studysmart.com') {
+    return true;
   }
   const sliitRegex = /^IT\d{8}@my\.sliit\.lk$/i;
   return sliitRegex.test(email);

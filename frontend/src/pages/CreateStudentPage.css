@@ -1,8 +1,9 @@
 /* ── Page shell ─────────────────────────────────────────── */
 .csp-page {
   height: 100%;
+  min-height: 600px;
   display: flex;
-  background: transparent;
+  background: #020617;
   font-family: 'Inter', system-ui, sans-serif;
   position: relative;
   overflow: hidden;
@@ -349,3 +350,38 @@
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.5; transform: scale(0.8); }
 }
+
+/* ── Light mode overrides ───────────────────────────────── */
+.csp-light { background: #f8fafc; }
+
+.csp-light .csp-heading {
+  background: linear-gradient(to right, #1e293b 30%, #4f46e5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.csp-light .csp-subtext          { color: rgba(15,23,42,0.6); }
+.csp-light .csp-feature-title    { color: #1e293b; }
+.csp-light .csp-feature-text     { color: rgba(15,23,42,0.55); }
+
+.csp-light .csp-profile-name     { color: #1e293b; }
+.csp-light .csp-profile-email    { color: rgba(15,23,42,0.5); }
+
+.csp-light .csp-form-label       { color: rgba(15,23,42,0.4); }
+
+.csp-light .fl-group .ant-input-affix-wrapper {
+  background: rgba(0,0,0,0.03) !important;
+  border-color: rgba(0,0,0,0.12) !important;
+  color: #1e293b !important;
+}
+.csp-light .fl-group .ant-input  { color: #1e293b !important; }
+.csp-light .fl-group .ant-input-prefix { color: rgba(15,23,42,0.35) !important; }
+.csp-light .fl-group .ant-input-suffix { color: rgba(15,23,42,0.35) !important; }
+
+.csp-light .fl-label             { color: rgba(15,23,42,0.4); }
+.csp-light .fl-group.raised .fl-label,
+.csp-light .fl-group .ant-input-affix-wrapper:focus-within ~ .fl-label { color: #6366f1; }
+
+.csp-light .strength-segment     { background: rgba(0,0,0,0.08); }
+
+.csp-light .csp-note             { color: rgba(15,23,42,0.45); }

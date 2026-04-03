@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useSessionTheme } from '../context/SessionThemeContext';
 import { Typography, Card, Button, List, Space, Tag, Modal, Drawer, message, Divider, Col, Row, Statistic, Table, Form, Input, Select, Upload, Tabs, Avatar, Popconfirm } from 'antd';
 import { 
   CalculatorOutlined, 
@@ -83,22 +84,26 @@ const getSubjectGradient = (color) => {
   return HEX_TO_GRADIENT[color.toLowerCase()] || 'linear-gradient(135deg,#6366f1,#4f46e5)';
 };
 
-const MaterialRow = ({ mat, editingPagesMat, setEditingPagesMat, onSave }) => {
+const MaterialRow = ({ mat, subjectId, editingPagesMat, setEditingPagesMat, onSave }) => {
   const isEditing = editingPagesMat?.matId === mat._id;
+  const { isDark } = useSessionTheme();
+  const fileHref = subjectId && mat._id
+    ? `http://localhost:5000/api/subjects/${subjectId}/materials/${mat._id}/file`
+    : `http://localhost:5000${mat.fileUrl}`;
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
       padding: '10px 14px',
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.07)',
+      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+      border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
       borderRadius: 10, marginBottom: 6,
     }}>
       {/* PDF name link */}
       <FilePdfOutlined style={{ color: '#f87171', fontSize: 16, flexShrink: 0 }} />
       <a
-        href={`http://localhost:5000${mat.fileUrl}`}
+        href={fileHref}
         target="_blank" rel="noreferrer"
-        style={{ color: '#e2e8f0', fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}
+        style={{ color: isDark ? '#e2e8f0' : '#334155', fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}
       >
         {mat.name}
       </a>
@@ -118,8 +123,8 @@ const MaterialRow = ({ mat, editingPagesMat, setEditingPagesMat, onSave }) => {
             }}
             style={{
               width: 60, height: 28, borderRadius: 7, textAlign: 'center',
-              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(99,102,241,0.5)',
-              color: '#f1f5f9', fontSize: 13, fontWeight: 700, outline: 'none',
+              background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', border: '1px solid rgba(99,102,241,0.5)',
+              color: isDark ? '#f1f5f9' : '#1e293b', fontSize: 13, fontWeight: 700, outline: 'none',
             }}
           />
           <button
@@ -129,7 +134,7 @@ const MaterialRow = ({ mat, editingPagesMat, setEditingPagesMat, onSave }) => {
           >✓</button>
           <button
             onClick={() => setEditingPagesMat(null)}
-            style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.4)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             title="Cancel"
           >✕</button>
         </div>
@@ -140,9 +145,9 @@ const MaterialRow = ({ mat, editingPagesMat, setEditingPagesMat, onSave }) => {
           style={{
             display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0,
             padding: '3px 10px', borderRadius: 20,
-            background: mat.totalPages ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.05)',
-            border: `1px solid ${mat.totalPages ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.1)'}`,
-            color: mat.totalPages ? '#818cf8' : 'rgba(255,255,255,0.3)',
+            background: mat.totalPages ? 'rgba(99,102,241,0.12)' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+            border: `1px solid ${mat.totalPages ? 'rgba(99,102,241,0.3)' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            color: mat.totalPages ? '#818cf8' : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.35)',
             fontSize: 11, fontWeight: 700, cursor: 'pointer',
           }}
         >
@@ -156,6 +161,7 @@ const MaterialRow = ({ mat, editingPagesMat, setEditingPagesMat, onSave }) => {
 
 const StudySessionPage = () => {
   const { user } = useAuth();
+  const { isDark } = useSessionTheme();
   const [stage, setStage] = useState('subjects'); // 'subjects', 'units', 'unit-details', 'session', 'summary'
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -185,14 +191,44 @@ const StudySessionPage = () => {
   const [initialPomodoroTime, setInitialPomodoroTime] = useState(0);
   const [intervalsCompleted, setIntervalsCompleted] = useState(0);
 
+  const pomodoroStatusRef = useRef('inactive'); // always mirrors pomodoroStatus for interval closures
   const pomodoroIntervalRef = useRef(null);
   const pomodoroFiredRef = useRef(false);
+
+  // Synchronously update both state and ref to avoid stale closure in the upTime interval
+  const setPomodoroStatusSync = (status) => {
+    pomodoroStatusRef.current = status;
+    setPomodoroStatus(status);
+  };
+
+  // Play a short ascending tone using Web Audio API
+  const playPomodoroSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + i * 0.18;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.35, start + 0.05);
+        gain.gain.linearRampToValueAtTime(0, start + 0.18);
+        osc.start(start);
+        osc.stop(start + 0.2);
+      });
+    } catch (_) {}
+  };
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
   const [moduleForm] = Form.useForm();
   const [unitForm] = Form.useForm();
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [studentSearch, setStudentSearch] = useState('');
   const [activeManageTab, setActiveManageTab] = useState('edit');
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [editingPagesMat, setEditingPagesMat] = useState(null); // { matId, value }
@@ -216,13 +252,13 @@ const StudySessionPage = () => {
     if (sessionStatus === 'active') {
       const id = setInterval(() => {
         setUpTime((prev) => prev + 1);
-        if (pomodoroStatus === 'active') {
+        if (pomodoroStatusRef.current === 'active') {
           setWorkedTime((prev) => prev + 1);
         }
       }, 1000);
       return () => clearInterval(id);
     }
-  }, [sessionStatus, pomodoroStatus]);
+  }, [sessionStatus]);
 
   const fetchSubjects = async () => {
     setLoading(true);
@@ -260,6 +296,7 @@ const StudySessionPage = () => {
       }
     }
     setSelectedStudentIds([]);
+    setStudentSearch('');
     setActiveManageTab('edit');
     setEditGradient(getSubjectGradient(freshSubj?.color));
     setEditShape(freshSubj?.icon || 'circle');
@@ -322,14 +359,14 @@ const StudySessionPage = () => {
     setSessionStatus('paused');
     if (pomodoroStatus === 'active') {
       clearInterval(pomodoroIntervalRef.current);
-      setPomodoroStatus('inactive');
+      setPomodoroStatusSync('inactive');
     }
   };
 
   const stopSession = () => {
     setSessionStatus('inactive');
     clearInterval(pomodoroIntervalRef.current);
-    setPomodoroStatus('inactive');
+    setPomodoroStatusSync('inactive');
     // Find total pages of the material being studied
     const mat = selectedUnit?.materials?.find(m => m.name === materialBeingStudied);
     setPagesCompleted(0);
@@ -369,7 +406,7 @@ const StudySessionPage = () => {
     if (sessionStatus !== 'active') {
         startSession();
     }
-    setPomodoroStatus('active');
+    setPomodoroStatusSync('active');
     pomodoroFiredRef.current = false;
     pomodoroIntervalRef.current = setInterval(() => {
       setPomodoroTime((prev) => {
@@ -377,11 +414,15 @@ const StudySessionPage = () => {
           if (!pomodoroFiredRef.current) {
             pomodoroFiredRef.current = true;
             clearInterval(pomodoroIntervalRef.current);
-            setPomodoroStatus('inactive');
+            setPomodoroStatusSync('inactive');
             setIntervalsCompleted((prevCount) => prevCount + 1);
-            message.success('Interval completed!');
+            playPomodoroSound();
+            message.success({
+              content: '🍅 Pomodoro complete! Great work — take a break.',
+              duration: 5,
+            });
           }
-          return 0;
+          return initialPomodoroTime; // reset so the button stays enabled for next round
         }
         return prev - 1;
       });
@@ -466,7 +507,7 @@ const StudySessionPage = () => {
     setPomodoroTime(0);
     setIntervalsCompleted(0);
     setSessionStatus('inactive');
-    setPomodoroStatus('inactive');
+    setPomodoroStatusSync('inactive');
     setSessionPagesData(null);
     setPagesCompleted(0);
   };
@@ -604,16 +645,26 @@ const StudySessionPage = () => {
     { title: 'Material', dataIndex: 'materialName', key: 'materialName' }
   ];
 
+  // Text colours that flip between dark / light mode
+  const tc = {
+    primary:   isDark ? '#f1f5f9'               : '#1e293b',
+    body:      isDark ? '#e2e8f0'               : '#334155',
+    secondary: isDark ? 'rgba(255,255,255,0.55)': 'rgba(15,23,42,0.6)',
+    muted:     isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)',
+    dim:       isDark ? 'rgba(255,255,255,0.18)': 'rgba(15,23,42,0.25)',
+    white:     isDark ? '#fff'                  : '#1e293b',
+  };
+
   const inputStyle = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    border:     isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
     borderRadius: 12,
-    color: '#f1f5f9',
+    color: tc.primary,
     fontSize: 14,
   };
 
   const labelStyle = {
-    color: 'rgba(255,255,255,0.55)',
+    color: tc.secondary,
     fontSize: 11,
     fontWeight: 700,
     letterSpacing: '0.7px',
@@ -621,7 +672,7 @@ const StudySessionPage = () => {
   };
 
   return (
-    <div className="session-tracker-container">
+    <div className={`session-tracker-container${isDark ? '' : ' light-mode'}`}>
       <div className="bg-visuals" aria-hidden="true">
         {/* Static glow blobs */}
         <div className="sess-glow sess-glow-1" />
@@ -751,7 +802,7 @@ const StudySessionPage = () => {
               >
                 ← Prev
               </Button>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600 }}>
+              <span style={{ color: tc.secondary, fontSize: 13, fontWeight: 600 }}>
                 Page {currentPage} of {Math.ceil(subjects.length / PAGE_SIZE)}
               </span>
               <Button
@@ -773,7 +824,7 @@ const StudySessionPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <button
               onClick={() => setStage('subjects')}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', borderRadius: 10, color: tc.secondary, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               <ArrowLeftOutlined style={{ fontSize: 12 }} /> All Subjects
             </button>
@@ -823,13 +874,13 @@ const StudySessionPage = () => {
 
             {/* Units list */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tc.muted, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 }}>
                 {selectedSubject?.units?.length || 0} Units / Modules
               </div>
               {(selectedSubject?.units?.length || 0) === 0 ? (
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '40px 24px', textAlign: 'center' }}>
-                  <BookOutlined style={{ fontSize: 36, color: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
-                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.2)' }}>No units added yet.</div>
+                <div style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', borderRadius: 14, padding: '40px 24px', textAlign: 'center' }}>
+                  <BookOutlined style={{ fontSize: 36, color: tc.dim, marginBottom: 12 }} />
+                  <div style={{ fontSize: 14, color: tc.dim }}>No units added yet.</div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -846,16 +897,16 @@ const StudySessionPage = () => {
 
                       {/* Name + meta */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: tc.primary, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {unit.name}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                           {unit.durationMinutes > 0 && (
-                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontSize: 11, color: tc.muted, display: 'flex', alignItems: 'center', gap: 4 }}>
                               <ClockCircleOutlined style={{ fontSize: 10 }} />{unit.durationMinutes} min
                             </span>
                           )}
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ fontSize: 11, color: tc.muted, display: 'flex', alignItems: 'center', gap: 4 }}>
                             <FilePdfOutlined style={{ fontSize: 10, color: '#f87171' }} />{unit.materials?.length || 0} PDF{unit.materials?.length !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -868,8 +919,8 @@ const StudySessionPage = () => {
                             {unit.materials.length} material{unit.materials.length !== 1 ? 's' : ''}
                           </span>
                         )}
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <ArrowRightOutlined style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} className="unit-row-arrow" />
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <ArrowRightOutlined style={{ fontSize: 11, color: tc.muted }} className="unit-row-arrow" />
                         </div>
                       </div>
                     </div>
@@ -883,20 +934,20 @@ const StudySessionPage = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
                 {/* Global materials */}
-                <div style={{ background: 'rgba(15,23,41,0.7)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ background: isDark ? 'rgba(15,23,41,0.7)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 18px', borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <FilePdfOutlined style={{ color: '#f87171', fontSize: 13 }} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#f1f5f9', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Subject Materials</span>
-                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: 100 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: tc.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Subject Materials</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: tc.muted, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', padding: '2px 7px', borderRadius: 100 }}>
                       {selectedSubject?.materials?.length || 0}
                     </span>
                   </div>
                   <div style={{ padding: '10px 14px' }}>
                     {(selectedSubject?.materials?.length || 0) === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: 'rgba(255,255,255,0.18)' }}>No global materials</div>
+                      <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: tc.dim }}>No global materials</div>
                     ) : (
                       selectedSubject.materials.map((mat, i) => (
-                        <a key={i} href={`http://localhost:5000${mat.fileUrl}`} target="_blank" rel="noreferrer"
+                        <a key={i} href={`http://localhost:5000/api/subjects/${selectedSubject._id}/materials/${mat._id}/file`} target="_blank" rel="noreferrer"
                           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px', borderBottom: i < selectedSubject.materials.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', textDecoration: 'none' }}>
                           <FilePdfOutlined style={{ color: '#f87171', fontSize: 13, flexShrink: 0 }} />
                           <span style={{ fontSize: 12, color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mat.name}</span>
@@ -907,17 +958,17 @@ const StudySessionPage = () => {
                 </div>
 
                 {/* Students */}
-                <div style={{ background: 'rgba(15,23,41,0.7)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ background: isDark ? 'rgba(15,23,41,0.7)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 18px', borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <UserOutlined style={{ color: '#60a5fa', fontSize: 13 }} />
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#f1f5f9', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assigned Students</span>
-                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: 100 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: tc.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assigned Students</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: tc.muted, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', padding: '2px 7px', borderRadius: 100 }}>
                       {selectedSubject?.students?.length || 0}
                     </span>
                   </div>
                   <div style={{ padding: '10px 14px' }}>
                     {(selectedSubject?.students?.length || 0) === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: 'rgba(255,255,255,0.18)' }}>No students assigned yet</div>
+                      <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: tc.dim }}>No students assigned yet</div>
                     ) : (
                       selectedSubject.students.map((st, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 4px', borderBottom: i < selectedSubject.students.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
@@ -925,8 +976,8 @@ const StudySessionPage = () => {
                             <UserOutlined style={{ fontSize: 12, color: '#60a5fa' }} />
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.name}</div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.email}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: tc.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.name}</div>
+                            <div style={{ fontSize: 11, color: tc.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.email}</div>
                           </div>
                         </div>
                       ))
@@ -947,12 +998,12 @@ const StudySessionPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             <button
               onClick={() => setStage('units')}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', borderRadius: 10, color: tc.secondary, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               <ArrowLeftOutlined style={{ fontSize: 12 }} /> {selectedSubject?.name}
             </button>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>/</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>{selectedUnit?.name}</span>
+            <span style={{ fontSize: 12, color: tc.dim }}>/</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: tc.secondary }}>{selectedUnit?.name}</span>
           </div>
 
           {/* ── Unit hero banner ── */}
@@ -985,15 +1036,15 @@ const StudySessionPage = () => {
           </div>
 
           {/* ── Materials list ── */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: tc.muted, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 }}>
             Learning Materials
           </div>
 
           {(selectedUnit?.materials?.length || 0) === 0 ? (
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '48px 24px', textAlign: 'center' }}>
-              <FilePdfOutlined style={{ fontSize: 40, color: 'rgba(255,255,255,0.1)', marginBottom: 14 }} />
-              <div style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.2)', marginBottom: 5 }}>No materials uploaded yet</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.12)' }}>
+            <div style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', borderRadius: 14, padding: '48px 24px', textAlign: 'center' }}>
+              <FilePdfOutlined style={{ fontSize: 40, color: tc.dim, marginBottom: 14 }} />
+              <div style={{ fontSize: 15, fontWeight: 600, color: tc.dim, marginBottom: 5 }}>No materials uploaded yet</div>
+              <div style={{ fontSize: 12, color: tc.dim }}>
                 {user?.role === 'admin' ? 'Upload PDFs via Manage Subject.' : 'Ask your admin to upload study materials.'}
               </div>
             </div>
@@ -1002,7 +1053,7 @@ const StudySessionPage = () => {
               {selectedUnit.materials.map((mat, idx) => (
                 <div key={mat._id || idx} style={{
                   display: 'flex', alignItems: 'center', gap: 14,
-                  background: 'rgba(15,23,41,0.7)', border: '1px solid rgba(255,255,255,0.07)',
+                  background: isDark ? 'rgba(15,23,41,0.7)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
                   borderRadius: 14, padding: '16px 20px',
                   transition: 'border-color 0.2s, background 0.2s',
                 }}>
@@ -1014,14 +1065,14 @@ const StudySessionPage = () => {
                   {/* Name + meta */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <a
-                      href={`http://localhost:5000${mat.fileUrl}`}
+                      href={`http://localhost:5000/api/subjects/${selectedSubject?._id}/materials/${mat._id}/file`}
                       target="_blank" rel="noreferrer"
-                      style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}
+                      style={{ fontSize: 14, fontWeight: 700, color: tc.primary, textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}
                     >
                       {mat.name}
                     </a>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>PDF Document</span>
+                      <span style={{ fontSize: 11, color: tc.muted }}>PDF Document</span>
                       {mat.totalPages > 0 && (
                         <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', padding: '1px 8px', borderRadius: 100 }}>
                           {mat.totalPages} pages
@@ -1062,16 +1113,16 @@ const StudySessionPage = () => {
               onClick={() => setStage('unit-details')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px',
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 10, color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600,
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+                borderRadius: 10, color: tc.secondary, fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', transition: 'all 0.2s',
               }}
             >
               <ArrowLeftOutlined style={{ fontSize: 12 }} /> Exit Session
             </button>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#f1f5f9' }}>{selectedUnit.name}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{selectedSubject.name} · Study Session</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: tc.primary }}>{selectedUnit.name}</div>
+              <div style={{ fontSize: 12, color: tc.muted }}>{selectedSubject.name} · Study Session</div>
             </div>
           </div>
           
@@ -1091,7 +1142,7 @@ const StudySessionPage = () => {
               <div style={{ padding: '24px 24px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
                 {/* Label + status */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '1.4px', textTransform: 'uppercase' }}>Session Time</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: tc.muted, letterSpacing: '1.4px', textTransform: 'uppercase' }}>Session Time</span>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
                     padding: '2px 8px', borderRadius: 100,
@@ -1110,7 +1161,7 @@ const StudySessionPage = () => {
                 </div>
 
                 {/* Subject name */}
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 4 }}>{selectedSubject.name}</div>
+                <div style={{ fontSize: 13, color: tc.secondary, fontWeight: 600, marginBottom: 4 }}>{selectedSubject.name}</div>
 
                 {/* Timer digits */}
                 <div className="timer-up" style={{ margin: '8px 0 16px' }}>{formatTime(upTime)}</div>
@@ -1156,8 +1207,8 @@ const StudySessionPage = () => {
             }}>
               <div style={{ height: 3, background: 'linear-gradient(90deg,#10b981,#34d399,#6ee7b7)' }} />
               <div style={{ padding: '24px 24px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 4 }}>Worked Time</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Tracked during Pomodoro only</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: tc.muted, letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 4 }}>Worked Time</div>
+                <div style={{ fontSize: 13, color: tc.muted, fontWeight: 500 }}>Tracked during Pomodoro only</div>
                 <div className="timer-up" style={{
                   margin: '8px 0',
                   background: 'linear-gradient(to bottom,#4ade80,#166534)',
@@ -1167,11 +1218,11 @@ const StudySessionPage = () => {
 
                 {/* Progress bar: worked / total */}
                 <div style={{ width: '100%', marginTop: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 11, color: tc.muted, fontWeight: 600 }}>
                     <span>Efficiency</span>
                     <span>{upTime > 0 ? Math.round((workedTime / upTime) * 100) : 0}%</span>
                   </div>
-                  <div style={{ height: 6, borderRadius: 100, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+                  <div style={{ height: 6, borderRadius: 100, background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', overflow: 'hidden' }}>
                     <div style={{
                       height: '100%',
                       width: `${upTime > 0 ? Math.min((workedTime / upTime) * 100, 100) : 0}%`,
@@ -1189,7 +1240,7 @@ const StudySessionPage = () => {
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                 }}>
                   <CheckCircleOutlined style={{ color: '#34d399', fontSize: 16 }} />
-                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600 }}>
+                  <span style={{ color: tc.secondary, fontSize: 13, fontWeight: 600 }}>
                     <span style={{ color: '#4ade80', fontWeight: 800 }}>{intervalsCompleted}</span> Pomodoro{intervalsCompleted !== 1 ? 's' : ''} completed
                   </span>
                 </div>
@@ -1208,7 +1259,7 @@ const StudySessionPage = () => {
               <div style={{ height: 3, background: 'linear-gradient(90deg,#f43f5e,#fb7185,#fda4af)' }} />
               <div style={{ padding: '24px 24px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '1.4px', textTransform: 'uppercase' }}>Pomodoro</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: tc.muted, letterSpacing: '1.4px', textTransform: 'uppercase' }}>Pomodoro</span>
                   {pomodoroStatus === 'active' && (
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -1235,7 +1286,7 @@ const StudySessionPage = () => {
                         padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                         border: `1px solid ${initialPomodoroTime === m * 60 ? 'rgba(251,113,133,0.5)' : 'rgba(255,255,255,0.1)'}`,
                         background: initialPomodoroTime === m * 60 ? 'rgba(244,63,94,0.2)' : 'rgba(255,255,255,0.04)',
-                        color: initialPomodoroTime === m * 60 ? '#fb7185' : 'rgba(255,255,255,0.45)',
+                        color: initialPomodoroTime === m * 60 ? '#fb7185' : tc.muted,
                         transition: 'all 0.2s',
                         opacity: pomodoroStatus === 'active' ? 0.4 : 1,
                       }}
@@ -1270,7 +1321,7 @@ const StudySessionPage = () => {
                       width: 40, height: 40, borderRadius: 12, flexShrink: 0,
                       border: '1px solid rgba(255,255,255,0.1)',
                       background: 'rgba(255,255,255,0.04)',
-                      color: pomodoroStatus === 'active' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)',
+                      color: pomodoroStatus === 'active' ? tc.dim : tc.secondary,
                       cursor: pomodoroStatus === 'active' ? 'not-allowed' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 15, transition: 'all 0.2s',
@@ -1291,7 +1342,7 @@ const StudySessionPage = () => {
               renderItem={(mat) => (
                 <List.Item>
                   <Card size="small" hoverable>
-                    <a href={`http://localhost:5000${mat.fileUrl}`} target="_blank" rel="noreferrer">
+                    <a href={`http://localhost:5000/api/subjects/${selectedSubject?._id}/materials/${mat._id}/file`} target="_blank" rel="noreferrer">
                       <Space>
                         <FilePdfOutlined style={{ color: '#ff4d4f' }} />
                         {mat.name}
@@ -1379,10 +1430,10 @@ const StudySessionPage = () => {
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ClockCircleOutlined style={{ color: '#60a5fa', fontSize: 13 }} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Total Session</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: tc.muted, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Total Session</span>
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: '#60a5fa', fontFamily: 'monospace' }}>{formatTime(upTime)}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>Wall-clock time</div>
+                <div style={{ fontSize: 11, color: tc.dim, marginTop: 3 }}>Wall-clock time</div>
               </div>
 
               {/* Focus Time */}
@@ -1391,10 +1442,10 @@ const StudySessionPage = () => {
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ThunderboltOutlined style={{ color: '#34d399', fontSize: 13 }} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Time</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: tc.muted, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Time</span>
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: '#34d399', fontFamily: 'monospace' }}>{formatTime(workedTime)}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>Active pomodoro time</div>
+                <div style={{ fontSize: 11, color: tc.dim, marginTop: 3 }}>Active pomodoro time</div>
               </div>
 
               {/* Break / Idle */}
@@ -1403,10 +1454,10 @@ const StudySessionPage = () => {
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(251,191,36,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <PauseCircleOutlined style={{ color: '#fbbf24', fontSize: 13 }} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Break / Idle</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: tc.muted, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Break / Idle</span>
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: '#fbbf24', fontFamily: 'monospace' }}>{formatTime(breakTime)}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>Non-focus time</div>
+                <div style={{ fontSize: 11, color: tc.dim, marginTop: 3 }}>Non-focus time</div>
               </div>
 
               {/* Focus Rate */}
@@ -1415,10 +1466,10 @@ const StudySessionPage = () => {
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <TrophyOutlined style={{ color: '#818cf8', fontSize: 13 }} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Rate</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: tc.muted, textTransform: 'uppercase', letterSpacing: '0.7px' }}>Focus Rate</span>
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: '#818cf8', fontFamily: 'monospace' }}>{focusRate}%</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>
+                <div style={{ fontSize: 11, color: tc.dim, marginTop: 3 }}>
                   {focusRate >= 70 ? 'Excellent' : focusRate >= 40 ? 'Good' : focusRate > 0 ? 'Can improve' : 'No pomodoro used'}
                 </div>
               </div>
@@ -1431,7 +1482,7 @@ const StudySessionPage = () => {
               <div className="timer-card-pomo" style={{ background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.15)', borderRadius: 16, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                   <span style={{ fontSize: 16 }}>🍅</span>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: '#f1f5f9', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pomodoro Summary</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: tc.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pomodoro Summary</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                   {[
@@ -1440,19 +1491,19 @@ const StudySessionPage = () => {
                     { label: 'Total Focused',   value: workedTime > 0 ? `${Math.round(workedTime / 60)}m` : '—',                                 sub: 'focused minutes',   color: '#fb7185' },
                     { label: 'Avg / Interval',  value: intervalsCompleted > 0 && workedTime > 0 ? `${Math.round(workedTime / intervalsCompleted / 60)}m` : '—', sub: 'avg per round', color: '#f43f5e' },
                   ].map(s => (
-                    <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '11px 13px' }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.32)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{s.label}</div>
+                    <div key={s.label} style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', borderRadius: 10, padding: '11px 13px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: tc.muted, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{s.label}</div>
                       <div style={{ fontSize: 19, fontWeight: 900, color: s.color }}>{s.value}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)', marginTop: 1 }}>{s.sub}</div>
+                      <div style={{ fontSize: 10, color: tc.dim, marginTop: 1 }}>{s.sub}</div>
                     </div>
                   ))}
                 </div>
                 {upTime > 0 && (
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.32)', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: tc.muted, marginBottom: 4 }}>
                       <span>Focus efficiency</span><span style={{ fontWeight: 700 }}>{focusRate}%</span>
                     </div>
-                    <div style={{ height: 6, borderRadius: 100, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+                    <div style={{ height: 6, borderRadius: 100, background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${focusRate}%`, borderRadius: 100, background: 'linear-gradient(90deg,#f43f5e,#fb7185)', boxShadow: '0 0 8px rgba(244,63,94,0.45)' }} />
                     </div>
                   </div>
@@ -1468,7 +1519,7 @@ const StudySessionPage = () => {
                   <div style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: 16, padding: '18px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                       <FilePdfOutlined style={{ color: '#818cf8', fontSize: 15 }} />
-                      <span style={{ fontSize: 12, fontWeight: 800, color: '#f1f5f9', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Reading Progress</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: tc.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Reading Progress</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 14 }}>
                       {/* SVG ring */}
@@ -1487,19 +1538,19 @@ const StudySessionPage = () => {
                         </div>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: tc.body, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {sessionPagesData.materialName}
                         </div>
                         {[
                           { l: 'Pages read',  v: `${sessionPagesData.completed} / ${sessionPagesData.total}`, c: '#818cf8' },
-                          { l: 'Remaining',   v: `${pagesLeft} pages`,                                         c: 'rgba(255,255,255,0.45)' },
+                          { l: 'Remaining',   v: `${pagesLeft} pages`,                                         c: tc.secondary },
                         ].map(r => (
                           <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>{r.l}</span>
+                            <span style={{ color: tc.muted }}>{r.l}</span>
                             <span style={{ fontWeight: 700, color: r.c }}>{r.v}</span>
                           </div>
                         ))}
-                        <div style={{ marginTop: 8, height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+                        <div style={{ marginTop: 8, height: 5, borderRadius: 100, background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${pct}%`, borderRadius: 100, background: pct === 100 ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#6366f1,#818cf8,#06b6d4)', boxShadow: '0 0 8px rgba(99,102,241,0.45)' }} />
                         </div>
                       </div>
@@ -1516,7 +1567,7 @@ const StudySessionPage = () => {
 
             {/* ── Session Details ── */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '18px 20px', marginBottom: 20 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>Session Details</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: tc.muted, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>Session Details</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
                 {[
                   { label: 'Subject',          value: selectedSubject?.name },
@@ -1527,8 +1578,8 @@ const StudySessionPage = () => {
                   { label: 'Date',             value: sessionStartTime.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) },
                 ].map(d => (
                   <div key={d.label}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{d.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.value}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: tc.muted, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 3 }}>{d.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: tc.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.value}</div>
                   </div>
                 ))}
               </div>
@@ -1541,7 +1592,7 @@ const StudySessionPage = () => {
                 Save to History
               </Button>
               <Button size="large" icon={<DownloadOutlined />}
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', borderRadius: 12, fontWeight: 600, height: 46, paddingInline: 20 }}
+                style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', color: tc.body, borderRadius: 12, fontWeight: 600, height: 46, paddingInline: 20 }}
                 onClick={() => generatePDF({
                   subject: selectedSubject.name,
                   unitName: selectedUnit.name,
@@ -1554,7 +1605,7 @@ const StudySessionPage = () => {
                 Download PDF
               </Button>
               <Button size="large" onClick={reset}
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)', borderRadius: 12, fontWeight: 600, height: 46, paddingInline: 20 }}>
+                style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)', color: tc.secondary, borderRadius: 12, fontWeight: 600, height: 46, paddingInline: 20 }}>
                 Finish
               </Button>
             </div>
@@ -1571,7 +1622,7 @@ const StudySessionPage = () => {
         closable={false}
         rootClassName="adm-new-subj-drawer"
         styles={{
-          body: { padding: 0, background: '#0b1222', display: 'flex', flexDirection: 'column', height: '100%' },
+          body: { padding: 0, background: isDark ? '#0b1222' : '#f8fafc', display: 'flex', flexDirection: 'column', height: '100%' },
           wrapper: { boxShadow: '-8px 0 40px rgba(0,0,0,0.5)' },
         }}
       >
@@ -1636,9 +1687,9 @@ const StudySessionPage = () => {
                       style={{
                         flex: 1, textAlign: 'center', padding: '10px 0',
                         borderRadius: 12, cursor: 'pointer', fontSize: 13, fontWeight: 700,
-                        border: `1.5px solid ${isSelected ? colorMap[d] : 'rgba(255,255,255,0.08)'}`,
-                        background: isSelected ? `${colorMap[d]}22` : 'rgba(255,255,255,0.03)',
-                        color: isSelected ? colorMap[d] : 'rgba(255,255,255,0.4)',
+                        border: `1.5px solid ${isSelected ? colorMap[d] : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)')}`,
+                        background: isSelected ? `${colorMap[d]}22` : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'),
+                        color: isSelected ? colorMap[d] : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)'),
                         transition: 'all 0.2s',
                       }}
                     >
@@ -1665,8 +1716,8 @@ const StudySessionPage = () => {
                       width: 48, height: 48,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 18, cursor: 'pointer',
-                      border: `2px solid ${selectedShape === shape.key ? '#6366f1' : 'rgba(255,255,255,0.1)'}`,
-                      background: selectedShape === shape.key ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
+                      border: `2px solid ${selectedShape === shape.key ? '#6366f1' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)')}`,
+                      background: selectedShape === shape.key ? 'rgba(99,102,241,0.18)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
                       transition: 'all 0.2s',
                       boxShadow: selectedShape === shape.key ? '0 0 0 3px rgba(99,102,241,0.2)' : 'none',
                       ...shape.style,
@@ -1692,8 +1743,8 @@ const StudySessionPage = () => {
                       borderRadius: 10,
                       background: g.value,
                       cursor: 'pointer',
-                      border: `2px solid ${selectedGradient === g.value ? '#fff' : 'transparent'}`,
-                      boxShadow: selectedGradient === g.value ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 2px 8px rgba(0,0,0,0.3)',
+                      border: `2px solid ${selectedGradient === g.value ? (isDark ? '#fff' : '#1e293b') : 'transparent'}`,
+                      boxShadow: selectedGradient === g.value ? (isDark ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 0 0 3px rgba(0,0,0,0.2)') : '0 2px 8px rgba(0,0,0,0.3)',
                       transition: 'all 0.2s',
                       transform: selectedGradient === g.value ? 'scale(1.2)' : 'scale(1)',
                     }}
@@ -1729,11 +1780,11 @@ const StudySessionPage = () => {
         closable={false}
         rootClassName="admin-manage-drawer"
         styles={{
-          body: { padding: 0, background: '#0b1222', position: 'relative' },
+          body: { padding: 0, background: isDark ? '#0b1222' : '#f8fafc', position: 'relative' },
           wrapper: { boxShadow: '-12px 0 50px rgba(0,0,0,0.6)' },
         }}
       >
-        <div className="adm-inner" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0b1222' }}>
+        <div className="adm-inner" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: isDark ? '#0b1222' : '#f8fafc' }}>
 
         {/* Header — live preview updates with edit tab selections */}
         <div style={{
@@ -1764,7 +1815,7 @@ const StudySessionPage = () => {
         </div>
 
         {/* Custom tab bar */}
-        <div className="adm-tabbar" style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+        <div className="adm-tabbar" style={{ display: 'flex', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, flexShrink: 0 }}>
           {[
             { key: 'edit',      label: 'Edit',      icon: <EditOutlined /> },
             { key: 'units',     label: 'Units',     icon: <AppstoreOutlined /> },
@@ -1777,7 +1828,7 @@ const StudySessionPage = () => {
               data-active={activeManageTab === tab.key}
               style={{
                 flex: 1, padding: '12px 0', border: 'none', background: 'transparent',
-                color: activeManageTab === tab.key ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                color: activeManageTab === tab.key ? '#818cf8' : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.45)'),
                 borderBottom: `2px solid ${activeManageTab === tab.key ? '#818cf8' : 'transparent'}`,
                 cursor: 'pointer', fontSize: 12, fontWeight: activeManageTab === tab.key ? 700 : 500,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -1795,7 +1846,7 @@ const StudySessionPage = () => {
           {/* ── Edit Tab ── */}
           {activeManageTab === 'edit' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>EDIT SUBJECT</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>EDIT SUBJECT</div>
               <Form form={editForm} onFinish={handleEditSubject} layout="vertical" requiredMark={false}>
                 <Form.Item
                   name="name"
@@ -1820,8 +1871,8 @@ const StudySessionPage = () => {
                           width: 48, height: 48,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 18, cursor: 'pointer',
-                          border: `2px solid ${editShape === shape.key ? '#818cf8' : 'rgba(255,255,255,0.1)'}`,
-                          background: editShape === shape.key ? 'rgba(129,140,248,0.18)' : 'rgba(255,255,255,0.04)',
+                          border: `2px solid ${editShape === shape.key ? '#818cf8' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)')}`,
+                          background: editShape === shape.key ? 'rgba(129,140,248,0.18)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
                           transition: 'all 0.2s',
                           boxShadow: editShape === shape.key ? '0 0 0 3px rgba(129,140,248,0.2)' : 'none',
                           ...shape.style,
@@ -1844,8 +1895,8 @@ const StudySessionPage = () => {
                         title={g.label}
                         style={{
                           width: 36, height: 36, borderRadius: 10, background: g.value, cursor: 'pointer',
-                          border: `2px solid ${editGradient === g.value ? '#fff' : 'transparent'}`,
-                          boxShadow: editGradient === g.value ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 2px 8px rgba(0,0,0,0.3)',
+                          border: `2px solid ${editGradient === g.value ? (isDark ? '#fff' : '#1e293b') : 'transparent'}`,
+                          boxShadow: editGradient === g.value ? (isDark ? '0 0 0 3px rgba(255,255,255,0.25)' : '0 0 0 3px rgba(0,0,0,0.2)') : '0 2px 8px rgba(0,0,0,0.3)',
                           transition: 'all 0.2s',
                           transform: editGradient === g.value ? 'scale(1.2)' : 'scale(1)',
                         }}
@@ -1869,7 +1920,7 @@ const StudySessionPage = () => {
           {/* ── Units Tab ── */}
           {activeManageTab === 'units' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ADD UNIT</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ADD UNIT</div>
               <Form form={unitForm} onFinish={handleCreateModule} layout="vertical" requiredMark={false}>
                 <Form.Item name="name" rules={[{ required: true, message: 'Enter unit name' }, { min: 2, message: 'At least 2 characters' }]} style={{ marginBottom: 12 }}>
                   <Input placeholder="Unit name (e.g. Algebra Basics)" style={inputStyle} />
@@ -1883,16 +1934,16 @@ const StudySessionPage = () => {
               </Form>
               {(selectedSubject?.units?.length || 0) > 0 && (
                 <div style={{ marginTop: 28 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
                     EXISTING UNITS ({selectedSubject.units.length})
                   </div>
                   {selectedSubject.units.map((unit, i) => (
-                    <div key={unit._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, marginBottom: 8 }}>
+                    <div key={unit._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 12, marginBottom: 8 }}>
                       <div>
-                        <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 14 }}>{unit.name}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginTop: 2 }}>{unit.durationMinutes} min</div>
+                        <div style={{ color: tc.primary, fontWeight: 600, fontSize: 14 }}>{unit.name}</div>
+                        <div style={{ color: tc.muted, fontSize: 11, marginTop: 2 }}>{unit.durationMinutes} min</div>
                       </div>
-                      <ClockCircleOutlined style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14 }} />
+                      <ClockCircleOutlined style={{ color: tc.dim, fontSize: 14 }} />
                     </div>
                   ))}
                 </div>
@@ -1903,20 +1954,91 @@ const StudySessionPage = () => {
           {/* ── Students Tab ── */}
           {activeManageTab === 'students' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ASSIGN STUDENTS</div>
-              <Select
-                mode="multiple"
-                showSearch
-                optionFilterProp="label"
-                placeholder="Search and select students..."
-                value={selectedStudentIds}
-                onChange={setSelectedStudentIds}
-                style={{ width: '100%', marginBottom: 12 }}
-                maxTagCount="responsive"
-                options={usersList
-                  .filter(u => !selectedSubject?.students?.some(s => (s._id || s) === u._id))
-                  .map(u => ({ label: `${u.name} · ${u.email}`, value: u._id }))}
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>ASSIGN STUDENTS</div>
+
+              {/* Search box */}
+              <input
+                type="text"
+                placeholder="Search students..."
+                value={studentSearch}
+                onChange={e => setStudentSearch(e.target.value)}
+                style={{
+                  width: '100%', padding: '9px 14px', marginBottom: 10,
+                  background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+                  borderRadius: 10, color: tc.primary, fontSize: 13, outline: 'none',
+                  boxSizing: 'border-box',
+                }}
               />
+
+              {/* Inline checklist */}
+              {(() => {
+                const available = usersList.filter(u =>
+                  !selectedSubject?.students?.some(s => (s._id || s) === u.id)
+                );
+                const filtered = available.filter(u =>
+                  !studentSearch.trim() ||
+                  u.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                  u.email.toLowerCase().includes(studentSearch.toLowerCase())
+                );
+                if (filtered.length === 0) return (
+                  <div style={{ color: tc.muted, fontSize: 13, textAlign: 'center', padding: '18px 0' }}>
+                    {available.length === 0 ? 'All students already assigned' : 'No students match your search'}
+                  </div>
+                );
+                return (
+                  <div style={{ maxHeight: 260, overflowY: 'auto', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {filtered.map(u => {
+                      const isSelected = selectedStudentIds.includes(u.id);
+                      const toggle = () => setSelectedStudentIds(prev =>
+                        isSelected ? prev.filter(id => id !== u.id) : [...prev, u.id]
+                      );
+                      return (
+                        <div
+                          key={u.id}
+                          onClick={toggle}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+                            background: isSelected ? 'rgba(99,102,241,0.18)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                            border: isSelected ? '1.5px solid rgba(99,102,241,0.5)' : `1.5px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {/* Avatar */}
+                          <div style={{
+                            width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+                            background: isSelected ? 'linear-gradient(135deg,#6366f1,#4f46e5)' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'),
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 800, fontSize: 13, color: isSelected ? '#fff' : tc.primary,
+                          }}>
+                            {(u.name || '?')[0].toUpperCase()}
+                          </div>
+                          {/* Info */}
+                          <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <div style={{ color: isSelected ? '#a5b4fc' : tc.body, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
+                            <div style={{ color: tc.muted, fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</div>
+                          </div>
+                          {/* Checkmark */}
+                          <div style={{
+                            width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                            background: isSelected ? '#6366f1' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+                            border: isSelected ? '2px solid #6366f1' : `2px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s',
+                          }}>
+                            {isSelected && (
+                              <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                                <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
               <Button
                 type="primary" block
                 disabled={selectedStudentIds.length === 0}
@@ -1927,20 +2049,20 @@ const StudySessionPage = () => {
               </Button>
               {(selectedSubject?.students?.length || 0) > 0 && (
                 <div style={{ marginTop: 28 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 12 }}>
                     ASSIGNED ({selectedSubject.students.length})
                   </div>
                   {selectedSubject.students.map((student, i) => {
                     const name = student.name || 'Student';
                     const email = student.email || '';
                     return (
-                      <div key={student._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, marginBottom: 8 }}>
+                      <div key={student._id || i} className="adm-list-item" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 12, marginBottom: 8 }}>
                         <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#fff', flexShrink: 0 }}>
                           {name[0].toUpperCase()}
                         </div>
                         <div style={{ overflow: 'hidden' }}>
-                          <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
-                          <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
+                          <div style={{ color: tc.primary, fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+                          <div style={{ color: tc.muted, fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
                         </div>
                       </div>
                     );
@@ -1953,7 +2075,7 @@ const StudySessionPage = () => {
           {/* ── Materials Tab ── */}
           {activeManageTab === 'materials' && (
             <div style={{ padding: '20px 24px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>UPLOAD MATERIAL</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 14 }}>UPLOAD MATERIAL</div>
               <Select
                 style={{ width: '100%', marginBottom: 12 }}
                 placeholder="Assign to unit (or subject-wide)"
@@ -1983,13 +2105,14 @@ const StudySessionPage = () => {
                   {selectedSubject.units.map((unit, i) => (
                     (unit.materials?.length || 0) > 0 && (
                       <div key={unit._id || i} style={{ marginBottom: 20 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>
                           {unit.name}
                         </div>
                         {unit.materials.map((mat) => (
                           <MaterialRow
                             key={mat._id}
                             mat={mat}
+                            subjectId={selectedSubject?._id}
                             editingPagesMat={editingPagesMat}
                             setEditingPagesMat={setEditingPagesMat}
                             onSave={handleSaveMaterialPages}
@@ -2000,11 +2123,12 @@ const StudySessionPage = () => {
                   ))}
                   {(selectedSubject?.materials?.length || 0) > 0 && (
                     <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>SUBJECT-WIDE</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 10 }}>SUBJECT-WIDE</div>
                       {selectedSubject.materials.map((mat) => (
                         <MaterialRow
                           key={mat._id}
                           mat={mat}
+                          subjectId={selectedSubject?._id}
                           editingPagesMat={editingPagesMat}
                           setEditingPagesMat={setEditingPagesMat}
                           onSave={handleSaveMaterialPages}
@@ -2019,7 +2143,7 @@ const StudySessionPage = () => {
         </div>
 
         {/* Pinned delete footer — always visible */}
-        <div className="adm-footer" style={{ flexShrink: 0, padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.07)', background: '#0b1222' }}>
+        <div className="adm-footer" style={{ flexShrink: 0, padding: '14px 24px', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'}`, background: isDark ? '#0b1222' : '#f8fafc' }}>
           <Button
             block
             icon={<DeleteOutlined />}

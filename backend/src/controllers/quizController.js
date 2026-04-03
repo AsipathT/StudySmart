@@ -1,6 +1,7 @@
 const { Quiz, QuizAttempt } = require('../models/Quiz');
 const quizService = require('../services/quizGeneratorService');
 const Subject = require('../models/Subject');
+const path = require('path');
 
 class QuizController {
   /**
@@ -9,7 +10,32 @@ class QuizController {
   async generateFromPDF(req, res) {
     const { subjectId, materialName, fileUrl } = req.body;
     try {
-      const text = await quizService.extractTextFromPDF(fileUrl);
+      let text = null;
+
+      // Try MongoDB buffer first (reliable)
+      if (subjectId && fileUrl) {
+        try {
+          const subject = await Subject.findById(subjectId);
+          if (subject) {
+            let mat = null;
+            for (const unit of subject.units) {
+              mat = unit.materials.find(m => m.fileUrl === fileUrl);
+              if (mat) break;
+            }
+            if (!mat) mat = subject.materials.find(m => m.fileUrl === fileUrl);
+            if (mat?.fileData) {
+              text = await quizService.extractTextFromBuffer(mat.fileData);
+            }
+          }
+        } catch (e) {
+          console.warn('[Quiz] MongoDB buffer lookup failed:', e.message);
+        }
+      }
+
+      // Fallback: try disk file
+      if (!text) {
+        text = await quizService.extractTextFromPDF(fileUrl);
+      }
       const generated = await quizService.generateQuiz(text, materialName);
 
       const newQuiz = new Quiz({

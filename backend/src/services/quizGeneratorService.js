@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 
 class QuizGeneratorService {
   constructor() {
@@ -8,7 +8,18 @@ class QuizGeneratorService {
   }
 
   /**
-   * Extract text from PDF
+   * Extract text from a PDF Buffer (stored in MongoDB)
+   */
+  async extractTextFromBuffer(buffer) {
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
+    await parser.destroy();
+    console.log(`Extracted text length from buffer: ${result.text?.length || 0}`);
+    return result.text;
+  }
+
+  /**
+   * Extract text from PDF file on disk (legacy fallback)
    */
   async extractTextFromPDF(fileUrl) {
     const normalizedUrl = fileUrl.startsWith('/') ? fileUrl.substring(1) : fileUrl;
@@ -17,9 +28,11 @@ class QuizGeneratorService {
 
     const dataBuffer = fs.readFileSync(filePath);
     console.log(`Extracting text from: ${filePath}`);
-    const data = await pdfParse(dataBuffer);
-    console.log(`Extracted text length: ${data.text?.length || 0}`);
-    return data.text;
+    const parser = new PDFParse({ data: dataBuffer });
+    const result = await parser.getText();
+    await parser.destroy();
+    console.log(`Extracted text length: ${result.text?.length || 0}`);
+    return result.text;
   }
 
   async getAuthorizedModel() {
