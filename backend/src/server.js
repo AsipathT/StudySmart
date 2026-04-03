@@ -15,10 +15,22 @@ const startServer = async () => {
     console.warn('⚠️ MongoDB unavailable:', e.message);
   }
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`\n✅ Server running on port ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/health`);
     console.log(`   Login:  POST http://localhost:${PORT}/api/auth/login`);
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err, promise) => {
+    console.error('Unhandled Rejection:', err.message);
+    server.close(() => process.exit(1));
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err.message);
+    server.close(() => process.exit(1));
   });
 };
 
