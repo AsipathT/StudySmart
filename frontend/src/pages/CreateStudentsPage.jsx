@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { UserAddOutlined, MailOutlined, LockOutlined, UserOutlined, CheckCircleFilled, SafetyOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import { useSessionTheme } from '../context/SessionThemeContext';
 import './CreateStudentPage.css';
 
 /* ── password strength helper ── */
@@ -31,6 +32,7 @@ const FloatingInput = ({ name, label, icon, rules, children, form }) => {
 const CreateStudentsPage = () => {
   const [form]    = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const { isDark } = useSessionTheme();
 
   const watchedName     = Form.useWatch('name',     form);
   const watchedEmail    = Form.useWatch('email',    form);
@@ -59,7 +61,7 @@ const CreateStudentsPage = () => {
         ...values,
         role: 'student',
       });
-      if (response.data.token) {
+      if (response.data.success) {
         message.success('Student account created successfully!');
         form.resetFields();
       }
@@ -71,7 +73,7 @@ const CreateStudentsPage = () => {
   };
 
   return (
-    <div className="csp-page">
+    <div className={`csp-page${isDark ? '' : ' csp-light'}`}>
 
       {/* glow blobs */}
       <div className="csp-blob csp-blob-1" />

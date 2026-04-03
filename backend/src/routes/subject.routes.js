@@ -4,6 +4,9 @@ const subjectController = require('../controllers/subjectController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
+// Serve material file from MongoDB — no auth needed (matches /uploads/ static serving behaviour)
+router.get('/:id/materials/:materialId/file', subjectController.getMaterialFile);
+
 // Route to get all subjects
 router.get('/', protect, subjectController.getAllSubjects);
 

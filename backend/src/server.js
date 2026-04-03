@@ -8,6 +8,9 @@ const startServer = async () => {
   try {
     const { connectMongoDB } = require('../config/database');
     await connectMongoDB();
+    // Seed demo + admin users now that DB is connected
+    const { seedUsers } = require('./routes/auth.routes');
+    if (seedUsers) await seedUsers();
   } catch (e) {
     console.warn('⚠️ MongoDB unavailable:', e.message);
   }

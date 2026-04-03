@@ -26,31 +26,33 @@ try {
 const isMongoUp = () => mongoose.connection.readyState === 1;
 
 // ── Auto-seed demo user into MongoDB on startup ───────────────────────────────
-async function seedDemoUser() {
+async function seedUsers() {
   if (!isMongoUp() || !User) {
     console.warn('[AUTH] Seed skipped — MongoDB not ready');
     return;
   }
-  try {
-    const existing = await User.findOne({ email: 'demo@studysmart.com' });
-    if (!existing) {
-      const hash = await bcrypt.hash('demo123', 10);
-      const u = await User.create({
-        name:      'Demo Student',
-        email:     'demo@studysmart.com',
-        password:  hash,
-        role:      'student',
-        studentId: 'IT23145870',
-      });
-      console.log('[AUTH] ✅ Demo user seeded  _id:', u._id.toString());
-    } else {
-      console.log('[AUTH] ✅ Demo user exists  _id:', existing._id.toString());
+
+  const seeds = [
+    { name: 'Demo Student', email: 'demo@studysmart.com', password: 'demo123', role: 'student', studentId: 'IT23145870' },
+    { name: 'Admin',        email: 'admin@nidu.sliit.lk', password: 'nidu@123', role: 'admin',   studentId: '' },
+  ];
+
+  for (const seed of seeds) {
+    try {
+      const existing = await User.findOne({ email: seed.email });
+      if (!existing) {
+        const hash = await bcrypt.hash(seed.password, 10);
+        const u = await User.create({ ...seed, password: hash });
+        console.log(`[AUTH] ✅ Seeded ${seed.role}:`, seed.email, '| _id:', u._id.toString());
+      } else {
+        console.log(`[AUTH] ✅ Already exists (${seed.role}):`, seed.email);
+      }
+    } catch (e) {
+      console.warn(`[AUTH] Seed error for ${seed.email}:`, e.message);
     }
-  } catch (e) {
-    console.warn('[AUTH] Seed error (non-fatal):', e.message);
   }
 }
-setTimeout(seedDemoUser, 2000);
+setTimeout(seedUsers, 2000);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function makeToken(user) {
@@ -176,9 +178,23 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// ── GET /api/auth/users ───────────────────────────────────────────────────────
+router.get('/users', async (req, res) => {
+  if (!isMongoUp() || !User) {
+    return res.status(503).json({ success: false, message: 'Database unavailable' });
+  }
+  try {
+    const users = await User.find({}).select('-password').lean();
+    return res.json({ success: true, data: users.map(safeUser) });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ── POST /api/auth/logout ─────────────────────────────────────────────────────
 router.post('/logout', (_req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
 module.exports = router;
+module.exports.seedUsers = seedUsers;

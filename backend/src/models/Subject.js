@@ -13,6 +13,8 @@ const unitSchema = new mongoose.Schema({
   materials: [{
     name: String,
     fileUrl: String,
+    fileData: { type: Buffer },
+    mimeType: { type: String, default: 'application/pdf' },
     totalPages: { type: Number, default: 0 },
     uploadedAt: { type: Date, default: Date.now }
   }]
@@ -35,6 +37,8 @@ const subjectSchema = new mongoose.Schema({
   materials: [{
     name: String,
     fileUrl: String,
+    fileData: { type: Buffer },
+    mimeType: { type: String, default: 'application/pdf' },
     totalPages: { type: Number, default: 0 },
     uploadedAt: { type: Date, default: Date.now }
   }],
