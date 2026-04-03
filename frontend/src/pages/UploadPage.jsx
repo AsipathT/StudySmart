@@ -20,7 +20,6 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
 const BRANCHES = [
   { value: 'kandy',       label: 'Kandy' },
   { value: 'malabe',      label: 'Malabe' },
@@ -39,116 +38,38 @@ const ACADEMIC_YEARS = [
 
 const PROGRAMS = [
   "B.Sc (Hons) Information Technology",
-  "B.Sc (Hons) Software Engineering"
+  "B.Sc (Hons) Software Engineering",
 ];
 
 const SUBJECTS = {
   "B.Sc (Hons) Information Technology": {
     1: {
-      1: [
-        "IT1180 - Effective Academic Communication",
-        "IT1140 - Fundamentals of Computing",
-        "IT1130 - Mathematics for Computing",
-        "IT1120 - Introduction to Programming",
-        "IE1030 - Data Communication Networks"
-      ],
-      2: [
-        "SE1020 - Object Oriented Programming",
-        "IT1170 - Data Structures and Algorithms",
-        "IT1160 - Discrete Mathematics",
-        "IT1150 - Technical Writing"
-      ]
+      1: ["IT1180 - Effective Academic Communication","IT1140 - Fundamentals of Computing","IT1130 - Mathematics for Computing","IT1120 - Introduction to Programming","IE1030 - Data Communication Networks"],
+      2: ["SE1020 - Object Oriented Programming","IT1170 - Data Structures and Algorithms","IT1160 - Discrete Mathematics","IT1150 - Technical Writing"],
     },
     2: {
-      1: [
-        "SE2030 - Software Engineering",
-        "IT2140 - Database Design and Development",
-        "IT2120 - Probability and Statistics",
-        "IT2011 - Artficial Intelligence and Machine Learning"
-      ],
-      2: [
-        "SE2020 - Web and Mobile Technology",
-        "IT2160 - Professional Skills",
-        "IT2150 - IT Project",
-        "IT2130 - Operating Systems and System Administration"
-      ]
+      1: ["SE2030 - Software Engineering","IT2140 - Database Design and Development","IT2120 - Probability and Statistics","IT2011 - Artficial Intelligence and Machine Learning"],
+      2: ["SE2020 - Web and Mobile Technology","IT2160 - Professional Skills","IT2150 - IT Project","IT2130 - Operating Systems and System Administration"],
     },
     3: {
-      1: [
-        "IT3050 - Employability Skills Development - Seminar",
-        "IT3040 - IT Project Management",
-        "IT3030 - Programming Applications and Frameworks",
-        "IT3020 - Database Systems",
-        "IT3010 - Network Design and Management"
-      ],
-      2: [
-        "IT3090 - Bussiness Management for IT",
-        "IT3080 - Data Science & Analytics",
-        "IT3070 - Information Assurance & Security",
-        "IT3060 - Human Computer Interaction"
-      ]
+      1: ["IT3050 - Employability Skills Development - Seminar","IT3040 - IT Project Management","IT3030 - Programming Applications and Frameworks","IT3020 - Database Systems","IT3010 - Network Design and Management"],
+      2: ["IT3090 - Bussiness Management for IT","IT3080 - Data Science & Analytics","IT3070 - Information Assurance & Security","IT3060 - Human Computer Interaction"],
     },
     4: {
-      1: [
-        "Research Project (Comprehensive Design and Analysis Project ) - IT4010",
-        "IT4140 - Industry Placement - 6 Months",
-        "IT4130 - Image Understanding & Processing",
-        "IT4110 - Computer Systems and Network Administration",
-        "IT4100 - Software Quality Assurance",
-        "IT4070 - Preparation for the Professional World",
-        "IT4060 - Machine Learning",
-        "IT4020 - Modern Topics in IT",
-        "IE4040 - Information Assurance and Auditing"
-      ],
-      2: [
-        "IT4140 - Industry Placement - 6 Months",
-        "IT4130 - Image Understanding & Processing",
-        "IT4110 - Computer Systems and Network Administration",
-        "IT4100 - Software Quality Assurance",
-        "IT4070 - Preparation for the Professional World",
-        "IT4060 - Machine Learning",
-        "IT4020 - Modern Topics in IT",
-        "IT4010 - Research Project",
-        "IE4040 - Information Assurance and Auditing"
-      ]
-    }
+      1: ["Research Project (Comprehensive Design and Analysis Project ) - IT4010","IT4140 - Industry Placement - 6 Months","IT4130 - Image Understanding & Processing","IT4110 - Computer Systems and Network Administration","IT4100 - Software Quality Assurance","IT4070 - Preparation for the Professional World","IT4060 - Machine Learning","IT4020 - Modern Topics in IT","IE4040 - Information Assurance and Auditing"],
+      2: ["IT4140 - Industry Placement - 6 Months","IT4130 - Image Understanding & Processing","IT4110 - Computer Systems and Network Administration","IT4100 - Software Quality Assurance","IT4070 - Preparation for the Professional World","IT4060 - Machine Learning","IT4020 - Modern Topics in IT","IT4010 - Research Project","IE4040 - Information Assurance and Auditing"],
+    },
   },
   "B.Sc (Hons) Software Engineering": {
     3: {
-      1: [
-        "SE3040 - Application Frameworks",
-        "SE3030 - Software Architecture",
-        "SE3020 - Distributed Systems",
-        "SE3010 - Software Engineering Process & Quality Management",
-        "IT3050 - Employability Skills Development - Seminar"
-      ],
-      2: [
-        "SE3080 - Software Project Management",
-        "SE3070 - Case Studies in Software Engineering",
-        "SE3060 - Database Systems",
-        "SE3050 - User Experience Engineering"
-      ]
+      1: ["SE3040 - Application Frameworks","SE3030 - Software Architecture","SE3020 - Distributed Systems","SE3010 - Software Engineering Process & Quality Management","IT3050 - Employability Skills Development - Seminar"],
+      2: ["SE3080 - Software Project Management","SE3070 - Case Studies in Software Engineering","SE3060 - Database Systems","SE3050 - User Experience Engineering"],
     },
     4: {
-      1: [
-        "Research Project (Comprehensive Design and Analysis Project )",
-        "SE4020 - Mobile Application Design and Development",
-        "SE4010 - Current Trends in Software Engineering",
-        "IT4140 - Industry Placement - 6 Months",
-        "IT4130 - Image Understanding & Processing",
-        "IT4070 - Preparation for the Professional World",
-        "IT4060 - Machine Learning"
-      ],
-      2: [
-        "SE4050 - Deep Learning",
-        "SE4040 - Enterprise Application Development",
-        "SE4030 - Secure Software Development",
-        "IT4140 - Industry Placement - 6 Months",
-        "IT4010 - Research Project",
-        "IE4060 - Robotics & Intelligent Systems"
-      ]
-    }
-  }
+      1: ["Research Project (Comprehensive Design and Analysis Project )","SE4020 - Mobile Application Design and Development","SE4010 - Current Trends in Software Engineering","IT4140 - Industry Placement - 6 Months","IT4130 - Image Understanding & Processing","IT4070 - Preparation for the Professional World","IT4060 - Machine Learning"],
+      2: ["SE4050 - Deep Learning","SE4040 - Enterprise Application Development","SE4030 - Secure Software Development","IT4140 - Industry Placement - 6 Months","IT4010 - Research Project","IE4060 - Robotics & Intelligent Systems"],
+    },
+  },
 };
 
 const subjectToSemester = {};
@@ -164,17 +85,108 @@ Object.keys(SUBJECTS).forEach(program => {
 
 const normalizeId = (val) => String(val || '').replace(/\s+/g, '').toUpperCase();
 
+// ─── BUG FIX 1: Merge into sessionStorage instead of overwriting ──────────────
+// Key: 'analyticsScores' holds ALL uploaded subject rows across multiple uploads.
+// On each upload we MERGE new rows with existing ones (dedup by subject+studentNumber).
+function mergeAnalyticsScores(newRows) {
+  let existing = [];
+  try {
+    const stored = sessionStorage.getItem('analyticsScores');
+    if (stored) existing = JSON.parse(stored);
+    if (!Array.isArray(existing)) existing = [];
+  } catch { existing = []; }
+
+  // Build a map keyed by "studentNumber|subject" for deduplication.
+  // New rows overwrite old ones for the same subject (latest upload wins).
+  const map = new Map();
+  existing.forEach(r => {
+    const key = `${normalizeId(r.studentNumber)}|${(r.subject||'').trim().toLowerCase()}`;
+    map.set(key, r);
+  });
+  newRows.forEach(r => {
+    const key = `${normalizeId(r.studentNumber)}|${(r.subject||'').trim().toLowerCase()}`;
+    map.set(key, r);
+  });
+
+  const merged = Array.from(map.values());
+  try {
+    sessionStorage.setItem('analyticsScores', JSON.stringify(merged));
+  } catch (e) {
+    // Storage quota exceeded — keep only the newest 200 rows
+    const trimmed = merged.slice(-200);
+    sessionStorage.setItem('analyticsScores', JSON.stringify(trimmed));
+  }
+  console.log(`[Upload] analyticsScores: ${existing.length} → ${merged.length} rows (added ${newRows.length})`);
+  return merged;
+}
+
+function getLetterGrade(score) {
+  if (score >= 85) return 'A+'; if (score >= 75) return 'A';
+  if (score >= 70) return 'B+'; if (score >= 65) return 'B';
+  if (score >= 60) return 'C+'; if (score >= 55) return 'C';
+  if (score >= 50) return 'D';  return 'F';
+}
+
+// ─── Extract score rows from a preview array ──────────────────────────────────
+// Handles both raw Excel rows (CA Marks) and already-normalised rows (score).
+function extractScoreRows(preview, studentId, formValues) {
+  if (!Array.isArray(preview) || preview.length === 0) return [];
+
+  const selectedSubjects = Array.isArray(formValues?.subjects) ? formValues.subjects : [];
+
+  return preview
+    .map(row => {
+      // Score — try every column name the Excel might use
+      const rawScore =
+        row['CA Marks'] ?? row['ca_marks'] ?? row['CAMarks'] ??
+        row['Marks']    ?? row['marks']    ??
+        row['Score']    ?? row['score']    ??
+        row['Total']    ?? row['total']    ??
+        row['Mark']     ?? row['mark']     ?? null;
+
+      const numScore = rawScore !== null
+        ? parseFloat(String(rawScore).replace(/[^0-9.]/g, ''))
+        : NaN;
+
+      // Already-normalised rows from ExtractedDataMongo have 'score' directly
+      const finalScore = !isNaN(numScore) ? numScore
+        : (!isNaN(parseFloat(row.score)) ? parseFloat(row.score) : 0);
+
+      // Subject — try every column name
+      const subject =
+        row['Subject']     || row['subject']      ||
+        row['Module Name'] || row['Module']        || row['module']  ||
+        row['Course']      || row['course']        ||
+        row['Subject Name']|| row['subject_name']  ||
+        (selectedSubjects.length > 0 ? selectedSubjects[0] : '');
+
+      if (!subject.trim()) return null;
+
+      return {
+        subject:       subject.trim(),
+        score:         finalScore,
+        grade:         row['Grade']     || row['grade']  || getLetterGrade(finalScore),
+        status:        row['Pass/Fail'] || row['Status'] || row['status'] ||
+                       (finalScore >= 50 ? 'Pass' : 'Fail'),
+        studentNumber: studentId || row['Registration No'] || row['studentNumber'] || '',
+        name:          formValues?.fullName || row['Name'] || row['name'] || '',
+        branch:        formValues?.branch   || row['branch'] || '',
+        date:          new Date().toISOString(),
+      };
+    })
+    .filter(Boolean);
+}
+
+// ─── Sub-components (unchanged from your original) ───────────────────────────
 const FileIcon = ({ fileName }) => {
   if (!fileName) return <CloudUploadOutlined style={{ fontSize: 40, color: '#2563eb' }} />;
-  if (fileName.endsWith('.pdf'))
-    return <FilePdfOutlined style={{ fontSize: 40, color: '#dc2626' }} />;
+  if (fileName.endsWith('.pdf')) return <FilePdfOutlined style={{ fontSize: 40, color: '#dc2626' }} />;
   return <FileExcelOutlined style={{ fontSize: 40, color: '#16a34a' }} />;
 };
 
-// ─── Step 1: Student Info ─────────────────────────────────────────────────────
 const StudentInfoForm = ({ form, onNext }) => {
   const [selectedProgram, setSelectedProgram] = useState(null);
-  const [selectedYear, setSelectedYear]       = useState(null);
+  const [selectedYear,    setSelectedYear]    = useState(null);
 
   const handleNext = async () => {
     try {
@@ -189,9 +201,7 @@ const StudentInfoForm = ({ form, onNext }) => {
         <UserOutlined className="step-icon" />
         <div>
           <Title level={4} style={{ margin: 0 }}>Student Information</Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            Fill in your details before uploading your marks file.
-          </Text>
+          <Text type="secondary" style={{ fontSize: 13 }}>Fill in your details before uploading your marks file.</Text>
         </div>
       </div>
       <Divider />
@@ -201,26 +211,19 @@ const StudentInfoForm = ({ form, onNext }) => {
           <Col span={12}>
             <Form.Item name="fullName" label="Full Name"
               rules={[{ required: true, message: 'Please enter your full name' }]}>
-              <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="e.g. John Doe" size="large" />
+              <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="e.g. John Doe" size="large" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="studentId" label="Student ID"
-              rules={[
-                { required: true, message: 'Please enter your student ID' },
-                {
-                  validator: (_, value) => {
-                    const normalized = normalizeId(value);
-                    if (!/^IT\d{8}$/.test(normalized)) {
-                      return Promise.reject(new Error('Format: IT followed by 8 digits'));
-                    }
-                    return Promise.resolve();
+              rules={[{ required: true, message: 'Please enter your student ID' },
+                { validator: (_, value) => {
+                    const n = normalizeId(value);
+                    return /^IT\d{8}$/.test(n) ? Promise.resolve() : Promise.reject(new Error('Format: IT followed by 8 digits'));
                   }
                 }
               ]}>
-              <Input prefix={<IdcardOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="IT23145870" size="large" />
+              <Input prefix={<IdcardOutlined style={{ color: '#94a3b8' }} />} placeholder="IT23145870" size="large" />
             </Form.Item>
           </Col>
         </Row>
@@ -228,7 +231,7 @@ const StudentInfoForm = ({ form, onNext }) => {
         <Form.Item name="courseProgram" label="Course Program"
           rules={[{ required: true, message: 'Please select your course program' }]}>
           <Select size="large" placeholder="Select your program"
-            onChange={(value) => { setSelectedProgram(value); setSelectedYear(null); form.setFieldsValue({ academicYear: null, subjects: [] }); }}>
+            onChange={value => { setSelectedProgram(value); setSelectedYear(null); form.setFieldsValue({ academicYear: null, subjects: [] }); }}>
             {PROGRAMS.map(p => <Option key={p} value={p}>{p}</Option>)}
           </Select>
         </Form.Item>
@@ -261,22 +264,19 @@ const StudentInfoForm = ({ form, onNext }) => {
 
         {selectedYear && (
           <Form.Item name="subjects" label={
-            <Space size={4}>
-              <span>Subjects</span>
-              <Text type="secondary" style={{ fontSize: 11, fontWeight: 400 }}>(optional — read from file)</Text>
-            </Space>
-          }>
+            <Space size={4}><span>Subjects</span>
+              <Text type="secondary" style={{ fontSize: 11, fontWeight: 400 }}>(optional)</Text></Space>}>
             <Select size="large" placeholder="Select subjects (optional)" mode="multiple"
-              onChange={(selected) => {
-                if (selected && selected.length > 0) {
-                  const semesters = new Set(selected.map(sub => subjectToSemester[sub]));
-                  if (semesters.size === 1) form.setFieldsValue({ semester: Array.from(semesters)[0] });
+              onChange={selected => {
+                if (selected?.length > 0) {
+                  const sems = new Set(selected.map(sub => subjectToSemester[sub]));
+                  if (sems.size === 1) form.setFieldsValue({ semester: Array.from(sems)[0] });
                 }
               }}>
               {(() => {
-                const allSubjects = [];
-                Object.values(SUBJECTS[selectedProgram][selectedYear]).forEach(s => allSubjects.push(...s));
-                return allSubjects.map(s => <Option key={s} value={s}>{s}</Option>);
+                const all = [];
+                Object.values(SUBJECTS[selectedProgram][selectedYear]).forEach(s => all.push(...s));
+                return all.map(s => <Option key={s} value={s}>{s}</Option>);
               })()}
             </Select>
           </Form.Item>
@@ -292,8 +292,8 @@ const StudentInfoForm = ({ form, onNext }) => {
       </Form>
 
       <div className="step-footer">
-        <Button type="primary" size="large" icon={<ArrowRightOutlined />}
-          iconPosition="end" onClick={handleNext} className="next-btn">
+        <Button type="primary" size="large" icon={<ArrowRightOutlined />} iconPosition="end"
+          onClick={handleNext} className="next-btn">
           Continue to Upload
         </Button>
       </div>
@@ -301,13 +301,8 @@ const StudentInfoForm = ({ form, onNext }) => {
   );
 };
 
-// ─── Step 2: File Upload ──────────────────────────────────────────────────────
 const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProgress, uploadStatus }) => {
-  const onDrop = useCallback(
-    (accepted) => { if (accepted.length > 0) setFile(accepted[0]); },
-    [setFile]
-  );
-
+  const onDrop = useCallback(accepted => { if (accepted.length > 0) setFile(accepted[0]); }, [setFile]);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -327,9 +322,7 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
         <CloudUploadOutlined className="step-icon" />
         <div>
           <Title level={4} style={{ margin: 0 }}>Upload Marks File</Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            Drag &amp; drop a PDF, CSV, or Excel file containing student marks.
-          </Text>
+          <Text type="secondary" style={{ fontSize: 13 }}>Drag & drop a PDF, CSV, or Excel file.</Text>
         </div>
       </div>
       <Divider />
@@ -345,9 +338,7 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
               <Text type="secondary" style={{ fontSize: 12 }}>{(file.size / 1024).toFixed(1)} KB</Text>
             </div>
             {!uploading && (
-              <Button danger size="small" onClick={e => { e.stopPropagation(); setFile(null); }}>
-                Remove file
-              </Button>
+              <Button danger size="small" onClick={e => { e.stopPropagation(); setFile(null); }}>Remove file</Button>
             )}
           </Space>
         ) : (
@@ -355,8 +346,7 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
             <div style={{
               width: 64, height: 64, borderRadius: '50%',
               background: 'rgba(37,99,235,0.08)', border: '1.5px dashed #93c5fd',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 4,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4,
             }}>
               <CloudUploadOutlined style={{ fontSize: 28, color: '#2563eb' }} />
             </div>
@@ -372,9 +362,7 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
               <Tag icon={<FileExcelOutlined />} color="blue">XLSX</Tag>
               <Tag icon={<FileExcelOutlined />} color="cyan">XLS</Tag>
             </Space>
-            <Text type="secondary" style={{ fontSize: 11, marginTop: 4 }}>
-              Maximum file size: 20 MB
-            </Text>
+            <Text type="secondary" style={{ fontSize: 11, marginTop: 4 }}>Maximum file size: 20 MB</Text>
           </Space>
         )}
       </div>
@@ -391,17 +379,13 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
           </Text>
         </div>
       )}
-
       {uploadStatus && !uploading && (
-        <Alert type={uploadStatus.type} message={uploadStatus.message} showIcon
-          style={{ marginTop: 14 }} />
+        <Alert type={uploadStatus.type} message={uploadStatus.message} showIcon style={{ marginTop: 14 }} />
       )}
 
       <Card size="small" style={{ marginTop: 16 }}
         title={<Space size={6}><InfoCircleOutlined style={{ color: '#2563eb' }} /><span>CSV / Excel Format Guide</span></Space>}>
-        <Text style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 8 }}>
-          Required columns:
-        </Text>
+        <Text style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 8 }}>Required columns:</Text>
         <Space size={4} wrap style={{ marginBottom: 10 }}>
           {['studentNumber','name','subject','score','type'].map(col => (
             <Tag key={col} color="blue" style={{ fontFamily: 'DM Mono, monospace' }}>{col}</Tag>
@@ -409,15 +393,13 @@ const FileUploadZone = ({ file, setFile, onBack, onSubmit, uploading, uploadProg
         </Space>
         <pre className="code-example">
 {`studentNumber,name,subject,score,type
-STU001,John Doe,Mathematics,85,quiz
-STU002,Jane Smith,Physics,92,final`}
+IT23145870,John Doe,IT3060 - HCI,78,CA
+IT23145870,John Doe,IT3070 - ML,65,CA`}
         </pre>
       </Card>
 
       <div className="step-footer" style={{ justifyContent: 'space-between' }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={onBack} disabled={uploading} size="large">
-          Back
-        </Button>
+        <Button icon={<ArrowLeftOutlined />} onClick={onBack} disabled={uploading} size="large">Back</Button>
         <Button type="primary" icon={<CloudUploadOutlined />} onClick={onSubmit}
           disabled={!file || uploading} loading={uploading} className="next-btn" size="large">
           {uploading ? 'Uploading…' : 'Submit Upload'}
@@ -427,11 +409,10 @@ STU002,Jane Smith,Physics,92,final`}
   );
 };
 
-// ─── Step 3: Success ──────────────────────────────────────────────────────────
-const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
+const SuccessStep = ({ formValues, file, uploadResult, onReset, totalScoresInSession }) => {
   const rawPreview   = uploadResult?.preview || [];
-  const studentFound = uploadResult?.studentFound ?? (rawPreview.length > 0);
   const enteredId    = normalizeId(formValues?.studentId);
+  const recordsCount = uploadResult?.recordsCount || 0;
 
   const preview = rawPreview.filter(row => {
     const regVal = normalizeId(
@@ -441,18 +422,11 @@ const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
     return !enteredId || regVal === enteredId || regVal === '';
   });
 
-  const recordsCount = uploadResult?.recordsCount || 0;
-
   const buildColumns = (rows) => {
     if (!rows.length) return [];
     const keys = Object.keys(rows[0]).filter(k => !k.startsWith('__EMPTY') && k.trim());
-    const priority = ['Registration No','CA Marks','Grade','Pass/Fail','Status',
-                      'studentNumber','subject','score','grade','status'];
-    const sorted = [
-      ...priority.filter(k => keys.includes(k)),
-      ...keys.filter(k => !priority.includes(k))
-    ].slice(0, 6);
-
+    const priority = ['Registration No','CA Marks','Grade','Pass/Fail','Status','studentNumber','subject','score','grade','status'];
+    const sorted = [...priority.filter(k => keys.includes(k)), ...keys.filter(k => !priority.includes(k))].slice(0, 6);
     return sorted.map(k => ({
       title: k, dataIndex: k, key: k, ellipsis: true,
       render: v => {
@@ -462,105 +436,70 @@ const SuccessStep = ({ formValues, file, uploadResult, onReset }) => {
           if (val.toLowerCase() === 'fail') return <Tag color="error">Fail</Tag>;
         }
         return val || '—';
-      }
+      },
     }));
   };
-
-  const columns = buildColumns(preview);
 
   return (
     <div className="step-content success-step">
       <div className="success-icon-wrapper">
         <CheckOutlined className="success-check" />
       </div>
-      <Title level={3} style={{ marginTop: 20, color: '#16a34a', marginBottom: 4 }}>
-        Upload Successful!
-      </Title>
-      <Text type="secondary" style={{ fontSize: 13 }}>
-        Your marks file has been submitted for processing.
-      </Text>
+      <Title level={3} style={{ marginTop: 20, color: '#16a34a', marginBottom: 4 }}>Upload Successful!</Title>
+      <Text type="secondary" style={{ fontSize: 13 }}>Your marks have been saved and merged into analytics.</Text>
 
-      <Row gutter={12} style={{ marginTop: 24, width: '100%', maxWidth: 480 }}>
+      <Row gutter={12} style={{ marginTop: 24, width: '100%', maxWidth: 500 }}>
         <Col span={8}>
           <Card size="small" style={{ textAlign: 'center', background: '#f0fdf4', borderColor: '#86efac' }}>
             <TrophyOutlined style={{ fontSize: 22, color: '#16a34a' }} />
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#16a34a', lineHeight: 1.3, marginTop: 4 }}>
-              {recordsCount}
-            </div>
-            <Text type="secondary" style={{ fontSize: 11 }}>Records</Text>
+            <div style={{ fontSize: 24, fontWeight: 700, color: '#16a34a', lineHeight: 1.3, marginTop: 4 }}>{recordsCount}</div>
+            <Text type="secondary" style={{ fontSize: 11 }}>This Upload</Text>
           </Card>
         </Col>
         <Col span={8}>
           <Card size="small" style={{ textAlign: 'center', background: '#eff6ff', borderColor: '#93c5fd' }}>
-            <FileExcelOutlined style={{ fontSize: 22, color: '#2563eb' }} />
-            <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4, color: '#1e40af',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-              {file?.name}
-            </div>
-            <Text type="secondary" style={{ fontSize: 11 }}>Uploaded</Text>
+            <BarChartOutlined style={{ fontSize: 22, color: '#2563eb' }} />
+            <div style={{ fontSize: 24, fontWeight: 700, color: '#2563eb', lineHeight: 1.3, marginTop: 4 }}>{totalScoresInSession}</div>
+            <Text type="secondary" style={{ fontSize: 11 }}>Total Subjects</Text>
           </Card>
         </Col>
         <Col span={8}>
           <Card size="small" style={{ textAlign: 'center', background: '#fffbeb', borderColor: '#fcd34d' }}>
             <UserOutlined style={{ fontSize: 22, color: '#d97706' }} />
-            <div style={{ fontSize: 12, fontWeight: 600, marginTop: 4, color: '#92400e' }}>
-              {formValues?.studentId || '—'}
-            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, marginTop: 4, color: '#92400e' }}>{formValues?.studentId || '—'}</div>
             <Text type="secondary" style={{ fontSize: 11 }}>Student ID</Text>
           </Card>
         </Col>
       </Row>
 
-      <Descriptions bordered size="small" column={1}
-        style={{ marginTop: 16, width: '100%', maxWidth: 480 }}>
-        <Descriptions.Item label="Name">{formValues?.fullName || '—'}</Descriptions.Item>
-        <Descriptions.Item label="Student ID">{formValues?.studentId || '—'}</Descriptions.Item>
-        <Descriptions.Item label="Academic Year">
-          {ACADEMIC_YEARS.find(y => y.value === formValues?.academicYear)?.label || '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label="Semester">
-          {formValues?.semester ? `Semester ${formValues.semester}` : '—'}
-        </Descriptions.Item>
-        <Descriptions.Item label="Branch">
-          {BRANCHES.find(b => b.value === formValues?.branch)?.label || '—'}
-        </Descriptions.Item>
-      </Descriptions>
+      {/* Session score count notice */}
+      {totalScoresInSession > 0 && (
+        <Alert type="info" showIcon style={{ marginTop: 16, width: '100%', maxWidth: 500, borderRadius: 10 }}
+          message={`${totalScoresInSession} subject score(s) accumulated across all your uploads this session`}
+          description="All subjects are preserved. Upload more files to add additional subjects." />
+      )}
 
       {preview.length > 0 ? (
         <div style={{ marginTop: 20, width: '100%', maxWidth: 640 }}>
-          <Text strong style={{ fontSize: 13 }}>Your Marks</Text>
-          <Table
-            dataSource={preview} columns={columns}
-            rowKey="studentNumber" size="small"
-            pagination={false}
-            style={{ marginTop: 10 }}
-            scroll={{ x: true }}
-          />
+          <Text strong style={{ fontSize: 13 }}>Your Marks (this upload)</Text>
+          <Table dataSource={preview} columns={buildColumns(preview)}
+            rowKey={(r, i) => i} size="small" pagination={false}
+            style={{ marginTop: 10 }} scroll={{ x: true }} />
         </div>
       ) : (
-        <Alert type="warning" showIcon style={{ marginTop: 16, width: '100%', maxWidth: 480 }}
+        <Alert type="warning" showIcon style={{ marginTop: 16, width: '100%', maxWidth: 500 }}
           message="No marks found for your Student ID"
-          description={
-            `No record was found for "${formValues?.studentId}" in the uploaded file. ` +
-            `Please ensure your Student ID matches the Registration No in the file exactly.`
-          }
-        />
+          description={`No record was found for "${formValues?.studentId}" in the uploaded file. Ensure your Student ID matches the Registration No exactly.`} />
       )}
 
       <div className="step-footer" style={{ justifyContent: 'center', marginTop: 24, gap: 12 }}>
-        <Button type="primary" icon={<UploadOutlined />} onClick={onReset} size="large">
-          Upload Another File
-        </Button>
-        <Button icon={<BarChartOutlined />}
-          onClick={() => window.location.href = '/analytics'} size="large">
-          View Analytics
-        </Button>
+        <Button type="primary" icon={<UploadOutlined />} onClick={onReset} size="large">Upload Another File</Button>
+        <Button icon={<BarChartOutlined />} onClick={() => window.location.href = '/analytics'} size="large">View Analytics</Button>
       </div>
     </div>
   );
 };
 
-// ─── History helpers ──────────────────────────────────────────────────────────
 const getStatusTag = (status) => {
   const cfg = {
     completed:  { color: 'success',    icon: <CheckCircleOutlined />,  text: 'Completed' },
@@ -584,24 +523,32 @@ const UploadPage = () => {
   const [uploadResult,   setUploadResult]   = useState(null);
   const [allExtractions, setAllExtractions] = useState([]);
   const [loading,        setLoading]        = useState(false);
-  const [stats,          setStats]          = useState({
-    totalUploads: 0, successfulExtractions: 0, failedExtractions: 0, totalRecords: 0
-  });
+  const [stats,          setStats]          = useState({ totalUploads: 0, successfulExtractions: 0, failedExtractions: 0, totalRecords: 0 });
   const [selectedExtraction, setSelectedExtraction] = useState(null);
   const [modalVisible,       setModalVisible]       = useState(false);
+  // Track how many total subjects are stored in sessionStorage across all uploads
+  const [totalScoresInSession, setTotalScoresInSession] = useState(0);
 
   const [currentStudentId, setCurrentStudentId] = useState(
     () => sessionStorage.getItem('uploadStudentId') || ''
   );
 
+  // Read session score count on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('analyticsScores');
+      if (stored) {
+        const arr = JSON.parse(stored);
+        setTotalScoresInSession(Array.isArray(arr) ? arr.length : 0);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   const extractions = currentStudentId
     ? allExtractions.filter(e => normalizeId(e.studentId) === normalizeId(currentStudentId))
     : allExtractions;
 
-  useEffect(() => {
-    loadExtractionHistory();
-    loadStats();
-  }, []);
+  useEffect(() => { loadExtractionHistory(); loadStats(); }, []);
 
   const loadExtractionHistory = async () => {
     setLoading(true);
@@ -611,11 +558,8 @@ const UploadPage = () => {
       setAllExtractions(historyData);
       sessionStorage.setItem('uploadHistory', JSON.stringify(historyData));
     } catch (e) {
-      console.error('Failed to load history:', e);
       const stored = sessionStorage.getItem('uploadHistory');
-      if (stored) {
-        setAllExtractions(JSON.parse(stored));
-      }
+      if (stored) { try { setAllExtractions(JSON.parse(stored)); } catch {} }
     } finally {
       setLoading(false);
     }
@@ -625,9 +569,7 @@ const UploadPage = () => {
     try {
       const data = await uploadService.getExtractionStats();
       if (data?.data) setStats(data.data);
-    } catch (e) {
-      console.error('Failed to load stats:', e);
-    }
+    } catch {}
   };
 
   const handleSubmit = async () => {
@@ -648,13 +590,13 @@ const UploadPage = () => {
       const response = await uploadService.uploadFile(
         file,
         {
-          studentId: normalizedStudentId,
-          fullName: values.fullName,
-          academicYear: values.academicYear,
-          semester: values.semester,
-          branch: values.branch,
+          studentId:     normalizedStudentId,
+          fullName:      values.fullName,
+          academicYear:  values.academicYear,
+          semester:      values.semester,
+          branch:        values.branch,
           courseProgram: values.courseProgram,
-          subjects: values.subjects
+          subjects:      values.subjects,
         },
         (p) => {
           setUploadProgress(p);
@@ -663,41 +605,22 @@ const UploadPage = () => {
       );
 
       const resultData = response?.data || {};
-
-      console.log('[Upload] full response:', response);
       console.log('[Upload] resultData:', resultData);
-      console.log('[Upload] preview array?', Array.isArray(resultData?.preview));
-      console.log('[Upload] preview:', resultData?.preview);
-      console.log('[Upload] studentFound:', resultData?.studentFound);
-
       setUploadResult(resultData);
 
-      if (resultData?.preview && Array.isArray(resultData.preview)) {
-        console.log('[Upload] preview is array with', resultData.preview.length, 'items');
-        const selectedSubjects = Array.isArray(values.subjects) ? values.subjects : [];
-        const analyticsScores = resultData.preview.map((row) => {
-          let score = null;
-          const rawScore = row['CA Marks'] ?? row['ca_marks'] ?? row['CAMarks'] ?? row['Marks'] ?? row['marks'] ?? row['Score'] ?? row['score'] ?? row['Total'] ?? row['total'] ?? null;
-          if (rawScore !== null) score = parseFloat(String(rawScore).replace(/[^0-9.]/g, ''));
-          if (isNaN(score) || score === null) score = 0;
-          let subject = row['Subject'] || row['subject'] || row['Module Name'] || row['Module'] || row['course'] || row['Course'] || '';
-          if (!subject && selectedSubjects.length > 0) subject = selectedSubjects[0];
-          return {
-            subject, score,
-            grade: row['Grade'] || row['grade'] || '',
-            status: row['Pass/Fail'] || row['Status'] || row['status'] || '',
-            studentNumber: normalizedStudentId,
-            name: values.fullName,
-            branch: values.branch || '',
-            date: new Date().toISOString(),
-            ...row
-          };
-        });
-        sessionStorage.setItem('analyticsScores', JSON.stringify(analyticsScores));
+      // ── BUG FIX 1: MERGE new rows into sessionStorage (never overwrite) ──────
+      if (Array.isArray(resultData?.preview) && resultData.preview.length > 0) {
+        const newRows = extractScoreRows(resultData.preview, normalizedStudentId, values);
+        console.log('[Upload] extracted score rows:', newRows.length, newRows);
+        if (newRows.length > 0) {
+          const merged = mergeAnalyticsScores(newRows);
+          setTotalScoresInSession(merged.length);
+        }
       }
 
       const newEntry = {
         id:               resultData.extractionId || 'local-' + Date.now(),
+        _id:              resultData.extractionId || 'local-' + Date.now(),
         fileName:         file.name,
         fileType:         file.name.match(/\.pdf$/i) ? 'pdf' : 'excel',
         status:           'completed',
@@ -705,7 +628,7 @@ const UploadPage = () => {
         processedAt:      new Date().toISOString(),
         recordCount:      resultData.recordsCount || 0,
         studentId:        normalizedStudentId,
-        validationErrors: []
+        validationErrors: [],
       };
       setAllExtractions(prev => [newEntry, ...prev]);
       setStats(prev => ({
@@ -715,7 +638,7 @@ const UploadPage = () => {
         totalRecords:          prev.totalRecords + (resultData.recordsCount || 0),
       }));
 
-      setUploadStatus({ type: 'success', message: 'Upload complete!' });
+      setUploadStatus({ type: 'success', message: 'Upload complete! Marks merged into analytics.' });
       setCurrentStep(2);
       setTimeout(() => { loadExtractionHistory(); loadStats(); }, 1000);
 
@@ -737,31 +660,23 @@ const UploadPage = () => {
     setCurrentStep(0);
   };
 
+  const successRate = stats.totalUploads > 0
+    ? Math.round((stats.successfulExtractions / stats.totalUploads) * 100) : 0;
+
   const columns = [
     {
       title: 'File', dataIndex: 'fileName', key: 'fileName',
       render: (text, record) => (
         <Space>
-          {record.fileType === 'pdf'
-            ? <FilePdfOutlined style={{ color: '#dc2626' }} />
-            : <FileExcelOutlined style={{ color: '#16a34a' }} />}
+          {record.fileType === 'pdf' ? <FilePdfOutlined style={{ color: '#dc2626' }} /> : <FileExcelOutlined style={{ color: '#16a34a' }} />}
           <Text style={{ fontSize: 13 }} ellipsis={{ tooltip: text }}>{text}</Text>
         </Space>
       ),
     },
-    {
-      title: 'Student ID', dataIndex: 'studentId', key: 'studentId',
-      render: v => <Text code style={{ fontSize: 12 }}>{v}</Text>
-    },
-    {
-      title: 'Date', dataIndex: 'uploadedAt', key: 'uploadedAt',
-      render: d => d ? <Text type="secondary" style={{ fontSize: 12 }}>{new Date(d).toLocaleString()}</Text> : '—'
-    },
+    { title: 'Student ID', dataIndex: 'studentId', key: 'studentId', render: v => <Text code style={{ fontSize: 12 }}>{v}</Text> },
+    { title: 'Date', dataIndex: 'uploadedAt', key: 'uploadedAt', render: d => d ? <Text type="secondary" style={{ fontSize: 12 }}>{new Date(d).toLocaleString()}</Text> : '—' },
     { title: 'Status', dataIndex: 'status', key: 'status', render: s => getStatusTag(s) },
-    {
-      title: 'Records', dataIndex: 'recordCount', key: 'recordCount',
-      render: c => <Badge count={c || 0} showZero color="#2563eb" style={{ fontSize: 11 }} />
-    },
+    { title: 'Records', dataIndex: 'recordCount', key: 'recordCount', render: c => <Badge count={c || 0} showZero color="#2563eb" style={{ fontSize: 11 }} /> },
     {
       title: '', key: 'actions',
       render: (_, record) => (
@@ -770,24 +685,16 @@ const UploadPage = () => {
             <Button type="text" size="small" icon={<EyeOutlined />}
               onClick={() => { setSelectedExtraction(record); setModalVisible(true); }} />
           </Tooltip>
-          <Tooltip title="Download">
-            <Button type="text" size="small" icon={<DownloadOutlined />} />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
-          </Tooltip>
+          <Tooltip title="Download"><Button type="text" size="small" icon={<DownloadOutlined />} /></Tooltip>
+          <Tooltip title="Delete"><Button type="text" size="small" danger icon={<DeleteOutlined />} /></Tooltip>
         </Space>
       ),
     },
   ];
 
-  const successRate = stats.totalUploads > 0
-    ? Math.round((stats.successfulExtractions / stats.totalUploads) * 100) : 0;
-
   return (
     <div className="upload-page">
-
-      {/* ── Header ── */}
+      {/* Header */}
       <Card className="upload-header" style={{ marginBottom: 24 }}>
         <Row justify="space-between" align="middle">
           <Col>
@@ -804,22 +711,33 @@ const UploadPage = () => {
                 <Title level={3} style={{ margin: 0, lineHeight: 1.3 }}>Upload Marks</Title>
                 <Text type="secondary" style={{ fontSize: 13 }}>
                   Submit your student marks via PDF, CSV, or Excel
+                  {totalScoresInSession > 0 && (
+                    <Tag color="blue" style={{ marginLeft: 10 }}>
+                      {totalScoresInSession} subject{totalScoresInSession !== 1 ? 's' : ''} in session
+                    </Tag>
+                  )}
                 </Text>
               </div>
             </Space>
           </Col>
           <Col>
-            <Button icon={<ReloadOutlined />}
-              onClick={() => { loadExtractionHistory(); loadStats(); }}>
-              Refresh
-            </Button>
+            <Space>
+              {totalScoresInSession > 0 && (
+                <Button danger size="small"
+                  onClick={() => {
+                    sessionStorage.removeItem('analyticsScores');
+                    setTotalScoresInSession(0);
+                  }}>
+                  Clear Session ({totalScoresInSession})
+                </Button>
+              )}
+              <Button icon={<ReloadOutlined />} onClick={() => { loadExtractionHistory(); loadStats(); }}>Refresh</Button>
+            </Space>
           </Col>
         </Row>
       </Card>
 
       <Row gutter={24}>
-
-        {/* ── Left column: Wizard + Stats ── */}
         <Col xs={24} lg={10}>
           <Card className="wizard-card">
             <Steps current={currentStep} size="small" style={{ marginBottom: 28 }}
@@ -831,50 +749,39 @@ const UploadPage = () => {
             />
             {currentStep === 0 && <StudentInfoForm form={form} onNext={() => setCurrentStep(1)} />}
             {currentStep === 1 && (
-              <FileUploadZone
-                file={file} setFile={setFile}
+              <FileUploadZone file={file} setFile={setFile}
                 onBack={() => { setUploadStatus(null); setCurrentStep(0); }}
                 onSubmit={handleSubmit}
-                uploading={uploading} uploadProgress={uploadProgress} uploadStatus={uploadStatus}
-              />
+                uploading={uploading} uploadProgress={uploadProgress} uploadStatus={uploadStatus} />
             )}
             {currentStep === 2 && (
-              <SuccessStep
-                formValues={formValues} file={file}
+              <SuccessStep formValues={formValues} file={file}
                 uploadResult={uploadResult} onReset={handleReset}
-              />
+                totalScoresInSession={totalScoresInSession} />
             )}
           </Card>
 
-          {/* Stats Cards */}
           <Row gutter={12} style={{ marginTop: 16 }}>
             <Col span={12}>
               <Card size="small" style={{ background: '#eff6ff', borderColor: '#bfdbfe' }}>
                 <Statistic title="Total Uploads" value={stats.totalUploads}
-                  prefix={<UploadOutlined style={{ color: '#2563eb' }} />}
-                />
+                  prefix={<UploadOutlined style={{ color: '#2563eb' }} />} />
               </Card>
             </Col>
             <Col span={12}>
-              <Card size="small" style={{
-                background: successRate >= 80 ? '#f0fdf4' : '#fffbeb',
-                borderColor: successRate >= 80 ? '#bbf7d0' : '#fde68a'
-              }}>
+              <Card size="small" style={{ background: successRate >= 80 ? '#f0fdf4' : '#fffbeb', borderColor: successRate >= 80 ? '#bbf7d0' : '#fde68a' }}>
                 <Statistic title="Success Rate" value={successRate} suffix="%"
-                  prefix={<CheckCircleOutlined style={{ color: successRate >= 80 ? '#16a34a' : '#d97706' }} />}
-                />
+                  prefix={<CheckCircleOutlined style={{ color: successRate >= 80 ? '#16a34a' : '#d97706' }} />} />
               </Card>
             </Col>
           </Row>
         </Col>
 
-        {/* ── Right column: History + Activity ── */}
         <Col xs={24} lg={14}>
           <Card
             title={<Space><HistoryOutlined style={{ color: '#2563eb' }} /><span>Upload History</span></Space>}
             extra={
-              <Button type="link" icon={<BarChartOutlined />}
-                style={{ fontSize: 13, fontWeight: 600 }}
+              <Button type="link" icon={<BarChartOutlined />} style={{ fontSize: 13, fontWeight: 600 }}
                 onClick={() => window.location.href = '/analytics'}>
                 View Analytics
               </Button>
@@ -883,20 +790,15 @@ const UploadPage = () => {
             {loading ? (
               <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div>
             ) : (
-              <Table
-                dataSource={extractions} columns={columns} rowKey="_id" size="small"
+              <Table dataSource={extractions} columns={columns} rowKey="_id" size="small"
                 pagination={{ pageSize: 8, size: 'small' }}
-                locale={{ emptyText: (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description={<Text type="secondary">No upload history yet</Text>} />
-                )}}
+                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text type="secondary">No upload history yet</Text>} /> }}
               />
             )}
           </Card>
 
-          <Card title={
-            <Space><ClockCircleOutlined style={{ color: '#2563eb' }} /><span>Recent Activity</span></Space>
-          } style={{ marginTop: 16 }}>
+          <Card title={<Space><ClockCircleOutlined style={{ color: '#2563eb' }} /><span>Recent Activity</span></Space>}
+            style={{ marginTop: 16 }}>
             {extractions.length > 0 ? (
               <Timeline items={extractions.slice(0, 5).map(e => ({
                 color: e.status === 'completed' ? 'green' : e.status === 'failed' ? 'red' : 'blue',
@@ -904,8 +806,7 @@ const UploadPage = () => {
                   <div style={{ paddingBottom: 4 }}>
                     <Text strong style={{ fontSize: 13 }}>
                       {e.fileName}{' '}
-                      <Text type={e.status === 'completed' ? 'success' : 'danger'}
-                        style={{ fontWeight: 400, fontSize: 12 }}>
+                      <Text type={e.status === 'completed' ? 'success' : 'danger'} style={{ fontWeight: 400, fontSize: 12 }}>
                         {e.status}
                       </Text>
                     </Text>
@@ -914,58 +815,37 @@ const UploadPage = () => {
                       {e.recordCount || 0} records · {new Date(e.uploadedAt).toLocaleString()}
                     </Text>
                   </div>
-                )
+                ),
               }))} />
             ) : (
               <Timeline items={[
-                { color: 'green', children: <div><Text strong style={{ fontSize: 13 }}>grades_2024_q1.pdf processed</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>45 records extracted · 2 minutes ago</Text></div> },
-                { color: 'green', children: <div><Text strong style={{ fontSize: 13 }}>student_scores_feb.csv processed</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>78 records extracted · 1 hour ago</Text></div> },
-                { color: 'red',   children: <div><Text strong style={{ fontSize: 13 }}>midterm_results.pdf failed</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>Invalid file format · 3 hours ago</Text></div> },
+                { color: 'green', children: <div><Text strong style={{ fontSize: 13 }}>grades_2024_q1.pdf processed</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>45 records extracted · example</Text></div> },
+                { color: 'blue',  children: <div><Text strong style={{ fontSize: 13 }}>student_scores_feb.csv</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>78 records extracted · example</Text></div> },
               ]} />
             )}
           </Card>
         </Col>
       </Row>
 
-      {/* ── Detail Modal ── */}
-      <Modal
-        title="Extraction Details" open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+      <Modal title="Extraction Details" open={modalVisible} onCancel={() => setModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setModalVisible(false)}>Close</Button>,
           <Button key="dl" type="primary" icon={<DownloadOutlined />}>Download Data</Button>,
-        ]}
-        width={700}
-      >
+        ]} width={700}>
         {selectedExtraction && (
           <div>
             <Descriptions bordered size="small" column={2}>
               <Descriptions.Item label="File Name" span={2}>
                 <Space>
-                  {selectedExtraction.fileType === 'pdf'
-                    ? <FilePdfOutlined style={{ color: '#dc2626' }} />
-                    : <FileExcelOutlined style={{ color: '#16a34a' }} />}
+                  {selectedExtraction.fileType === 'pdf' ? <FilePdfOutlined style={{ color: '#dc2626' }} /> : <FileExcelOutlined style={{ color: '#16a34a' }} />}
                   {selectedExtraction.fileName}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="Status">{getStatusTag(selectedExtraction.status)}</Descriptions.Item>
               <Descriptions.Item label="Records">{selectedExtraction.recordCount}</Descriptions.Item>
-              <Descriptions.Item label="Uploaded At">
-                {new Date(selectedExtraction.uploadedAt).toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="Processed At">
-                {selectedExtraction.processedAt ? new Date(selectedExtraction.processedAt).toLocaleString() : '—'}
-              </Descriptions.Item>
+              <Descriptions.Item label="Uploaded At">{new Date(selectedExtraction.uploadedAt).toLocaleString()}</Descriptions.Item>
+              <Descriptions.Item label="Processed At">{selectedExtraction.processedAt ? new Date(selectedExtraction.processedAt).toLocaleString() : '—'}</Descriptions.Item>
             </Descriptions>
-            {selectedExtraction.validationErrors?.length > 0 && (
-              <Alert type="warning" style={{ marginTop: 16 }} message="Validation Errors"
-                description={
-                  <ul style={{ margin: 0, paddingLeft: 20 }}>
-                    {selectedExtraction.validationErrors.map((e, i) => <li key={i}>{e}</li>)}
-                  </ul>
-                }
-              />
-            )}
           </div>
         )}
       </Modal>
