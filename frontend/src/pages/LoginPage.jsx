@@ -53,6 +53,8 @@ const LoginPage = () => {
         // Redirect based on role
         if (result.user?.role === 'admin') {
           navigate('/admin-dashboard');
+        } else if (result.user?.role === 'resource_admin') {
+          navigate('/resource-library/dashboard');
         } else {
           navigate('/dashboard');
         }

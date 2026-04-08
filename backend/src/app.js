@@ -118,6 +118,13 @@ try {
   console.warn('⚠️ quiz.routes:', e.message);
 }
 
+try {
+  app.use('/api/resource-library', require('../src/routes/resourceLibrary.routes'));
+  console.log('✅ resource-library routes');
+} catch (e) {
+  console.warn('⚠️ resourceLibrary.routes:', e.message);
+}
+
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({

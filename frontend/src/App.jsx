@@ -26,6 +26,9 @@ import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminDashboard from './pages/AdminDashboard';
+import ResourceLibraryDashboard from './pages/ResourceLibraryDashboard';
+import ResourceLibraryLoginPage from './pages/ResourceLibraryLoginPage';
+import ResourceLibraryPrivateRoute from './components/resourceLibrary/ResourceLibraryPrivateRoute';
 
 import MyGroups from "./pages/MyGroups";
 import JoinedGroups from "./pages/JoinedGroups";
@@ -71,6 +74,15 @@ function App() {
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/resource-library" element={<ResourceLibraryLoginPage />} />
+                <Route
+                  path="/resource-library/:section"
+                  element={
+                    <ResourceLibraryPrivateRoute>
+                      <ResourceLibraryDashboard />
+                    </ResourceLibraryPrivateRoute>
+                  }
+                />
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 
                 {/* Admin Route */}

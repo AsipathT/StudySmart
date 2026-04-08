@@ -71,6 +71,13 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  const demoLogin = (demoUser) => {
+    const demoToken = `demo-${Date.now()}`;
+    localStorage.setItem('token', demoToken);
+    setToken(demoToken);
+    setUser(demoUser);
+  };
+
   const register = async (userData) => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/register', userData);
@@ -101,7 +108,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, register, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, register, demoLogin, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

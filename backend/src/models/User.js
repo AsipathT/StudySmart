@@ -1,9 +1,25 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Resource Library demo accounts (seeded in auth.routes)
+const RESOURCE_LIBRARY_DEMO_EMAILS = new Set([
+  'resourceadmin@gmail.com',
+  'kasun@gmail.com',
+  'nadeesha@gmail.com',
+  'dulani@gmail.com',
+  'chamod@gmail.com',
+  'ishani@gmail.com',
+]);
+
 // SLIIT email format validator
 const validateSLIITEmail = (email) => {
-  if (email === 'admin@nidu.sliit.lk' || email === 'demo@studysmart.com') {
+  const e = String(email || '').toLowerCase();
+  if (RESOURCE_LIBRARY_DEMO_EMAILS.has(e)) return true;
+  if (
+    e === 'admin@nidu.sliit.lk' ||
+    e === 'demo@studysmart.com' ||
+    e === 'resourceadmin@studysmart.com'
+  ) {
     return true;
   }
   const sliitRegex = /^IT\d{8}@my\.sliit\.lk$/i;
@@ -34,7 +50,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'admin'],
+    enum: ['student', 'admin', 'resource_admin'],
     default: 'student'
   },
   studentId: {
