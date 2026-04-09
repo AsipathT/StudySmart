@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Select, TimePicker } from "antd";
+import { Select, TimePicker, Modal, message } from "antd";
 import dayjs from "dayjs";
 import { useAuth } from "../hooks/useAuth";
 
@@ -41,12 +41,13 @@ const gridStyle = {
   gap: "18px",
 };
 
-const groupCard = {
+const baseGroupCard = {
   background: "#ffffff",
   borderRadius: "22px",
   overflow: "hidden",
   border: "1px solid #e2e8f0",
   boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
+  transition: "transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease",
 };
 
 const imageStyle = {
@@ -54,6 +55,7 @@ const imageStyle = {
   height: "210px",
   objectFit: "cover",
   display: "block",
+  transition: "transform 0.35s ease",
 };
 
 const cardBody = {
@@ -93,6 +95,7 @@ const chipStyle = {
   color: "#334155",
   fontSize: "13px",
   fontWeight: 500,
+  transition: "all 0.2s ease",
 };
 
 const actionRow = {
@@ -111,6 +114,7 @@ const primaryButton = {
   background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
   color: "#fff",
   boxShadow: "0 8px 20px rgba(79, 70, 229, 0.25)",
+  transition: "all 0.25s ease",
 };
 
 const secondaryButton = {
@@ -121,6 +125,7 @@ const secondaryButton = {
   cursor: "pointer",
   background: "#eef2ff",
   color: "#4338ca",
+  transition: "all 0.25s ease",
 };
 
 const neutralButton = {
@@ -131,6 +136,7 @@ const neutralButton = {
   cursor: "pointer",
   background: "#e2e8f0",
   color: "#1e293b",
+  transition: "all 0.25s ease",
 };
 
 const dangerButton = {
@@ -141,6 +147,7 @@ const dangerButton = {
   cursor: "pointer",
   background: "#fef2f2",
   color: "#dc2626",
+  transition: "all 0.25s ease",
 };
 
 const formGrid = {
@@ -186,38 +193,25 @@ const emptyState = {
   background: "#f8fafc",
 };
 
-const editContainer = {
-  background: "#f8fafc",
-  border: "1px solid #e2e8f0",
-  borderRadius: "18px",
-  padding: "18px",
+const modalSectionTitle = {
+  margin: "0 0 6px",
+  fontSize: "22px",
+  fontWeight: 700,
+  color: "#0f172a",
+};
+
+const modalSectionText = {
+  margin: "0 0 20px",
+  color: "#64748b",
+  fontSize: "14px",
 };
 
 const buildingOptions = {
   "Main Building": [
-    "A101",
-    "A102",
-    "A201",
-    "A202",
-    "A301",
-    "A302",
-    "A401",
-    "A402",
-    "A501",
-    "A502",
+    "A101", "A102", "A201", "A202", "A301", "A302", "A401", "A402", "A501", "A502",
   ],
   "New Building": [
-    "F301",
-    "F401",
-    "F501",
-    "F601",
-    "F701",
-    "F801",
-    "F901",
-    "F1001",
-    "F1101",
-    "F1201",
-    "F1301",
+    "F301", "F401", "F501", "F601", "F701", "F801", "F901", "F1001", "F1101", "F1201", "F1301",
   ],
 };
 
@@ -225,7 +219,11 @@ const MyGroups = () => {
   const { user } = useAuth();
 
   const [groups, setGroups] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingGroupId, setEditingGroupId] = useState(null);
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [hoveredButton, setHoveredButton] = useState("");
+
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -264,22 +262,23 @@ const MyGroups = () => {
       setGroups(myCreatedGroups);
     } catch (error) {
       console.error("Error fetching groups:", error);
+      message.error("Failed to fetch groups");
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/study-groups/${id}`);
-      alert("Group deleted successfully");
+      message.success("Group deleted successfully");
       fetchGroups();
     } catch (error) {
       console.error("Error deleting group:", error);
-      alert("Failed to delete group");
+      message.error("Failed to delete group");
     }
   };
 
-  const handleEditClick = (group) => {
-    setEditingId(group._id);
+  const openEditModal = (group) => {
+    setEditingGroupId(group._id);
     setEditForm({
       name: group.name || "",
       description: group.description || "",
@@ -292,38 +291,56 @@ const MyGroups = () => {
       building: group.building || "",
       hall: group.hall || "",
     });
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingGroupId(null);
+    setEditForm({
+      name: "",
+      description: "",
+      subject: "",
+      maxMembers: 5,
+      image: "",
+      selectedDays: [],
+      startTime: "",
+      endTime: "",
+      building: "",
+      hall: "",
+    });
   };
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "building") {
-      setEditForm({
-        ...editForm,
+      setEditForm((prev) => ({
+        ...prev,
         building: value,
         hall: "",
-      });
+      }));
       return;
     }
 
-    setEditForm({ ...editForm, [name]: value });
+    setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleDaysChange = (value) => {
-    setEditForm({ ...editForm, selectedDays: value });
+    setEditForm((prev) => ({ ...prev, selectedDays: value }));
   };
 
   const handleStartTimeChange = (_, timeString) => {
-    setEditForm({ ...editForm, startTime: timeString });
+    setEditForm((prev) => ({ ...prev, startTime: timeString }));
   };
 
   const handleEndTimeChange = (_, timeString) => {
-    setEditForm({ ...editForm, endTime: timeString });
+    setEditForm((prev) => ({ ...prev, endTime: timeString }));
   };
 
-  const handleUpdate = async (id) => {
+  const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/study-groups/${id}`, {
+      await axios.put(`http://localhost:5000/api/study-groups/${editingGroupId}`, {
         name: editForm.name,
         description: editForm.description,
         subject: editForm.subject,
@@ -336,12 +353,12 @@ const MyGroups = () => {
         hall: editForm.hall,
       });
 
-      alert("Group updated successfully");
-      setEditingId(null);
+      message.success("Group updated successfully");
+      closeEditModal();
       fetchGroups();
     } catch (error) {
       console.error("Error updating group:", error);
-      alert("Failed to update group");
+      message.error("Failed to update group");
     }
   };
 
@@ -357,271 +374,274 @@ const MyGroups = () => {
 
         {groups.length > 0 ? (
           <div style={gridStyle}>
-            {groups.map((group) => (
-              <div key={group._id} style={groupCard}>
-                {group.image && (
-                  <img src={group.image} alt={group.name} style={imageStyle} />
-                )}
+            {groups.map((group) => {
+              const cardKey = group._id;
+              return (
+                <div
+                  key={group._id}
+                  style={{
+                    ...baseGroupCard,
+                    transform: hoveredCard === cardKey ? "translateY(-6px)" : "translateY(0)",
+                    boxShadow:
+                      hoveredCard === cardKey
+                        ? "0 18px 36px rgba(79, 70, 229, 0.14)"
+                        : baseGroupCard.boxShadow,
+                    borderColor: hoveredCard === cardKey ? "#c7d2fe" : "#e2e8f0",
+                  }}
+                  onMouseEnter={() => setHoveredCard(cardKey)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
+                  {group.image && (
+                    <img
+                      src={group.image}
+                      alt={group.name}
+                      style={{
+                        ...imageStyle,
+                        transform: hoveredCard === cardKey ? "scale(1.05)" : "scale(1)",
+                      }}
+                    />
+                  )}
 
-                <div style={cardBody}>
-                  {editingId === group._id ? (
-                    <div style={editContainer}>
-                      <div style={{ marginBottom: "16px" }}>
-                        <h3
-                          style={{
-                            margin: 0,
-                            fontSize: "20px",
-                            fontWeight: 700,
-                            color: "#0f172a",
-                          }}
-                        >
-                          Edit Group
-                        </h3>
-                        <p
-                          style={{
-                            margin: "6px 0 0",
-                            color: "#64748b",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Update your group details below.
-                        </p>
-                      </div>
+                  <div style={cardBody}>
+                    <div style={badgeStyle}>Your Group</div>
 
-                      <div style={formGrid}>
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Group Name</label>
-                          <input
-                            type="text"
-                            name="name"
-                            value={editForm.name}
-                            onChange={handleEditChange}
-                            placeholder="Group Name"
-                            style={inputStyle}
-                          />
-                        </div>
+                    <h3
+                      style={{
+                        margin: "0 0 8px",
+                        color: "#0f172a",
+                        fontSize: "21px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {group.name}
+                    </h3>
 
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Subject</label>
-                          <input
-                            type="text"
-                            name="subject"
-                            value={editForm.subject}
-                            onChange={handleEditChange}
-                            placeholder="Subject"
-                            style={inputStyle}
-                          />
-                        </div>
+                    <p style={descriptionStyle}>
+                      {group.description || "No description available."}
+                    </p>
 
-                        <div style={{ ...fieldBox, ...fullWidth }}>
-                          <label style={labelStyle}>Description</label>
-                          <textarea
-                            name="description"
-                            value={editForm.description}
-                            onChange={handleEditChange}
-                            placeholder="Description"
-                            style={{
-                              ...inputStyle,
-                              minHeight: "100px",
-                              resize: "vertical",
-                            }}
-                          />
-                        </div>
-
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Max Members</label>
-                          <input
-                            type="number"
-                            name="maxMembers"
-                            value={editForm.maxMembers}
-                            onChange={handleEditChange}
-                            placeholder="Max Members"
-                            style={inputStyle}
-                          />
-                        </div>
-
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Image URL</label>
-                          <input
-                            type="text"
-                            name="image"
-                            value={editForm.image}
-                            onChange={handleEditChange}
-                            placeholder="Image URL"
-                            style={inputStyle}
-                          />
-                        </div>
-
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Select Days</label>
-                          <Select
-                            mode="multiple"
-                            placeholder="Choose days"
-                            value={editForm.selectedDays}
-                            onChange={handleDaysChange}
-                            style={{ width: "100%" }}
-                            options={[
-                              { value: "Monday", label: "Monday" },
-                              { value: "Tuesday", label: "Tuesday" },
-                              { value: "Wednesday", label: "Wednesday" },
-                              { value: "Thursday", label: "Thursday" },
-                              { value: "Friday", label: "Friday" },
-                              { value: "Saturday", label: "Saturday" },
-                              { value: "Sunday", label: "Sunday" },
-                            ]}
-                          />
-                        </div>
-
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Building</label>
-                          <select
-                            name="building"
-                            value={editForm.building}
-                            onChange={handleEditChange}
-                            style={inputStyle}
-                          >
-                            <option value="">Select Building</option>
-                            <option value="Main Building">Main Building</option>
-                            <option value="New Building">New Building</option>
-                          </select>
-                        </div>
-
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Start Time</label>
-                          <TimePicker
-                            use12Hours
-                            format="h:mm A"
-                            value={
-                              editForm.startTime
-                                ? dayjs(editForm.startTime, "h:mm A")
-                                : null
-                            }
-                            onChange={handleStartTimeChange}
-                            style={{
-                              width: "100%",
-                              height: "46px",
-                              borderRadius: "12px",
-                            }}
-                          />
-                        </div>
-
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>End Time</label>
-                          <TimePicker
-                            use12Hours
-                            format="h:mm A"
-                            value={
-                              editForm.endTime
-                                ? dayjs(editForm.endTime, "h:mm A")
-                                : null
-                            }
-                            onChange={handleEndTimeChange}
-                            style={{
-                              width: "100%",
-                              height: "46px",
-                              borderRadius: "12px",
-                            }}
-                          />
-                        </div>
-
-                        <div style={fieldBox}>
-                          <label style={labelStyle}>Hall</label>
-                          <select
-                            name="hall"
-                            value={editForm.hall}
-                            onChange={handleEditChange}
-                            style={inputStyle}
-                            disabled={!editForm.building}
-                          >
-                            <option value="">Select Hall</option>
-                            {(buildingOptions[editForm.building] || []).map((hall) => (
-                              <option key={hall} value={hall}>
-                                {hall}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div style={actionRow}>
-                        <button
-                          onClick={() => handleUpdate(group._id)}
-                          style={primaryButton}
-                        >
-                          Save Changes
-                        </button>
-
-                        <button
-                          onClick={() => setEditingId(null)}
-                          style={neutralButton}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                    <div style={chipWrap}>
+                      <span style={chipStyle}>📘 {group.subject || "No subject"}</span>
+                      <span style={chipStyle}>
+                        👥 {group.members?.length || 0} / {group.maxMembers}
+                      </span>
+                      <span style={chipStyle}>
+                        📅 {group.selectedDays?.join(", ") || "Not set"}
+                      </span>
+                      <span style={chipStyle}>
+                        ⏰ {group.startTime || "Not set"} - {group.endTime || "Not set"}
+                      </span>
+                      <span style={chipStyle}>🏢 {group.building || "Not set"}</span>
+                      <span style={chipStyle}>📍 {group.hall || "Not set"}</span>
                     </div>
-                  ) : (
-                    <>
-                      <div style={badgeStyle}>Your Group</div>
 
-                      <h3
+                    <div style={actionRow}>
+                      <button
+                        onMouseEnter={() => setHoveredButton(`edit-${cardKey}`)}
+                        onMouseLeave={() => setHoveredButton("")}
+                        onClick={() => openEditModal(group)}
                         style={{
-                          margin: "0 0 8px",
-                          color: "#0f172a",
-                          fontSize: "21px",
-                          fontWeight: 700,
+                          ...secondaryButton,
+                          transform:
+                            hoveredButton === `edit-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
+                          boxShadow:
+                            hoveredButton === `edit-${cardKey}`
+                              ? "0 10px 20px rgba(67, 56, 202, 0.12)"
+                              : "none",
                         }}
                       >
-                        {group.name}
-                      </h3>
+                        Edit
+                      </button>
 
-                      <p style={descriptionStyle}>
-                        {group.description || "No description available."}
-                      </p>
-
-                      <div style={chipWrap}>
-                        <span style={chipStyle}>📘 {group.subject || "No subject"}</span>
-                        <span style={chipStyle}>
-                          👥 {group.members?.length || 0} / {group.maxMembers}
-                        </span>
-                        <span style={chipStyle}>
-                          📅 {group.selectedDays?.join(", ") || "Not set"}
-                        </span>
-                        <span style={chipStyle}>
-                          ⏰ {group.startTime || "Not set"} - {group.endTime || "Not set"}
-                        </span>
-                        <span style={chipStyle}>
-                          🏢 {group.building || "Not set"}
-                        </span>
-                        <span style={chipStyle}>
-                          📍 {group.hall || "Not set"}
-                        </span>
-                      </div>
-
-                      <div style={actionRow}>
-                        <button
-                          onClick={() => handleEditClick(group)}
-                          style={secondaryButton}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          onClick={() => handleDelete(group._id)}
-                          style={dangerButton}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </>
-                  )}
+                      <button
+                        onMouseEnter={() => setHoveredButton(`delete-${cardKey}`)}
+                        onMouseLeave={() => setHoveredButton("")}
+                        onClick={() => handleDelete(group._id)}
+                        style={{
+                          ...dangerButton,
+                          transform:
+                            hoveredButton === `delete-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
+                          boxShadow:
+                            hoveredButton === `delete-${cardKey}`
+                              ? "0 10px 20px rgba(220, 38, 38, 0.12)"
+                              : "none",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div style={emptyState}>You haven't created any groups yet.</div>
         )}
       </div>
+
+      <Modal
+        open={isEditModalOpen}
+        onCancel={closeEditModal}
+        footer={null}
+        width={820}
+        centered
+      >
+        <div>
+          <h2 style={modalSectionTitle}>Edit Group</h2>
+          <p style={modalSectionText}>
+            Update your group details in this popup without stretching the cards.
+          </p>
+
+          <div style={formGrid}>
+            <div style={fieldBox}>
+              <label style={labelStyle}>Group Name</label>
+              <input
+                type="text"
+                name="name"
+                value={editForm.name}
+                onChange={handleEditChange}
+                placeholder="Group Name"
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>Subject</label>
+              <input
+                type="text"
+                name="subject"
+                value={editForm.subject}
+                onChange={handleEditChange}
+                placeholder="Subject"
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={{ ...fieldBox, ...fullWidth }}>
+              <label style={labelStyle}>Description</label>
+              <textarea
+                name="description"
+                value={editForm.description}
+                onChange={handleEditChange}
+                placeholder="Description"
+                style={{
+                  ...inputStyle,
+                  minHeight: "100px",
+                  resize: "vertical",
+                }}
+              />
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>Max Members</label>
+              <input
+                type="number"
+                name="maxMembers"
+                value={editForm.maxMembers}
+                onChange={handleEditChange}
+                placeholder="Max Members"
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>Image URL</label>
+              <input
+                type="text"
+                name="image"
+                value={editForm.image}
+                onChange={handleEditChange}
+                placeholder="Image URL"
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>Select Days</label>
+              <Select
+                mode="multiple"
+                placeholder="Choose days"
+                value={editForm.selectedDays}
+                onChange={handleDaysChange}
+                style={{ width: "100%" }}
+                options={[
+                  { value: "Monday", label: "Monday" },
+                  { value: "Tuesday", label: "Tuesday" },
+                  { value: "Wednesday", label: "Wednesday" },
+                  { value: "Thursday", label: "Thursday" },
+                  { value: "Friday", label: "Friday" },
+                  { value: "Saturday", label: "Saturday" },
+                  { value: "Sunday", label: "Sunday" },
+                ]}
+              />
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>Building</label>
+              <select
+                name="building"
+                value={editForm.building}
+                onChange={handleEditChange}
+                style={inputStyle}
+              >
+                <option value="">Select Building</option>
+                <option value="Main Building">Main Building</option>
+                <option value="New Building">New Building</option>
+              </select>
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>Start Time</label>
+              <TimePicker
+                use12Hours
+                format="h:mm A"
+                value={editForm.startTime ? dayjs(editForm.startTime, "h:mm A") : null}
+                onChange={handleStartTimeChange}
+                style={{ width: "100%", height: "46px", borderRadius: "12px" }}
+              />
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>End Time</label>
+              <TimePicker
+                use12Hours
+                format="h:mm A"
+                value={editForm.endTime ? dayjs(editForm.endTime, "h:mm A") : null}
+                onChange={handleEndTimeChange}
+                style={{ width: "100%", height: "46px", borderRadius: "12px" }}
+              />
+            </div>
+
+            <div style={fieldBox}>
+              <label style={labelStyle}>Hall</label>
+              <select
+                name="hall"
+                value={editForm.hall}
+                onChange={handleEditChange}
+                style={inputStyle}
+                disabled={!editForm.building}
+              >
+                <option value="">Select Hall</option>
+                {(buildingOptions[editForm.building] || []).map((hall) => (
+                  <option key={hall} value={hall}>
+                    {hall}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ ...actionRow, marginTop: "24px", justifyContent: "flex-end" }}>
+            <button style={neutralButton} onClick={closeEditModal}>
+              Cancel
+            </button>
+            <button style={primaryButton} onClick={handleUpdate}>
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

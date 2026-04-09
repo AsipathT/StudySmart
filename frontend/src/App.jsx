@@ -29,8 +29,12 @@ import AdminDashboard from './pages/AdminDashboard';
 
 import MyGroups from "./pages/MyGroups";
 import JoinedGroups from "./pages/JoinedGroups";
-import AllGroups from "./pages/AllGroups";
+
 import CreateGroup from "./pages/CreateGroup";
+import StudyBuddyDashboard from "./pages/StudyBuddyDashboard";
+import FindBuddies from "./pages/FindBuddies";
+
+
 import StudySessionPage from "./pages/StudySessionPage";
 import TrackingSummaryPage from "./pages/TrackingSummaryPage";
 import QuizPage from "./pages/QuizPage";
@@ -178,14 +182,32 @@ function App() {
   }
 />
 
+
+
 <Route
-  path="/buddy/all-groups"
+  path="/buddy/dashboard"
   element={
     <PrivateRoute>
-      <AllGroups />
+      <StudyBuddyDashboard />
     </PrivateRoute>
   }
 />
+
+<Route
+  path="/buddy/find"
+  element={
+    <PrivateRoute>
+      <FindBuddies />
+    </PrivateRoute>
+  }
+/>
+
+
+
+
+
+
+
 
 <Route
   path="/study-tracker"
