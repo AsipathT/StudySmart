@@ -61,7 +61,10 @@ router.post("/", async (req, res) => {
 // Get all groups
 router.get("/", async (req, res) => {
   try {
-    const groups = await StudyGroup.find().sort({ createdAt: -1 });
+    const groups = await StudyGroup.find()
+  .populate("members", "name")
+  .populate("creator", "name")
+  .sort({ createdAt: -1 });
     res.json(groups);
   } catch (error) {
     console.error("Error fetching groups:", error);

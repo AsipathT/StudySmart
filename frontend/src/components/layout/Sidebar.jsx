@@ -41,7 +41,23 @@ const AVATAR_KEY = 'sidebarAvatarUrl';
 const PREDICTOR_KEYS = ['/upload', '/analytics', '/predictions', '/chatbot', '/history'];
 
 // Routes that belong under Session Tracker
-const SESSION_TRACKER_KEYS = ['/study-tracker', '/quizzes', '/tracking-summary', '/material-mastery', '/create-students'];
+const SESSION_TRACKER_KEYS = [
+  '/study-tracker',
+  '/quizzes',
+  '/tracking-summary',
+  '/material-mastery',
+  '/create-students',
+];
+
+// Routes that belong under Study Buddy Finder
+const STUDY_BUDDY_KEYS = [
+  '/buddy/dashboard',
+  '/buddy/find',
+  '/buddy/my-groups',
+  '/buddy/joined',
+  
+  '/buddy/create',
+];
 
 const RESOURCE_LIBRARY_KEYS = [
   '/resource-library/dashboard',
@@ -58,20 +74,22 @@ const isResourceLibraryShellPath = (pathname) =>
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, loading, token } = useAuth();
+  const { user, logout } = useAuth();
+
   const [selectedKey, setSelectedKey] = useState(location.pathname);
   const [openKeys, setOpenKeys] = useState(() => {
     const keys = [];
     if (PREDICTOR_KEYS.includes(location.pathname)) keys.push('performance-predictor');
     if (SESSION_TRACKER_KEYS.includes(location.pathname)) keys.push('session-tracker');
-    if (RESOURCE_LIBRARY_KEYS.some((k) => location.pathname === k || location.pathname.startsWith(`${k}/`)))
-      keys.push('resource-library');
+    if (STUDY_BUDDY_KEYS.includes(location.pathname)) keys.push('study-buddy');
     return keys;
   });
+
   const [avatarUrl, setAvatarUrl] = useState(
     () => sessionStorage.getItem(AVATAR_KEY) || null
   );
 
+  // Load avatar from profile API
   const loadAvatar = async () => {
     if (!user) return;
     try {
@@ -87,7 +105,9 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     }
   };
 
-  useEffect(() => { loadAvatar(); }, [user]);
+  useEffect(() => {
+    loadAvatar();
+  }, [user]);
 
   useEffect(() => {
     const onAvatarUpdate = (e) => {
@@ -96,22 +116,37 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         sessionStorage.setItem(AVATAR_KEY, e.detail.avatarUrl);
       }
     };
+
     window.addEventListener('avatarUpdated', onAvatarUpdate);
     return () => window.removeEventListener('avatarUpdated', onAvatarUpdate);
   }, []);
 
   useEffect(() => {
     setSelectedKey(location.pathname);
-    if (!collapsed) {
-      const newKeys = [];
-      if (PREDICTOR_KEYS.includes(location.pathname)) newKeys.push('performance-predictor');
-      if (SESSION_TRACKER_KEYS.includes(location.pathname)) newKeys.push('session-tracker');
-      if (RESOURCE_LIBRARY_KEYS.some((k) => location.pathname === k || location.pathname.startsWith(`${k}/`)))
-        newKeys.push('resource-library');
-      if (newKeys.length > 0) setOpenKeys(newKeys);
+
+    const newKeys = [];
+
+    if (
+      RESOURCE_LIBRARY_KEYS.some(
+        (k) =>
+          location.pathname === k ||
+          location.pathname.startsWith(`${k}/`)
+      )
+    ) {
+      newKeys.push('resource-library');
+    }
+
+    if (STUDY_BUDDY_KEYS.includes(location.pathname)) {
+      newKeys.push('study-buddy');
+    }
+
+    if (newKeys.length > 0) {
+      setOpenKeys(newKeys);
     }
   }, [location.pathname, collapsed]);
 
+
+  // When collapsing, close all sub-menus
   useEffect(() => {
     if (collapsed) setOpenKeys([]);
   }, [collapsed]);
@@ -244,11 +279,22 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     >
       <div className="sidebar-logo">
         {!collapsed ? (
-          <Space direction="vertical" size={2} style={{ width: '100%', textAlign: 'center' }}>
-            <Title level={3} style={{ margin: 0, color: '#2d3e50' }}>StudySmart</Title>
+          <Space
+            direction="vertical"
+            size={2}
+            style={{ width: '100%', textAlign: 'center' }}
+          >
+            <Title level={3} style={{ margin: 0, color: '#2d3e50' }}>
+              StudySmart
+            </Title>
+            <Text type="secondary">Smart Insights & Predictions</Text>
           </Space>
         ) : (
-          <Avatar size={40} icon={<BookOutlined />} style={{ backgroundColor: '#2d3e50' }} />
+          <Avatar
+            size={40}
+            icon={<BookOutlined />}
+            style={{ backgroundColor: '#2d3e50' }}
+          />
         )}
       </div>
 
