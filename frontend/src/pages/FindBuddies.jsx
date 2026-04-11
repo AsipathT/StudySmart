@@ -268,6 +268,24 @@ const modalValue = {
   fontWeight: 700,
 };
 
+const membersSection = {
+  marginTop: "18px",
+};
+
+const membersGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+  gap: "10px",
+  marginTop: "12px",
+};
+
+const memberCard = {
+  background: "#f8fafc",
+  border: "1px solid #e2e8f0",
+  borderRadius: "14px",
+  padding: "12px",
+};
+
 const modalActionRow = {
   display: "flex",
   justifyContent: "flex-end",
@@ -333,6 +351,16 @@ const FindBuddies = () => {
 
   const getMemberId = (member) =>
     typeof member === "object" && member !== null ? member._id : member;
+
+  const getMemberNames = (group) => {
+    if (!group?.members?.length) return [];
+    return group.members.map((member, index) => {
+      if (typeof member === "object" && member !== null) {
+        return member.name || member.username || member.fullName || `Member ${index + 1}`;
+      }
+      return `Member ${index + 1}`;
+    });
+  };
 
   const isUserJoined = (group) => {
     return group?.members?.some(
@@ -444,6 +472,7 @@ const FindBuddies = () => {
   const modalMemberCount = selectedGroup?.members?.length || 0;
   const modalMaxMembers = selectedGroup?.maxMembers || 1;
   const modalIsFull = modalMemberCount >= modalMaxMembers;
+  const modalMemberNames = getMemberNames(selectedGroup);
 
   return (
     <div style={pageStyle}>
@@ -774,6 +803,29 @@ const FindBuddies = () => {
                   }}
                 />
               </div>
+            </div>
+
+            <div style={membersSection}>
+              <h3 style={{ margin: "0 0 8px", color: "#0f172a", fontSize: "18px" }}>
+                Group Members
+              </h3>
+              <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
+                Students currently in this group.
+              </p>
+
+              {modalMemberNames.length > 0 ? (
+                <div style={membersGrid}>
+                  {modalMemberNames.map((name, index) => (
+                    <div key={`${name}-${index}`} style={memberCard}>
+                      <p style={{ margin: 0, color: "#0f172a", fontWeight: 700 }}>
+                        {name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={emptyState}>No members yet.</div>
+              )}
             </div>
 
             <div style={modalActionRow}>

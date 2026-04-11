@@ -35,6 +35,7 @@ import JoinedGroups from "./pages/JoinedGroups";
 import CreateGroup from "./pages/CreateGroup";
 import StudyBuddyDashboard from "./pages/StudyBuddyDashboard";
 import FindBuddies from "./pages/FindBuddies";
+import GroupChat from "./pages/GroupChat";
 
 
 import StudySessionPage from "./pages/StudySessionPage";
@@ -212,7 +213,7 @@ function App() {
   }
 />
 
-
+<Route path="/buddy/chat/:groupId" element={<GroupChat />} />
 
 
 
