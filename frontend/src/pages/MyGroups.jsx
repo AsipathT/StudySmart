@@ -5,54 +5,158 @@ import dayjs from "dayjs";
 import { useAuth } from "../hooks/useAuth";
 
 const pageStyle = {
-  padding: "20px",
-  background: "#f8fafc",
   minHeight: "100vh",
+  padding: "24px",
+  background:
+    "radial-gradient(circle at top left, rgba(99,102,241,0.16), transparent 26%), radial-gradient(circle at top right, rgba(168,85,247,0.14), transparent 28%), linear-gradient(180deg, #f8fbff 0%, #eef2ff 45%, #f8fafc 100%)",
+  position: "relative",
+  overflow: "hidden",
+};
+
+const floatingOrb = (top, left, size, bg, delay = "0s") => ({
+  position: "absolute",
+  top,
+  left,
+  width: size,
+  height: size,
+  borderRadius: "50%",
+  background: bg,
+  filter: "blur(10px)",
+  opacity: 0.5,
+  animation: "floaty 8s ease-in-out infinite",
+  animationDelay: delay,
+  pointerEvents: "none",
+});
+
+const wrapperStyle = {
+  maxWidth: "1280px",
+  margin: "0 auto",
+  position: "relative",
+  zIndex: 2,
+};
+
+const heroCard = {
+  position: "relative",
+  overflow: "hidden",
+  background:
+    "linear-gradient(135deg, #0f172a 0%, #312e81 38%, #6d28d9 72%, #9333ea 100%)",
+  borderRadius: "30px",
+  padding: "32px",
+  color: "#ffffff",
+  boxShadow: "0 24px 55px rgba(79, 70, 229, 0.24)",
+  marginBottom: "24px",
+  border: "1px solid rgba(255,255,255,0.12)",
+};
+
+const heroGlow = {
+  position: "absolute",
+  inset: 0,
+  background:
+    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.16), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.12), transparent 20%), radial-gradient(circle at 72% 82%, rgba(255,255,255,0.08), transparent 26%)",
+  pointerEvents: "none",
+};
+
+const heroTitle = {
+  margin: 0,
+  fontSize: "36px",
+  fontWeight: 800,
+  letterSpacing: "-0.8px",
+  position: "relative",
+  zIndex: 1,
+};
+
+const heroText = {
+  marginTop: "10px",
+  color: "rgba(255,255,255,0.9)",
+  fontSize: "15px",
+  lineHeight: 1.8,
+  maxWidth: "760px",
+  position: "relative",
+  zIndex: 1,
 };
 
 const sectionCard = {
-  background: "#ffffff",
-  borderRadius: "24px",
-  padding: "28px",
-  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
-  border: "1px solid #e2e8f0",
+  background: "rgba(255,255,255,0.82)",
+  backdropFilter: "blur(14px)",
+  borderRadius: "28px",
+  padding: "24px",
+  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.08)",
+  border: "1px solid rgba(226,232,240,0.95)",
 };
 
 const headerWrap = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: "16px",
   marginBottom: "28px",
+};
+
+const titleWrap = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
 };
 
 const titleStyle = {
   margin: 0,
   fontSize: "30px",
-  fontWeight: 700,
+  fontWeight: 800,
   color: "#0f172a",
+  letterSpacing: "-0.6px",
 };
 
 const subtitleStyle = {
-  marginTop: "8px",
+  margin: 0,
   color: "#64748b",
   fontSize: "15px",
+  lineHeight: 1.7,
+};
+
+const summaryBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "12px 16px",
+  borderRadius: "16px",
+  background: "linear-gradient(135deg, #eef2ff, #f5f3ff)",
+  border: "1px solid #ddd6fe",
+  color: "#4f46e5",
+  fontWeight: 800,
+  fontSize: "14px",
 };
 
 const gridStyle = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-  gap: "18px",
+  gap: "20px",
 };
 
 const baseGroupCard = {
-  background: "#ffffff",
-  borderRadius: "22px",
+  background: "rgba(255,255,255,0.96)",
+  borderRadius: "24px",
   overflow: "hidden",
   border: "1px solid #e2e8f0",
-  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
+  boxShadow: "0 14px 30px rgba(15, 23, 42, 0.08)",
   transition: "transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease",
+};
+
+const imageWrap = {
+  position: "relative",
+  overflow: "hidden",
+};
+
+const imageOverlay = {
+  position: "absolute",
+  inset: 0,
+  background:
+    "linear-gradient(to top, rgba(15,23,42,0.34), rgba(15,23,42,0.04))",
 };
 
 const imageStyle = {
   width: "100%",
-  height: "210px",
+  height: "220px",
   objectFit: "cover",
   display: "block",
   transition: "transform 0.35s ease",
@@ -64,19 +168,20 @@ const cardBody = {
 
 const badgeStyle = {
   display: "inline-block",
-  padding: "6px 12px",
+  padding: "7px 13px",
   borderRadius: "999px",
   fontSize: "12px",
-  fontWeight: 700,
+  fontWeight: 800,
   marginBottom: "12px",
-  background: "#ede9fe",
+  background: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
   color: "#5b21b6",
+  border: "1px solid rgba(255,255,255,0.7)",
 };
 
 const descriptionStyle = {
   margin: "0 0 14px",
   color: "#475569",
-  lineHeight: 1.6,
+  lineHeight: 1.7,
   fontSize: "14px",
 };
 
@@ -89,13 +194,30 @@ const chipWrap = {
 };
 
 const chipStyle = {
-  padding: "7px 12px",
+  padding: "8px 13px",
   borderRadius: "999px",
-  background: "#f1f5f9",
+  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
   color: "#334155",
-  fontSize: "13px",
-  fontWeight: 500,
+  fontSize: "12px",
+  fontWeight: 700,
   transition: "all 0.2s ease",
+  border: "1px solid #e2e8f0",
+};
+
+const progressLabel = {
+  marginBottom: "8px",
+  color: "#475569",
+  fontSize: "13px",
+  fontWeight: 700,
+};
+
+const progressTrack = {
+  width: "100%",
+  height: "12px",
+  background: "#e2e8f0",
+  borderRadius: "999px",
+  overflow: "hidden",
+  marginBottom: "18px",
 };
 
 const actionRow = {
@@ -107,45 +229,45 @@ const actionRow = {
 
 const primaryButton = {
   border: "none",
-  borderRadius: "12px",
-  padding: "11px 18px",
-  fontWeight: 600,
+  borderRadius: "14px",
+  padding: "12px 18px",
+  fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
   color: "#fff",
-  boxShadow: "0 8px 20px rgba(79, 70, 229, 0.25)",
+  boxShadow: "0 12px 22px rgba(99,102,241,0.18)",
   transition: "all 0.25s ease",
 };
 
 const secondaryButton = {
   border: "none",
-  borderRadius: "12px",
-  padding: "11px 18px",
-  fontWeight: 600,
+  borderRadius: "14px",
+  padding: "12px 18px",
+  fontWeight: 800,
   cursor: "pointer",
-  background: "#eef2ff",
+  background: "linear-gradient(135deg, #eef2ff, #e0e7ff)",
   color: "#4338ca",
   transition: "all 0.25s ease",
 };
 
 const neutralButton = {
   border: "none",
-  borderRadius: "12px",
-  padding: "11px 18px",
-  fontWeight: 600,
+  borderRadius: "14px",
+  padding: "12px 18px",
+  fontWeight: 800,
   cursor: "pointer",
-  background: "#e2e8f0",
+  background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
   color: "#1e293b",
   transition: "all 0.25s ease",
 };
 
 const dangerButton = {
   border: "none",
-  borderRadius: "12px",
-  padding: "11px 18px",
-  fontWeight: 600,
+  borderRadius: "14px",
+  padding: "12px 18px",
+  fontWeight: 800,
   cursor: "pointer",
-  background: "#fef2f2",
+  background: "linear-gradient(135deg, #fff1f2, #fee2e2)",
   color: "#dc2626",
   transition: "all 0.25s ease",
 };
@@ -168,42 +290,45 @@ const fieldBox = {
 const labelStyle = {
   display: "block",
   marginBottom: "8px",
-  fontWeight: 600,
+  fontWeight: 700,
   color: "#334155",
   fontSize: "14px",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #cbd5e1",
+  padding: "13px 14px",
+  borderRadius: "14px",
+  border: "1px solid #dbe2ea",
   fontSize: "14px",
   outline: "none",
   boxSizing: "border-box",
   background: "#fff",
+  boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
 };
 
 const emptyState = {
   textAlign: "center",
-  padding: "48px 20px",
+  padding: "56px 24px",
   border: "2px dashed #cbd5e1",
-  borderRadius: "18px",
+  borderRadius: "22px",
   color: "#64748b",
-  background: "#f8fafc",
+  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
 };
 
 const modalSectionTitle = {
-  margin: "0 0 6px",
-  fontSize: "22px",
-  fontWeight: 700,
+  margin: "0 0 8px",
+  fontSize: "28px",
+  fontWeight: 800,
   color: "#0f172a",
+  letterSpacing: "-0.5px",
 };
 
 const modalSectionText = {
-  margin: "0 0 20px",
+  margin: "0 0 22px",
   color: "#64748b",
   fontSize: "14px",
+  lineHeight: 1.7,
 };
 
 const buildingOptions = {
@@ -364,128 +489,221 @@ const MyGroups = () => {
 
   return (
     <div style={pageStyle}>
-      <div style={sectionCard}>
-        <div style={headerWrap}>
-          <h1 style={titleStyle}>My Groups</h1>
-          <p style={subtitleStyle}>
-            Edit or delete the study groups you created.
+      <style>
+        {`
+          @keyframes floaty {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(-18px) translateX(10px); }
+          }
+        `}
+      </style>
+
+      <div style={floatingOrb("80px", "-40px", "180px", "rgba(129,140,248,0.28)")}></div>
+      <div style={floatingOrb("430px", "90%", "160px", "rgba(192,132,252,0.24)", "1s")}></div>
+      <div style={floatingOrb("78%", "6%", "130px", "rgba(96,165,250,0.18)", "2s")}></div>
+
+      <div style={wrapperStyle}>
+        <div style={heroCard}>
+          <div style={heroGlow}></div>
+
+          <div
+            style={{
+              position: "absolute",
+              top: "-25px",
+              right: "-60px",
+              width: "220px",
+              height: "220px",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.08)",
+            }}
+          ></div>
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: "-55px",
+              left: "-30px",
+              width: "180px",
+              height: "180px",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.06)",
+            }}
+          ></div>
+
+          <h1 style={heroTitle}>My Groups</h1>
+          <p style={heroText}>
+            Manage the study groups you created, keep details updated, and make your groups look organized and inviting.
           </p>
         </div>
 
-        {groups.length > 0 ? (
-          <div style={gridStyle}>
-            {groups.map((group) => {
-              const cardKey = group._id;
-              return (
-                <div
-                  key={group._id}
-                  style={{
-                    ...baseGroupCard,
-                    transform: hoveredCard === cardKey ? "translateY(-6px)" : "translateY(0)",
-                    boxShadow:
-                      hoveredCard === cardKey
-                        ? "0 18px 36px rgba(79, 70, 229, 0.14)"
-                        : baseGroupCard.boxShadow,
-                    borderColor: hoveredCard === cardKey ? "#c7d2fe" : "#e2e8f0",
-                  }}
-                  onMouseEnter={() => setHoveredCard(cardKey)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
-                  {group.image && (
-                    <img
-                      src={group.image}
-                      alt={group.name}
-                      style={{
-                        ...imageStyle,
-                        transform: hoveredCard === cardKey ? "scale(1.05)" : "scale(1)",
-                      }}
-                    />
-                  )}
+        <div style={sectionCard}>
+          <div style={headerWrap}>
+            <div style={titleWrap}>
+              <h2 style={titleStyle}>Your Created Groups</h2>
+              <p style={subtitleStyle}>
+                Edit or delete the study groups you created.
+              </p>
+            </div>
 
-                  <div style={cardBody}>
-                    <div style={badgeStyle}>Your Group</div>
+            <div style={summaryBadge}>✨ {groups.length} Groups</div>
+          </div>
 
-                    <h3
-                      style={{
-                        margin: "0 0 8px",
-                        color: "#0f172a",
-                        fontSize: "21px",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {group.name}
-                    </h3>
+          {groups.length > 0 ? (
+            <div style={gridStyle}>
+              {groups.map((group) => {
+                const cardKey = group._id;
+                const memberCount = group.members?.length || 0;
+                const maxMembers = group.maxMembers || 1;
+                const progress = Math.min((memberCount / maxMembers) * 100, 100);
 
-                    <p style={descriptionStyle}>
-                      {group.description || "No description available."}
-                    </p>
+                return (
+                  <div
+                    key={group._id}
+                    style={{
+                      ...baseGroupCard,
+                      transform: hoveredCard === cardKey ? "translateY(-7px)" : "translateY(0)",
+                      boxShadow:
+                        hoveredCard === cardKey
+                          ? "0 22px 40px rgba(79, 70, 229, 0.14)"
+                          : baseGroupCard.boxShadow,
+                      borderColor: hoveredCard === cardKey ? "#c7d2fe" : "#e2e8f0",
+                    }}
+                    onMouseEnter={() => setHoveredCard(cardKey)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    {group.image && (
+                      <div style={imageWrap}>
+                        <img
+                          src={group.image}
+                          alt={group.name}
+                          style={{
+                            ...imageStyle,
+                            transform: hoveredCard === cardKey ? "scale(1.06)" : "scale(1)",
+                          }}
+                        />
+                        <div style={imageOverlay}></div>
+                      </div>
+                    )}
 
-                    <div style={chipWrap}>
-                      <span style={chipStyle}>📘 {group.subject || "No subject"}</span>
-                      <span style={chipStyle}>
-                        👥 {group.members?.length || 0} / {group.maxMembers}
-                      </span>
-                      <span style={chipStyle}>
-                        📅 {group.selectedDays?.join(", ") || "Not set"}
-                      </span>
-                      <span style={chipStyle}>
-                        ⏰ {group.startTime || "Not set"} - {group.endTime || "Not set"}
-                      </span>
-                      <span style={chipStyle}>🏢 {group.building || "Not set"}</span>
-                      <span style={chipStyle}>📍 {group.hall || "Not set"}</span>
-                    </div>
+                    <div style={cardBody}>
+                      <div style={badgeStyle}>Your Group</div>
 
-                    <div style={actionRow}>
-                      <button
-                        onMouseEnter={() => setHoveredButton(`edit-${cardKey}`)}
-                        onMouseLeave={() => setHoveredButton("")}
-                        onClick={() => openEditModal(group)}
+                      <h3
                         style={{
-                          ...secondaryButton,
-                          transform:
-                            hoveredButton === `edit-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
-                          boxShadow:
-                            hoveredButton === `edit-${cardKey}`
-                              ? "0 10px 20px rgba(67, 56, 202, 0.12)"
-                              : "none",
+                          margin: "0 0 8px",
+                          color: "#0f172a",
+                          fontSize: "22px",
+                          fontWeight: 800,
+                          letterSpacing: "-0.4px",
                         }}
                       >
-                        Edit
-                      </button>
+                        {group.name}
+                      </h3>
 
-                      <button
-                        onMouseEnter={() => setHoveredButton(`delete-${cardKey}`)}
-                        onMouseLeave={() => setHoveredButton("")}
-                        onClick={() => handleDelete(group._id)}
-                        style={{
-                          ...dangerButton,
-                          transform:
-                            hoveredButton === `delete-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
-                          boxShadow:
-                            hoveredButton === `delete-${cardKey}`
-                              ? "0 10px 20px rgba(220, 38, 38, 0.12)"
-                              : "none",
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <p style={descriptionStyle}>
+                        {group.description || "No description available."}
+                      </p>
+
+                      <div style={chipWrap}>
+                        <span style={chipStyle}>📘 {group.subject || "No subject"}</span>
+                        <span style={chipStyle}>
+                          👥 {memberCount} / {group.maxMembers}
+                        </span>
+                        <span style={chipStyle}>
+                          📅 {group.selectedDays?.join(", ") || "Not set"}
+                        </span>
+                        <span style={chipStyle}>
+                          ⏰ {group.startTime || "Not set"} - {group.endTime || "Not set"}
+                        </span>
+                        <span style={chipStyle}>🏢 {group.building || "Not set"}</span>
+                        <span style={chipStyle}>📍 {group.hall || "Not set"}</span>
+                      </div>
+
+                      <div style={progressLabel}>Group capacity</div>
+                      <div style={progressTrack}>
+                        <div
+                          style={{
+                            width: `${progress}%`,
+                            height: "100%",
+                            background:
+                              "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+                            borderRadius: "999px",
+                            transition: "width 0.35s ease",
+                          }}
+                        />
+                      </div>
+
+                      <div style={actionRow}>
+                        <button
+                          onMouseEnter={() => setHoveredButton(`edit-${cardKey}`)}
+                          onMouseLeave={() => setHoveredButton("")}
+                          onClick={() => openEditModal(group)}
+                          style={{
+                            ...secondaryButton,
+                            transform:
+                              hoveredButton === `edit-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
+                            boxShadow:
+                              hoveredButton === `edit-${cardKey}`
+                                ? "0 10px 20px rgba(67, 56, 202, 0.12)"
+                                : "none",
+                          }}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onMouseEnter={() => setHoveredButton(`delete-${cardKey}`)}
+                          onMouseLeave={() => setHoveredButton("")}
+                          onClick={() => handleDelete(group._id)}
+                          style={{
+                            ...dangerButton,
+                            transform:
+                              hoveredButton === `delete-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
+                            boxShadow:
+                              hoveredButton === `delete-${cardKey}`
+                                ? "0 10px 20px rgba(220, 38, 38, 0.12)"
+                                : "none",
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={emptyState}>You haven't created any groups yet.</div>
-        )}
+                );
+              })}
+            </div>
+          ) : (
+            <div style={emptyState}>
+              <h3 style={{ marginTop: 0, marginBottom: "8px", color: "#334155" }}>
+                No groups created yet
+              </h3>
+              <p style={{ margin: 0 }}>
+                You haven't created any groups yet.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <Modal
         open={isEditModalOpen}
         onCancel={closeEditModal}
         footer={null}
-        width={820}
+        width={860}
         centered
+        styles={{
+          content: {
+            borderRadius: "28px",
+            overflow: "hidden",
+            padding: "24px",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))",
+          },
+          body: {
+            paddingTop: "4px",
+          },
+        }}
       >
         <div>
           <h2 style={modalSectionTitle}>Edit Group</h2>
@@ -527,7 +745,7 @@ const MyGroups = () => {
                 placeholder="Description"
                 style={{
                   ...inputStyle,
-                  minHeight: "100px",
+                  minHeight: "110px",
                   resize: "vertical",
                 }}
               />
@@ -598,7 +816,7 @@ const MyGroups = () => {
                 format="h:mm A"
                 value={editForm.startTime ? dayjs(editForm.startTime, "h:mm A") : null}
                 onChange={handleStartTimeChange}
-                style={{ width: "100%", height: "46px", borderRadius: "12px" }}
+                style={{ width: "100%", height: "48px", borderRadius: "14px" }}
               />
             </div>
 
@@ -609,7 +827,7 @@ const MyGroups = () => {
                 format="h:mm A"
                 value={editForm.endTime ? dayjs(editForm.endTime, "h:mm A") : null}
                 onChange={handleEndTimeChange}
-                style={{ width: "100%", height: "46px", borderRadius: "12px" }}
+                style={{ width: "100%", height: "48px", borderRadius: "14px" }}
               />
             </div>
 
