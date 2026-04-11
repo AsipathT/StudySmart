@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../hooks/useAuth";
 import { message } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const pageStyle = {
   padding: "20px",
@@ -29,14 +30,13 @@ const baseGroupCard = {
   overflow: "hidden",
   border: "1px solid #e2e8f0",
   boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
-  transition: "transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease",
+  transition: "all 0.25s ease",
 };
 
 const imageStyle = {
   width: "100%",
   height: "190px",
   objectFit: "cover",
-  transition: "transform 0.35s ease",
 };
 
 const cardBody = {
@@ -56,36 +56,14 @@ const chipStyle = {
   background: "#f1f5f9",
   color: "#334155",
   fontSize: "13px",
-  fontWeight: 500,
-  transition: "all 0.2s ease",
-};
-
-const dangerButton = {
-  border: "none",
-  borderRadius: "12px",
-  padding: "11px 18px",
-  fontWeight: 600,
-  cursor: "pointer",
-  background: "#fef2f2",
-  color: "#dc2626",
-  width: "100%",
-  transition: "all 0.25s ease",
-};
-
-const emptyState = {
-  textAlign: "center",
-  padding: "48px 20px",
-  border: "2px dashed #cbd5e1",
-  borderRadius: "18px",
-  color: "#64748b",
-  background: "#f8fafc",
 };
 
 const JoinedGroups = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [groups, setGroups] = useState([]);
   const [hoveredCard, setHoveredCard] = useState(null);
-  const [hoveredButton, setHoveredButton] = useState("");
 
   const currentUserId = user?._id || user?.id;
 
@@ -114,30 +92,16 @@ const JoinedGroups = () => {
 
   const handleLeaveGroup = async (group) => {
     try {
-      const matchedMember = group.members?.find(
-        (member) => String(getMemberId(member)) === String(currentUserId)
-      );
-
-      const userIdToSend =
-        typeof matchedMember === "object"
-          ? matchedMember._id
-          : matchedMember || currentUserId;
-
-      if (!userIdToSend) {
-        message.error("Could not identify current user");
-        return;
-      }
-
       await axios.put(
         `http://localhost:5000/api/study-groups/${group._id}/leave`,
-        { userId: userIdToSend }
+        { userId: currentUserId }
       );
 
       message.success("Left group successfully");
       fetchJoinedGroups();
     } catch (error) {
-      console.error("Leave group error:", error.response?.data || error.message);
-      message.error(error.response?.data?.message || "Failed to leave group");
+      console.error("Leave group error:", error);
+      message.error("Failed to leave group");
     }
   };
 
@@ -145,10 +109,10 @@ const JoinedGroups = () => {
     <div style={pageStyle}>
       <div style={sectionCard}>
         <div style={{ marginBottom: "24px" }}>
-          <h1 style={{ margin: 0, fontSize: "30px", fontWeight: 700, color: "#0f172a" }}>
+          <h1 style={{ margin: 0, fontSize: "30px", fontWeight: 700 }}>
             Joined Groups
           </h1>
-          <p style={{ marginTop: "8px", color: "#64748b", fontSize: "15px" }}>
+          <p style={{ marginTop: "8px", color: "#64748b" }}>
             These are the study groups you are currently part of.
           </p>
         </div>
@@ -157,17 +121,20 @@ const JoinedGroups = () => {
           <div style={gridStyle}>
             {groups.map((group) => {
               const cardKey = group._id;
+
               return (
                 <div
                   key={group._id}
                   style={{
                     ...baseGroupCard,
-                    transform: hoveredCard === cardKey ? "translateY(-6px)" : "translateY(0)",
+                    transform:
+                      hoveredCard === cardKey
+                        ? "translateY(-6px)"
+                        : "translateY(0)",
                     boxShadow:
                       hoveredCard === cardKey
                         ? "0 18px 36px rgba(79, 70, 229, 0.14)"
                         : baseGroupCard.boxShadow,
-                    borderColor: hoveredCard === cardKey ? "#c7d2fe" : "#e2e8f0",
                   }}
                   onMouseEnter={() => setHoveredCard(cardKey)}
                   onMouseLeave={() => setHoveredCard(null)}
@@ -176,10 +143,7 @@ const JoinedGroups = () => {
                     <img
                       src={group.image}
                       alt={group.name}
-                      style={{
-                        ...imageStyle,
-                        transform: hoveredCard === cardKey ? "scale(1.05)" : "scale(1)",
-                      }}
+                      style={imageStyle}
                     />
                   )}
 
@@ -199,52 +163,79 @@ const JoinedGroups = () => {
                       Joined
                     </div>
 
-                    <h3 style={{ margin: "0 0 8px", color: "#0f172a", fontSize: "20px" }}>
-                      {group.name}
-                    </h3>
+                    <h3 style={{ margin: "0 0 8px" }}>{group.name}</h3>
 
-                    <p style={{ margin: "0 0 12px", color: "#475569", lineHeight: 1.6 }}>
+                    <p style={{ color: "#475569" }}>
                       {group.description || "No description available."}
                     </p>
 
                     <div style={chipWrap}>
-                      <span style={chipStyle}>📘 {group.subject || "No subject"}</span>
+                      <span style={chipStyle}>📘 {group.subject}</span>
                       <span style={chipStyle}>
-                        👥 {group.members?.length || 0} / {group.maxMembers}
+                        👥 {group.members?.length}/{group.maxMembers}
                       </span>
                       <span style={chipStyle}>
-                        📅 {group.selectedDays?.join(", ") || "Not set"}
+                        📅 {group.selectedDays?.join(", ")}
                       </span>
                       <span style={chipStyle}>
-                        ⏰ {group.startTime || "N/A"} - {group.endTime || "N/A"}
+                        ⏰ {group.startTime} - {group.endTime}
                       </span>
-                      <span style={chipStyle}>🏢 {group.building || "No building"}</span>
-                      <span style={chipStyle}>📍 {group.hall || "No hall"}</span>
+                      <span style={chipStyle}>🏢 {group.building}</span>
+                      <span style={chipStyle}>📍 {group.hall}</span>
                     </div>
 
-                    <button
-                      onMouseEnter={() => setHoveredButton(`leave-${cardKey}`)}
-                      onMouseLeave={() => setHoveredButton("")}
-                      onClick={() => handleLeaveGroup(group)}
-                      style={{
-                        ...dangerButton,
-                        transform:
-                          hoveredButton === `leave-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
-                        boxShadow:
-                          hoveredButton === `leave-${cardKey}`
-                            ? "0 10px 20px rgba(220, 38, 38, 0.12)"
-                            : "none",
-                      }}
-                    >
-                      Leave Group
-                    </button>
+                    {/* BUTTONS */}
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <button
+                        onClick={() =>
+                          navigate(`/buddy/chat/${group._id}`)
+                        }
+                        style={{
+                          flex: 1,
+                          border: "none",
+                          borderRadius: "12px",
+                          padding: "10px",
+                          background:
+                            "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                          color: "#fff",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        💬 Chat
+                      </button>
+
+                      <button
+                        onClick={() => handleLeaveGroup(group)}
+                        style={{
+                          flex: 1,
+                          border: "none",
+                          borderRadius: "12px",
+                          padding: "10px",
+                          background: "#fef2f2",
+                          color: "#dc2626",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Leave
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div style={emptyState}>You haven't joined any groups yet.</div>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px",
+              color: "#64748b",
+            }}
+          >
+            You haven't joined any groups yet.
+          </div>
         )}
       </div>
     </div>
