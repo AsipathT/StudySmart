@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
@@ -10,13 +10,28 @@ const GroupChat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  const bottomRef = useRef();
+  const bottomRef = useRef(null);
+  const chatRef = useRef(null);
 
   useEffect(() => {
-    const saved = JSON.parse(
-      localStorage.getItem(`chat_${groupId}`) || "[]"
-    );
+    const saved = JSON.parse(localStorage.getItem(`chat_${groupId}`) || "[]");
     setMessages(saved);
+  }, [groupId]);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+
+    if (document.documentElement) {
+      document.documentElement.scrollTop = 0;
+    }
+
+    if (document.body) {
+      document.body.scrollTop = 0;
+    }
+
+    if (chatRef.current) {
+      chatRef.current.scrollTop = 0;
+    }
   }, [groupId]);
 
   const sendMessage = () => {
@@ -35,9 +50,9 @@ const GroupChat = () => {
 
     setInput("");
 
-    setTimeout(() => {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+    requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
   };
 
   const handleKeyDown = (e) => {
@@ -51,9 +66,12 @@ const GroupChat = () => {
     <div
       style={{
         minHeight: "100vh",
+        height: "100vh",
         display: "flex",
         justifyContent: "center",
+        alignItems: "flex-start",
         padding: "30px",
+        boxSizing: "border-box",
         position: "relative",
         overflow: "hidden",
         background: `
@@ -63,7 +81,6 @@ const GroupChat = () => {
         `,
       }}
     >
-      {/* FLOATING BUBBLES */}
       <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
         {[...Array(18)].map((_, i) => {
           const size = 30 + (i % 5) * 20;
@@ -95,12 +112,11 @@ const GroupChat = () => {
         })}
       </div>
 
-      {/* MAIN CARD */}
       <div
         style={{
           width: "100%",
           maxWidth: "720px",
-          height: "calc(100vh - 120px)",
+          height: "calc(100vh - 60px)",
           display: "flex",
           flexDirection: "column",
           borderRadius: "24px",
@@ -112,7 +128,6 @@ const GroupChat = () => {
           zIndex: 1,
         }}
       >
-        {/* HEADER */}
         <div
           style={{
             padding: "18px",
@@ -122,6 +137,7 @@ const GroupChat = () => {
             display: "flex",
             alignItems: "center",
             gap: "10px",
+            flexShrink: 0,
           }}
         >
           <button
@@ -141,19 +157,16 @@ const GroupChat = () => {
           💬 Group Chat
         </div>
 
-        {/* CHAT AREA */}
         <div
+          ref={chatRef}
           style={{
             flex: 1,
+            minHeight: 0,
             padding: "20px",
             overflowY: "auto",
             display: "flex",
             flexDirection: "column",
             gap: "14px",
-            justifyContent:
-              messages.length === 0 ? "center" : "flex-start",
-
-            // 🔥 NEW ATTRACTIVE BACKGROUND
             background: `
               radial-gradient(circle at 10% 20%, rgba(99,102,241,0.08), transparent 40%),
               radial-gradient(circle at 90% 80%, rgba(139,92,246,0.08), transparent 40%),
@@ -162,14 +175,18 @@ const GroupChat = () => {
           }}
         >
           {messages.length === 0 && (
-            <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                textAlign: "center",
+                margin: "auto 0",
+              }}
+            >
               <div
                 style={{
                   width: "80px",
                   height: "80px",
                   borderRadius: "20px",
-                  background:
-                    "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                  background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -181,13 +198,9 @@ const GroupChat = () => {
                 💬
               </div>
 
-              <h2 style={{ margin: 0, color: "#4f46e5" }}>
-                Start chatting
-              </h2>
+              <h2 style={{ margin: 0, color: "#4f46e5" }}>Start chatting</h2>
 
-              <p style={{ color: "#64748b" }}>
-                Send your first message
-              </p>
+              <p style={{ color: "#64748b" }}>Send your first message</p>
             </div>
           )}
 
@@ -199,9 +212,7 @@ const GroupChat = () => {
                 key={i}
                 style={{
                   display: "flex",
-                  justifyContent: isMe
-                    ? "flex-end"
-                    : "flex-start",
+                  justifyContent: isMe ? "flex-end" : "flex-start",
                 }}
               >
                 <div
@@ -213,8 +224,7 @@ const GroupChat = () => {
                     padding: "12px 16px",
                     borderRadius: "16px",
                     maxWidth: "70%",
-                    boxShadow:
-                      "0 6px 18px rgba(0,0,0,0.08)",
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
                   }}
                 >
                   {!isMe && (
@@ -240,11 +250,16 @@ const GroupChat = () => {
             );
           })}
 
-          <div ref={bottomRef}></div>
+          <div ref={bottomRef} />
         </div>
 
-        {/* INPUT */}
-        <div style={{ padding: "14px", background: "transparent" }}>
+        <div
+          style={{
+            padding: "14px",
+            background: "transparent",
+            flexShrink: 0,
+          }}
+        >
           <div
             style={{
               display: "flex",
@@ -279,8 +294,7 @@ const GroupChat = () => {
                 height: "44px",
                 borderRadius: "50%",
                 border: "none",
-                background:
-                  "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
                 color: "#fff",
                 fontSize: "16px",
                 cursor: "pointer",
