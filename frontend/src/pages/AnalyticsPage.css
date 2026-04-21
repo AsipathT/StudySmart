@@ -1,14 +1,68 @@
-.analytics-page {
-  padding: 24px;
+/* ─── Google Fonts ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ─── CSS Variables - 60-30-20 Color Rule ───────────────────────── */
+:root {
+  /* 60-30-20 Color Rule Implementation */
+  --dominant: #f8fafc; /* 60% - Soft neutral background */
+  --secondary: #2563eb; /* 30% - Blue for supporting elements */
+  --accent: #f59e0b; /* 20% - Warm amber for highlights and CTAs */
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --surface: #ffffff;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', 'Fira Mono', 'SF Mono', monospace;
+  --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ─── Analytics Page ─────────────────────────────────────────────── */
+.analytics-page {
+  padding: 32px 36px;
+  background: var(--dominant);
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(245, 158, 11, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
+  min-height: 100vh;
+  font-family: var(--font);
+}
+
+.analytics-page * {
+  font-family: var(--font) !important;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Analytics Header ──────────────────────────────────────────── */
 .analytics-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+  background: linear-gradient(135deg, var(--secondary) 0%, #1e40af 100%);
+  border: none !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-md) !important;
+  overflow: hidden;
+  position: relative;
+}
+
+.analytics-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--secondary) 0%, var(--accent) 50%, #16a34a 100%);
 }
 
 .analytics-header .ant-card-body {
   color: white;
+  padding: 28px !important;
 }
 
 .analytics-header .ant-typography,
@@ -16,36 +70,123 @@
   color: white !important;
 }
 
-.analytics-page .ant-btn-primary {
-  background-color: #667eea;
-  border-color: #667eea;
+.analytics-header .ant-typography h2 {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: white !important;
 }
 
-.analytics-page .ant-btn-primary:hover {
-  background-color: #764ba2;
-  border-color: #764ba2;
+.analytics-header .ant-typography-secondary {
+  font-size: 14px !important;
+  opacity: 0.95;
 }
 
-.analytics-page .ant-btn-default {
-  color: #667eea;
-  border-color: #667eea;
-}
-
-.analytics-page .ant-btn-default:hover {
-  color: #764ba2;
-  border-color: #764ba2;
-}
-
+/* ─── Metric Card ────────────────────────────────────────────────── */
 .metric-card {
-  border-radius: 8px;
-  transition: all 0.3s;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border) !important;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(248, 250, 252, 0.8) 100%) !important;
+  transition: all var(--transition) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border-color: var(--accent) !important;
 }
 
+.metric-card .ant-card-body {
+  padding: 24px !important;
+}
+
+.metric-card .ant-statistic-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-card .ant-statistic-content-value {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+}
+
+/* ─── Ant Button Overrides ──────────────────────────────────────── */
+.analytics-page .ant-btn-primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25) !important;
+  font-weight: 600 !important;
+  transition: all var(--transition) !important;
+}
+
+.analytics-page .ant-btn-primary:hover {
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+.analytics-page .ant-btn-default {
+  color: var(--secondary) !important;
+  border-color: var(--secondary) !important;
+  font-weight: 600 !important;
+}
+
+.analytics-page .ant-btn-default:hover {
+  color: #1e40af !important;
+  border-color: #1e40af !important;
+  background: rgba(37, 99, 235, 0.05) !important;
+}
+
+/* ─── Ant Card Overrides ────────────────────────────────────────– */
+.analytics-page .ant-card {
+  border-radius: var(--radius-xl) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm) !important;
+  overflow: hidden;
+  transition: all var(--transition) !important;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(248, 250, 252, 0.8) 100%) !important;
+}
+
+.analytics-page .ant-card:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.analytics-page .ant-card-head {
+  border-bottom: 1px solid var(--border) !important;
+  padding: 20px 24px !important;
+  background: var(--dominant) !important;
+}
+
+.analytics-page .ant-card-head-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+}
+
+.analytics-page .ant-card-body {
+  padding: 24px !important;
+}
+
+/* ─── Recommendation Card ────────────────────────────────────────── */
+.recommendation-card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.25) !important;
+  border-radius: var(--radius-lg) !important;
+  transition: all var(--transition) !important;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15) !important;
+  border-color: var(--accent) !important;
+}
+
+/* ─── Loading Container ─────────────────────────────────────────── */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -54,29 +195,97 @@
   min-height: 400px;
 }
 
-.recommendation-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border: none;
-  transition: all 0.3s;
+.loading-container .ant-spin-dot-item {
+  background-color: var(--accent) !important;
 }
 
-.recommendation-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* ─── Select & Input Overrides ─────────────────────────────────── */
+.analytics-page .ant-select-selector {
+  border-radius: var(--radius-sm) !important;
+  border-color: var(--border) !important;
+  transition: all var(--transition) !important;
 }
 
-/* Chart container styling */
+.analytics-page .ant-select-selector:hover {
+  border-color: var(--secondary) !important;
+}
+
+.analytics-page .ant-select-focused .ant-select-selector {
+  border-color: var(--secondary) !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+/* ─── Table Styling ────────────────────────────────────────────── */
+.analytics-page .ant-table {
+  border-radius: var(--radius-md) !important;
+  overflow: hidden;
+}
+
+.analytics-page .ant-table-thead > tr > th {
+  background: var(--dominant) !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: var(--text-secondary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.analytics-page .ant-table-tbody > tr > td {
+  font-size: 14px !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.analytics-page .ant-table-tbody > tr:hover > td {
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+/* ─── Tag Styling ───────────────────────────────────────────────── */
+.analytics-page .ant-tag {
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 2px 10px !important;
+  border: none !important;
+}
+
+/* ─── Chart Container ──────────────────────────────────────────── */
 .recharts-wrapper {
-  margin: 0 auto;
+  margin: 0 auto !important;
 }
 
-/* Responsive */
+.recharts-surface {
+  border-radius: var(--radius-md) !important;
+}
+
+/* ─── Responsive Design ────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .analytics-page {
+    padding: 24px 28px;
+  }
+}
+
 @media (max-width: 768px) {
   .analytics-page {
     padding: 16px;
   }
   
+  .analytics-header .ant-card-body {
+    padding: 20px !important;
+  }
+
   .metric-card {
     margin-bottom: 16px;
+  }
+  
+  .analytics-page .ant-typography h2 {
+    font-size: 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-page {
+    padding: 12px;
   }
 }
