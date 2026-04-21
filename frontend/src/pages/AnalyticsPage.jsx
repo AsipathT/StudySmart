@@ -35,38 +35,42 @@ const PALETTE = {
   primary:    '#2563eb',
   primaryBg:  '#eff6ff',
   primaryLt:  '#dbeafe',
-  success:    '#059669',
-  successBg:  '#ecfdf5',
+  accent:     '#f59e0b',
+  accentBg:   '#fffbeb',
+  accentLt:   '#fde68a',
+  success:    '#16a34a',
+  successBg:  '#f0fdf4',
   warning:    '#d97706',
   warningBg:  '#fffbeb',
   error:      '#dc2626',
   errorBg:    '#fef2f2',
   purple:     '#7c3aed',
   purpleBg:   '#f5f3ff',
-  text:       '#1e293b',
+  text:       '#0f172a',
   textMd:     '#475569',
   textSm:     '#64748b',
-  border:     '#dbeafe',
-  bg:         '#f0f5ff',
+  border:     '#e2e8f0',
+  bg:         '#f8fafc',
+  surface:    '#ffffff',
 };
 
 const CHART_COLORS = [
-  '#2563eb','#059669','#d97706','#dc2626','#7c3aed',
-  '#0891b2','#db2777','#65a30d','#ea580c','#6366f1'
+  '#f59e0b','#2563eb','#16a34a','#dc2626','#7c3aed',
+  '#0891b2','#d97706','#65a30d','#ea580c','#6366f1'
 ];
 
 const gradeColor = g => {
   if (!g) return PALETTE.textSm;
   const u = String(g).toUpperCase();
-  if (u.startsWith('A')) return PALETTE.success;
-  if (u.startsWith('B')) return PALETTE.primary;
-  if (u.startsWith('C')) return PALETTE.warning;
+  if (u.startsWith('A')) return '#16a34a';
+  if (u.startsWith('B')) return '#2563eb';
+  if (u.startsWith('C')) return '#d97706';
   if (u.startsWith('D')) return '#f59e0b';
-  return PALETTE.error;
+  return '#dc2626';
 };
 
 const scoreColor = s =>
-  s >= 75 ? PALETTE.success : s >= 55 ? PALETTE.warning : PALETTE.error;
+  s >= 75 ? '#16a34a' : s >= 55 ? '#f59e0b' : '#dc2626';
 
 // ── Subject list ──────────────────────────────────────────────────────────────
 const SUBJECTS = {

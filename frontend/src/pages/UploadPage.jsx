@@ -211,7 +211,7 @@ const StudentInfoForm = ({ form, onNext }) => {
           <Col span={12}>
             <Form.Item name="fullName" label="Full Name"
               rules={[{ required: true, message: 'Please enter your full name' }]}>
-              <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="e.g. John Doe" size="large" />
+              <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="e.g. John Doe" size="large" style={{ height: 48 }} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -223,14 +223,14 @@ const StudentInfoForm = ({ form, onNext }) => {
                   }
                 }
               ]}>
-              <Input prefix={<IdcardOutlined style={{ color: '#94a3b8' }} />} placeholder="IT23145870" size="large" />
+              <Input prefix={<IdcardOutlined style={{ color: '#94a3b8' }} />} placeholder="IT23145870" size="large" style={{ height: 48 }} />
             </Form.Item>
           </Col>
         </Row>
 
         <Form.Item name="courseProgram" label="Course Program"
           rules={[{ required: true, message: 'Please select your course program' }]}>
-          <Select size="large" placeholder="Select your program"
+          <Select size="large" style={{ height: 48 }} placeholder="Select your program"
             onChange={value => { setSelectedProgram(value); setSelectedYear(null); form.setFieldsValue({ academicYear: null, subjects: [] }); }}>
             {PROGRAMS.map(p => <Option key={p} value={p}>{p}</Option>)}
           </Select>
@@ -241,7 +241,7 @@ const StudentInfoForm = ({ form, onNext }) => {
             <Col span={12}>
               <Form.Item name="academicYear" label="Academic Year"
                 rules={[{ required: true, message: 'Please select your academic year' }]}>
-                <Select size="large" placeholder="Select year" onChange={setSelectedYear}>
+                <Select size="large" style={{ height: 48 }} placeholder="Select year" onChange={setSelectedYear}>
                   {Object.keys(SUBJECTS[selectedProgram]).map(y => (
                     <Option key={y} value={parseInt(y)}>
                       {parseInt(y) === 1 ? '1st Year' : parseInt(y) === 2 ? '2nd Year' : parseInt(y) === 3 ? '3rd Year' : '4th Year'}
@@ -266,7 +266,7 @@ const StudentInfoForm = ({ form, onNext }) => {
           <Form.Item name="subjects" label={
             <Space size={4}><span>Subjects</span>
               <Text type="secondary" style={{ fontSize: 11, fontWeight: 400 }}>(optional)</Text></Space>}>
-            <Select size="large" placeholder="Select subjects (optional)" mode="multiple"
+            <Select size="large" style={{ height: 48 }} placeholder="Select subjects (optional)" mode="multiple"
               onChange={selected => {
                 if (selected?.length > 0) {
                   const sems = new Set(selected.map(sub => subjectToSemester[sub]));
@@ -284,7 +284,7 @@ const StudentInfoForm = ({ form, onNext }) => {
 
         <Form.Item name="branch" label="Branch"
           rules={[{ required: true, message: 'Please select your branch' }]}>
-          <Select size="large" placeholder="Select your branch"
+          <Select size="large" style={{ height: 48 }} placeholder="Select your branch"
             suffixIcon={<BankOutlined style={{ color: '#94a3b8' }} />}>
             {BRANCHES.map(b => <Option key={b.value} value={b.value}>{b.label}</Option>)}
           </Select>
@@ -292,7 +292,7 @@ const StudentInfoForm = ({ form, onNext }) => {
       </Form>
 
       <div className="step-footer">
-        <Button type="primary" size="large" icon={<ArrowRightOutlined />} iconPosition="end"
+        <Button type="primary" size="large" style={{ height: 48 }} icon={<ArrowRightOutlined />} iconPosition="end"
           onClick={handleNext} className="next-btn">
           Continue to Upload
         </Button>
@@ -399,9 +399,9 @@ IT23145870,John Doe,IT3070 - ML,65,CA`}
       </Card>
 
       <div className="step-footer" style={{ justifyContent: 'space-between' }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={onBack} disabled={uploading} size="large">Back</Button>
+        <Button icon={<ArrowLeftOutlined />} onClick={onBack} disabled={uploading} size="large" style={{ height: 48 }}>Back</Button>
         <Button type="primary" icon={<CloudUploadOutlined />} onClick={onSubmit}
-          disabled={!file || uploading} loading={uploading} className="next-btn" size="large">
+          disabled={!file || uploading} loading={uploading} className="next-btn" size="large" style={{ height: 48 }}>
           {uploading ? 'Uploading…' : 'Submit Upload'}
         </Button>
       </div>
@@ -493,8 +493,8 @@ const SuccessStep = ({ formValues, file, uploadResult, onReset, totalScoresInSes
       )}
 
       <div className="step-footer" style={{ justifyContent: 'center', marginTop: 24, gap: 12 }}>
-        <Button type="primary" icon={<UploadOutlined />} onClick={onReset} size="large">Upload Another File</Button>
-        <Button icon={<BarChartOutlined />} onClick={() => window.location.href = '/analytics'} size="large">View Analytics</Button>
+        <Button type="primary" icon={<UploadOutlined />} onClick={onReset} size="large" style={{ height: 48 }}>Upload Another File</Button>
+        <Button icon={<BarChartOutlined />} onClick={() => window.location.href = '/analytics'} size="large" style={{ height: 48 }}>View Analytics</Button>
       </div>
     </div>
   );

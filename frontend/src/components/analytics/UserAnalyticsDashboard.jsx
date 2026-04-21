@@ -183,33 +183,34 @@ const UserAnalyticsDashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable>
+          <Card hoverable style={{ borderRadius: '16px', transition: 'all 250ms ease' }}>
             <Statistic
               title="Average Score"
               value={analytics.averageMarks}
               suffix="%"
               valueStyle={{
-                color: analytics.averageMarks >= 75 ? '#52c41a' : analytics.averageMarks >= 60 ? '#faad14' : '#ff4d4f',
-                fontSize: '32px'
+                color: analytics.averageMarks >= 75 ? '#16a34a' : analytics.averageMarks >= 60 ? '#f59e0b' : '#dc2626',
+                fontSize: '32px',
+                fontWeight: 700
               }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable>
+          <Card hoverable style={{ borderRadius: '16px', transition: 'all 250ms ease' }}>
             <Statistic
               title="Total Marks"
               value={analytics.totalMarks}
-              valueStyle={{ fontSize: '32px', color: '#722ed1' }}
+              valueStyle={{ fontSize: '32px', color: '#2563eb', fontWeight: 700 }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable>
+          <Card hoverable style={{ borderRadius: '16px', transition: 'all 250ms ease' }}>
             <Statistic
               title="Subjects"
               value={analytics.subjects?.length || 0}
-              valueStyle={{ fontSize: '32px', color: '#13c2c2' }}
+              valueStyle={{ fontSize: '32px', color: '#f59e0b', fontWeight: 700 }}
             />
           </Card>
         </Col>
