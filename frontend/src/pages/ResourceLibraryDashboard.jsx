@@ -1577,7 +1577,7 @@ const ResourceLibraryDashboard = () => {
 
       <main className="rl-main">
         {activePage !== 'flashcards' && activePage !== 'notes' && activePage !== 'requests' && activePage !== 'resource-details' ? (
-          <div className="rl-actions">
+          <div className={`rl-actions ${activePage === 'dashboard' ? 'rl-actions--dashboard' : ''}`}>
             {activePage !== 'resources' ? (
               <button type="button" onClick={() => navigate(RL_NAV.resources)}><BookOutlined /> Access Resources</button>
             ) : null}

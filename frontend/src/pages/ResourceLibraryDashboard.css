@@ -229,8 +229,8 @@
 .rl-logout{background:transparent;border:1px solid rgba(255,255,255,.24);color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:600}
 .rl-main{flex:1;padding:20px 20px 22px;max-height:100vh;overflow-y:auto}
 .rl-actions{display:flex;justify-content:flex-end;gap:12px;margin-bottom:20px}
-.rl-actions button{background:linear-gradient(90deg,#2563eb,#6f2ce0);color:#fff;border:0;border-radius:12px;padding:10px 19px;cursor:pointer;font-weight:700;box-shadow:0 10px 24px rgba(37,99,235,.26);transition:transform .15s ease,box-shadow .15s ease}
-.rl-actions button:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(37,99,235,.34)}
+.rl-actions button{background:var(--ant-color-primary,#1677ff);color:#fff;border:0;border-radius:12px;padding:10px 19px;cursor:pointer;font-weight:700;box-shadow:0 10px 24px rgba(22,119,255,.28);transition:transform .15s ease,box-shadow .15s ease}
+.rl-actions button:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(22,119,255,.34)}
 .rl-metrics{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -2371,14 +2371,14 @@ html[data-theme="light"] .rl-auth-page .ant-segmented .ant-segmented-item-select
   height: 44px !important;
   padding: 0 22px !important;
   font-weight: 800 !important;
-  background: linear-gradient(100deg, #2563eb, #7c3aed 55%, #db2777) !important;
+  background: var(--ant-color-primary,#1677ff) !important;
   border: none !important;
-  box-shadow: 0 10px 26px rgba(124, 58, 237, 0.35) !important;
+  box-shadow: 0 10px 26px rgba(22,119,255,.35) !important;
   transition: transform 0.15s ease, box-shadow 0.15s ease !important;
 }
 .rl-requests-create-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 32px rgba(124, 58, 237, 0.42) !important;
+  box-shadow: 0 14px 32px rgba(22,119,255,.42) !important;
 }
 .rl-requests-list {
   list-style: none;
@@ -3478,6 +3478,13 @@ html[data-theme="light"] .rl-auth-page .ant-segmented .ant-segmented-item-select
   filter:saturate(1.05);
 }
 .rl-wrap .rl-actions button:active{transform:translateY(0);filter:saturate(1)}
+.rl-wrap .rl-actions--dashboard button:first-child{
+  background:#6f2ce0;
+  box-shadow:0 10px 22px rgba(111,44,224,.26);
+}
+.rl-wrap .rl-actions--dashboard button:first-child:hover{
+  box-shadow:0 14px 28px rgba(111,44,224,.33);
+}
 
 .rl-wrap .rl-title-row{margin:6px 0 12px;align-items:flex-end}
 .rl-wrap .rl-title{
