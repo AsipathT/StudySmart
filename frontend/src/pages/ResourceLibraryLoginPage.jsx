@@ -1,48 +1,54 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Form, Input } from 'antd';
+import { UserOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Card, Col, Divider, Form, Input, message, Row, Segmented, Space, Tag, Typography } from 'antd';
-import { LoginOutlined, UserOutlined } from '@ant-design/icons';
+import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { hasValidRlLoginIntent } from '../components/resourceLibrary/rlLoginIntent';
-import './ResourceLibraryDashboard.css';
+// Reuse the exact same stylesheet as the common LoginPage so the Resource Library sign-in
+// is pixel-for-pixel consistent with /login. Only the post-login destination and the DEMO
+// credentials strip differ — everything else (layout, colors, typography) is shared.
+import './LoginPage.css';
 
-const { Title, Text } = Typography;
-
-/** Demo credentials (Mongo seed in `auth.routes`). */
-const RESOURCE_LIBRARY_ADMIN_DUMMY = {
-  id: 'a1',
-  name: 'Resource Library Admin',
-  displayUsername: 'resourceadmin',
-  email: 'resourceadmin@gmail.com',
-  password: 'RAdmin123',
-  role: 'resource_admin',
-  appType: 'resource-library',
+/* ── animated counter (identical to LoginPage) ── */
+const Counter = ({ to, suffix = '' }) => {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const step = Math.ceil(to / 40);
+    const t = setInterval(() => {
+      start = Math.min(start + step, to);
+      setVal(start);
+      if (start >= to) clearInterval(t);
+    }, 35);
+    return () => clearInterval(t);
+  }, [to]);
+  return <span>{val.toLocaleString()}{suffix}</span>;
 };
 
-const DEMO_ACCOUNTS = {
-  student: [
-    { id: 's1', name: 'Kasun', email: 'kasun@gmail.com', password: 'kasun123', role: 'student', appType: 'resource-library' },
-    { id: 's2', name: 'Nadeesha', email: 'nadeesha@gmail.com', password: 'nadeesha123', role: 'student', appType: 'resource-library' },
-    { id: 's3', name: 'Dulani', email: 'dulani@gmail.com', password: 'dulani123', role: 'student', appType: 'resource-library' },
-    { id: 's4', name: 'Chamod', email: 'chamod@gmail.com', password: 'chamod123', role: 'student', appType: 'resource-library' },
-    { id: 's5', name: 'Ishani', email: 'ishani@gmail.com', password: 'ishani123', role: 'student', appType: 'resource-library' },
-  ],
-};
+/** Known Resource Library accounts (Mongo-seeded in `auth.routes`). These are shown in the
+ *  DEMO credentials strip; anything typed into the form still goes through the real login API,
+ *  so any valid account (including these) authenticates exactly as before. */
+const RL_DEMO_ADMIN = { email: 'resourceadmin@gmail.com', password: 'RAdmin123' };
+const RL_DEMO_STUDENTS = [
+  { email: 'kasun@gmail.com',    password: 'kasun123' },
+  { email: 'nadeesha@gmail.com', password: 'nadeesha123' },
+  { email: 'dulani@gmail.com',   password: 'dulani123' },
+  { email: 'chamod@gmail.com',   password: 'chamod123' },
+  { email: 'ishani@gmail.com',   password: 'ishani123' },
+];
 
 const ResourceLibraryLoginPage = () => {
-  const navigate = useNavigate();
-  // Intentionally no longer use `demoLogin` here — it minted a fake token like
-  // "demo-<timestamp>" that the backend rejected with 401, bouncing students back
-  // to /login on the first API call. Students now sign in against the real API
-  // using the same Mongo-seeded accounts (kasun@gmail.com, nadeesha@gmail.com, ...).
+  const [loading,          setLoading]          = useState(false);
+  const [error,            setError]            = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [showPass,         setShowPass]         = useState(false);
+  const [imgLoaded,        setImgLoaded]        = useState(false);
   const { login, user, token, loading: authLoading } = useAuth();
-  const [role, setRole] = useState('student');
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [quickAdminLoading, setQuickAdminLoading] = useState(false);
+  const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  const accounts = useMemo(() => (role === 'student' ? DEMO_ACCOUNTS.student : []), [role]);
+  useEffect(() => { checkConn(); }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -50,166 +56,285 @@ const ResourceLibraryLoginPage = () => {
       navigate('/resource-library/dashboard', { replace: true });
       return;
     }
+    // Guard: this page is only reachable via the Resource Library entry in the sidebar.
+    // If someone lands here directly, send them to the common /login instead.
     if (!hasValidRlLoginIntent()) {
       navigate('/login', { replace: true });
     }
   }, [authLoading, user, token, navigate]);
 
-  const handleResourceAdminQuickLogin = async () => {
-    setError(null);
-    setQuickAdminLoading(true);
-    const email = RESOURCE_LIBRARY_ADMIN_DUMMY.email;
-    const result = await login(email, RESOURCE_LIBRARY_ADMIN_DUMMY.password);
-    setQuickAdminLoading(false);
-    if (result.success) {
-      navigate('/resource-library/dashboard');
-      return;
+  const checkConn = async () => {
+    try {
+      const r = await fetch('http://localhost:5000/health');
+      setConnectionStatus(r.ok ? 'connected' : 'disconnected');
+    } catch {
+      setConnectionStatus('disconnected');
     }
-    message.error(
-      result.error ||
-        'Resource Admin sign-in failed. Use a real account JWT (MongoDB must be running and the seeded admin must exist). Demo tokens are not supported here.'
-    );
   };
 
-  const handleNormalLogin = async (values) => {
+  const onFinish = async ({ email, password }) => {
     setLoading(true);
-    setError(null);
-    const emailLc = String(values.email || '').toLowerCase();
-    const isSeededRlAdmin =
-      emailLc === RESOURCE_LIBRARY_ADMIN_DUMMY.email.toLowerCase() &&
-      values.password === RESOURCE_LIBRARY_ADMIN_DUMMY.password;
-    if (isSeededRlAdmin) {
-      const result = await login(values.email, values.password);
-      setLoading(false);
-      if (!result.success) {
-        setError(result.error || 'Failed to sign in.');
-        return;
+    setError('');
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        toast.success('✅ Welcome back!');
+        // Always route into the Resource Library dashboard, regardless of role —
+        // that's the contract for this entry point.
+        navigate('/resource-library/dashboard');
+      } else {
+        const msg = result.error || result.message || 'Login failed. Please check your credentials.';
+        setError(msg);
+        toast.error('❌ ' + (result.error || 'Login failed'));
       }
-      navigate('/resource-library/dashboard');
-      return;
+    } catch (err) {
+      const errMsg = err.message || 'Login failed';
+      setError(errMsg);
+      toast.error('❌ ' + errMsg);
+    } finally {
+      setLoading(false);
     }
-    // Demo accounts are real rows in Mongo — always authenticate against the backend
-    // so we get a valid JWT that survives RL API calls.
-    const result = await login(values.email, values.password);
-    setLoading(false);
-    if (!result.success) {
-      setError(result.error || 'Failed to sign in.');
-      return;
-    }
-    navigate('/resource-library/dashboard');
   };
 
-  const handleDemoLogin = async (account) => {
-    setError(null);
-    setLoading(true);
-    const result = await login(account.email, account.password);
-    setLoading(false);
-    if (!result.success) {
-      message.error(result.error || 'Could not sign in with demo account.');
-      return;
-    }
-    navigate('/resource-library/dashboard');
+  const fillCredentials = (creds) => {
+    form.setFieldsValue({ email: creds.email, password: creds.password });
   };
 
-  const isAdminTab = role === 'admin';
+  const offline = connectionStatus === 'disconnected';
 
   return (
-    <div className="rl-auth-page">
-      <div className="rl-auth-inner">
-        <Card className="rl-auth-main-card" style={{ borderRadius: 12 }}>
-          <Space direction="vertical" size={4} style={{ width: '100%', marginBottom: 14 }}>
-            <Title level={3} style={{ margin: 0 }}>StudySmart</Title>
-            <Text type="secondary">Sign in to the Resource Library</Text>
-          </Space>
+    <div className="lp">
 
-          <Segmented
-            block
-            size="middle"
-            value={role}
-            onChange={setRole}
-            options={[
-              { label: 'Resource Admin', value: 'admin' },
-              { label: 'Student', value: 'student' },
-            ]}
-            style={{ marginBottom: 16 }}
-          />
+      {/* ══════════════════ LEFT PANEL — campus photo ══════════════════ */}
+      <div className="lp__left">
+        <img
+          src="/images/SLIIT-malabe.jpg"
+          alt="SLIIT Malabe Campus"
+          className={`lp__campus${imgLoaded ? ' lp__campus--loaded' : ''}`}
+          onLoad={() => setImgLoaded(true)}
+          onError={e => { e.target.style.display = 'none'; }}
+        />
 
-          <Form form={form} layout="vertical" size="middle" onFinish={handleNormalLogin}>
+        <div className="lp__overlay lp__overlay--dark"/>
+        <div className="lp__overlay lp__overlay--grad"/>
+        <div className="lp__overlay lp__overlay--vignette"/>
+
+        <div className="lp__left-content">
+          <div className="lp__brand">
+            <div className="lp__brand-icon">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <rect width="28" height="28" rx="8" fill="rgba(255,255,255,0.15)"/>
+                <path d="M6 20L14 8l8 12H6z" fill="white" opacity="0.9"/>
+                <circle cx="14" cy="14" r="3" fill="white"/>
+              </svg>
+            </div>
+            <span className="lp__brand-name">StudySmart</span>
+          </div>
+
+          <div className="lp__headline">
+            <div className="lp__tag">SLIIT · Malabe Campus</div>
+            <h1 className="lp__h1">
+              Track your<br/>
+              <span className="lp__h1-accent">academic journey</span><br/>
+              intelligently.
+            </h1>
+            <p className="lp__desc">
+              Upload marks, analyse performance, predict outcomes — all in one intelligent platform built for SLIIT students.
+            </p>
+          </div>
+
+          <div className="lp__stats">
+            {[
+              { icon: '📊', label: 'Assessments Tracked', val: 1200, suffix: '+' },
+              { icon: '🎓', label: 'Students Active',     val: 340,  suffix: '+' },
+              { icon: '📈', label: 'Avg GPA Improvement', val: 0.4,  suffix: ' pts' },
+            ].map(({ icon, label, val, suffix }) => (
+              <div key={label} className="lp__stat">
+                <div className="lp__stat-icon">{icon}</div>
+                <div className="lp__stat-val">
+                  <Counter to={val} suffix={suffix}/>
+                </div>
+                <div className="lp__stat-label">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="lp__features">
+            {[
+              'AI-powered grade predictions',
+              'Real-time performance analytics',
+              'Subject-wise risk assessment',
+              'Smart study recommendations',
+            ].map(f => (
+              <div key={f} className="lp__feature">
+                <span className="lp__feature-dot"/>
+                {f}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="lp__watermark">SLIIT Malabe · Faculty of Computing</div>
+      </div>
+
+      {/* ══════════════════ RIGHT PANEL — login form ══════════════════ */}
+      <div className="lp__right">
+        <div className="lp__form-wrap">
+
+          <div className="lp__mobile-brand">
+            <div className="lp__brand-icon lp__brand-icon--dark">
+              <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                <rect width="28" height="28" rx="8" fill="#2563eb"/>
+                <path d="M6 20L14 8l8 12H6z" fill="white" opacity="0.9"/>
+                <circle cx="14" cy="14" r="3" fill="white"/>
+              </svg>
+            </div>
+            <span style={{ fontWeight:800, fontSize:18, color:'#0f172a' }}>StudySmart</span>
+          </div>
+
+          <div className="lp__form-head">
+            <h2 className="lp__form-title">Welcome back</h2>
+            <p className="lp__form-sub">Sign in to the Resource Library</p>
+          </div>
+
+          <div className={`lp__conn lp__conn--${connectionStatus}`}>
+            <span className={`lp__conn-dot lp__conn-dot--${connectionStatus}`}/>
+            {connectionStatus === 'checking'      && 'Connecting to server…'}
+            {connectionStatus === 'connected'     && 'Server connected'}
+            {connectionStatus === 'disconnected'  && (
+              <>Server offline —&nbsp;
+                <button className="lp__conn-retry" onClick={checkConn}>retry</button>
+              </>
+            )}
+          </div>
+
+          {error && (
+            <div className="lp__error">
+              <span>⚠</span>
+              <span>{error}</span>
+              <button className="lp__error-close" onClick={() => setError('')}>✕</button>
+            </div>
+          )}
+
+          <Form
+            form={form}
+            name="rl-login"
+            onFinish={onFinish}
+            layout="vertical"
+            className="lp__ant-form"
+          >
             <Form.Item
               name="email"
-              label="University Email"
-              rules={[{ required: true, message: 'Please input your email' }, { type: 'email', message: 'Enter a valid email' }]}
+              label={<span className="lp__label">Email Address</span>}
+              rules={[
+                { required: true, message: 'Please enter your email' },
+                { type: 'email',  message: 'Enter a valid email address' },
+              ]}
             >
-              <Input placeholder="e.g. it22541045@my.sliit.lk" prefix={<UserOutlined />} />
+              <Input
+                prefix={<UserOutlined className="lp__input-icon"/>}
+                placeholder="your.email@sliit.lk"
+                size="large"
+                className="lp__input"
+                disabled={offline}
+              />
             </Form.Item>
+
             <Form.Item
               name="password"
-              label="Password"
-              rules={[{ required: true, message: 'Please input your password' }]}
+              label={<span className="lp__label">Password</span>}
+              rules={[{ required: true, message: 'Please enter your password' }]}
             >
-              <Input.Password placeholder="Enter password" />
+              <Input
+                type={showPass ? 'text' : 'password'}
+                prefix={<LockOutlined className="lp__input-icon"/>}
+                suffix={
+                  <button
+                    type="button"
+                    className="lp__eye"
+                    onClick={() => setShowPass(p => !p)}
+                  >
+                    {showPass ? <EyeInvisibleOutlined/> : <EyeOutlined/>}
+                  </button>
+                }
+                placeholder="Enter your password"
+                size="large"
+                className="lp__input"
+                disabled={offline}
+              />
             </Form.Item>
 
-            {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 12 }} />}
+            <div className="lp__forgot-row">
+              <button type="button" className="lp__forgot">Forgot password?</button>
+            </div>
 
-            <Button type="primary" htmlType="submit" icon={<LoginOutlined />} block loading={loading}>
-              Sign in
-            </Button>
+            <Form.Item style={{ marginTop: 8 }}>
+              <button
+                type="submit"
+                className={`lp__submit${offline ? ' lp__submit--disabled' : ''}`}
+                disabled={offline || loading}
+              >
+                {loading ? (
+                  <span className="lp__submit-loading">
+                    <span className="lp__dot-spin"/>
+                    Signing in…
+                  </span>
+                ) : 'Sign In →'}
+              </button>
+            </Form.Item>
           </Form>
 
-          {isAdminTab ? (
-            <>
-              <Divider />
-              <Text strong>Resource Admin demo (dev)</Text>
-              <Space direction="vertical" size={10} style={{ width: '100%', marginTop: 10, maxHeight: 200, overflowY: 'auto', paddingRight: 6 }}>
-                <Card size="small" styles={{ body: { padding: 10 } }}>
-                  <Row justify="space-between" align="middle" gutter={8}>
-                    <Col flex="auto">
-                      <div style={{ fontWeight: 600 }}>{RESOURCE_LIBRARY_ADMIN_DUMMY.name}</div>
-                      <div style={{ color: '#475569', fontWeight: 500 }}>{RESOURCE_LIBRARY_ADMIN_DUMMY.displayUsername}</div>
-                      <div style={{ color: '#475569', fontWeight: 500 }}>{RESOURCE_LIBRARY_ADMIN_DUMMY.email}</div>
-                      <div style={{ color: '#64748b', fontSize: 12, fontWeight: 600 }}>Password: {RESOURCE_LIBRARY_ADMIN_DUMMY.password}</div>
-                    </Col>
-                    <Col>
-                      <Tag color="purple">resource_admin</Tag>
-                      <Button
-                        size="small"
-                        type="link"
-                        htmlType="button"
-                        loading={quickAdminLoading}
-                        onClick={handleResourceAdminQuickLogin}
-                      >
-                        Use
-                      </Button>
-                    </Col>
-                  </Row>
-                </Card>
-              </Space>
-            </>
-          ) : (
-            <>
-              <Divider />
-              <Text strong>Student demo accounts (dev)</Text>
-              <Space direction="vertical" size={10} style={{ width: '100%', marginTop: 10, maxHeight: 200, overflowY: 'auto', paddingRight: 6 }}>
-                {accounts.map((acc) => (
-                  <Card key={acc.id} size="small" styles={{ body: { padding: 10 } }}>
-                    <Row justify="space-between" align="middle" gutter={8}>
-                      <Col flex="auto">
-                        <div style={{ fontWeight: 600 }}>{acc.name}</div>
-                        <div style={{ color: '#475569', fontWeight: 500 }}>{acc.email}</div>
-                        <div style={{ color: '#64748b', fontSize: 12, fontWeight: 600 }}>Password: {acc.password}</div>
-                      </Col>
-                      <Col>
-                        <Tag color="blue">student</Tag>
-                        <Button size="small" type="link" htmlType="button" onClick={() => handleDemoLogin(acc)}>Use</Button>
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
-              </Space>
-            </>
-          )}
-        </Card>
+          <div className="lp__divider"><span>or</span></div>
+
+          <div className="lp__register">
+            Don't have an account?{' '}
+            <button className="lp__register-btn" onClick={() => navigate('/register')}>
+              Create account
+            </button>
+          </div>
+
+          {/* DEMO credentials — same visual as LoginPage, but showing the accounts the
+              Resource Library already supported. Clicking a row fills the form. */}
+          <div className="lp__demo">
+            <div className="lp__demo-head">
+              <span className="lp__demo-badge">DEMO</span>
+              <span>Resource Library accounts</span>
+            </div>
+
+            <button
+              type="button"
+              className="lp__demo-row"
+              style={{ background:'transparent', border:0, padding:0, width:'100%', textAlign:'left', cursor:'pointer' }}
+              onClick={() => fillCredentials(RL_DEMO_ADMIN)}
+              title="Click to fill admin credentials"
+            >
+              <span className="lp__demo-key">Admin</span>
+              <code className="lp__demo-val">{RL_DEMO_ADMIN.email}</code>
+            </button>
+            <div className="lp__demo-row">
+              <span className="lp__demo-key">Password</span>
+              <code className="lp__demo-val">{RL_DEMO_ADMIN.password}</code>
+            </div>
+
+            {RL_DEMO_STUDENTS.map((s) => (
+              <button
+                key={s.email}
+                type="button"
+                className="lp__demo-row"
+                style={{ background:'transparent', border:0, padding:0, width:'100%', textAlign:'left', cursor:'pointer' }}
+                onClick={() => fillCredentials(s)}
+                title="Click to fill student credentials"
+              >
+                <span className="lp__demo-key">Student</span>
+                <code className="lp__demo-val">{s.email} · {s.password}</code>
+              </button>
+            ))}
+          </div>
+
+          <p className="lp__footer">
+            © {new Date().getFullYear()} StudySmart · SLIIT · Built for students
+          </p>
+        </div>
       </div>
     </div>
   );
