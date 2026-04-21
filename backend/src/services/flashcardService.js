@@ -1,7 +1,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
-const pdfParse = require('pdf-parse');
+// pdf-parse v2 exports a `PDFParse` class (v1's default-function export is gone).
+const { PDFParse } = require('pdf-parse');
 const JSZip = require('jszip');
 
 const unescapeXml = (s) => {
@@ -26,8 +27,13 @@ class FlashcardService {
     const filePath = path.join(__dirname, '..', normalizedUrl);
     if (!fs.existsSync(filePath)) throw new Error(`PDF file not found at: ${filePath}`);
     const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdfParse(dataBuffer);
-    return data.text || '';
+    const parser = new PDFParse({ data: dataBuffer });
+    try {
+      const result = await parser.getText();
+      return result?.text || '';
+    } finally {
+      try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
+    }
   }
 
   async extractTextFromNotes(fileUrl, fileMime, fileName) {

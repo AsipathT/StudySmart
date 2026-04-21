@@ -4,7 +4,6 @@ import { Layout } from 'antd';
 import { AuthProvider } from './context/AuthContext';
 import { SessionThemeProvider, useSessionTheme } from './context/SessionThemeContext';
 import Sidebar from './components/layout/Sidebar';
-import Header from './components/layout/Header';
 import PrivateRoute from './components/common/PrivateRoute';
 
 const SessionDarkWrapper = ({ children }) => {
@@ -50,7 +49,7 @@ function App() {
   return (
     <AuthProvider>
       <SessionThemeProvider>
-      <Router future={{ v7_relativeSplatPath: true }}>
+      <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
         <Layout style={{ minHeight: '100vh' }}>
           <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
           <Layout 
@@ -61,10 +60,9 @@ function App() {
               position: 'relative'
             }}
           >
-            <Header collapsed={collapsed} setCollapsed={setCollapsed} />
             <Content 
               style={{ 
-                margin: '24px 16px', 
+                margin: 0, 
                 padding: 24, 
                 minHeight: 280,
                 background: '#fff',

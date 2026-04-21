@@ -8,7 +8,6 @@ const RESOURCE_TYPE_OPTIONS = [
   { value: 'PPT', label: 'PPT' },
   { value: 'NOTES', label: 'Notes' },
   { value: 'VIDEO', label: 'Video' },
-  { value: 'FLASHCARDS', label: 'Flashcards' },
 ];
 
 const FLASHCARD_TYPE_OPTIONS = [

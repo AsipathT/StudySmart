@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BookOutlined, LogoutOutlined, UploadOutlined, FileTextOutlined, BarChartOutlined, DownloadOutlined, AppstoreOutlined, EyeOutlined, EditOutlined, HighlightOutlined, UndoOutlined, RedoOutlined, BorderOutlined, RadiusUpleftOutlined, FontSizeOutlined, BgColorsOutlined, ClearOutlined, SaveOutlined, VideoCameraOutlined, TeamOutlined, BoldOutlined, ItalicOutlined, UnderlineOutlined, AlignLeftOutlined, AlignCenterOutlined, AlignRightOutlined, OrderedListOutlined, UnorderedListOutlined, DeleteOutlined, StrikethroughOutlined, LinkOutlined, DisconnectOutlined, TableOutlined, FileImageOutlined, PrinterOutlined, FilePdfOutlined, MessageOutlined, UserOutlined, PaperClipOutlined, FolderOpenOutlined, BankOutlined, CloseOutlined, SendOutlined, CalendarOutlined, ClockCircleOutlined, CheckCircleOutlined, StarOutlined, BellOutlined } from '@ant-design/icons';
+import { BookOutlined, LogoutOutlined, UploadOutlined, FileTextOutlined, BarChartOutlined, DownloadOutlined, AppstoreOutlined, EyeOutlined, EditOutlined, HighlightOutlined, UndoOutlined, RedoOutlined, BorderOutlined, RadiusUpleftOutlined, FontSizeOutlined, BgColorsOutlined, ClearOutlined, SaveOutlined, VideoCameraOutlined, TeamOutlined, BoldOutlined, ItalicOutlined, UnderlineOutlined, AlignLeftOutlined, AlignCenterOutlined, AlignRightOutlined, OrderedListOutlined, UnorderedListOutlined, DeleteOutlined, StrikethroughOutlined, LinkOutlined, DisconnectOutlined, TableOutlined, FileImageOutlined, PrinterOutlined, FilePdfOutlined, MessageOutlined, UserOutlined, PaperClipOutlined, FolderOpenOutlined, BankOutlined, CloseOutlined, SendOutlined, CalendarOutlined, ClockCircleOutlined, CheckCircleOutlined, StarOutlined, BellOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { Badge, Button, Card, Divider, Dropdown, Form, Input, Modal, Popconfirm, Rate, Select, Spin, Upload, message } from 'antd';
 import { useAuth } from '../hooks/useAuth';
 import resourceLibraryService from '../services/resourceLibrary.service';
@@ -265,6 +265,13 @@ const ResourceLibraryDashboard = () => {
     [section, navigate, loadResourceDetailView]
   );
 
+  const goBackFromResourceDetails = useCallback(() => {
+    const page = RL_PATH_TO_PAGE[section] || 'resources';
+    setActivePage(page);
+    setResourceDetails(null);
+    setSelectedResourceId(null);
+  }, [section]);
+
   useEffect(() => {
     const page = RL_PATH_TO_PAGE[section];
     if (!section || !page) {
@@ -416,6 +423,11 @@ const ResourceLibraryDashboard = () => {
     }
   }, [activePage]);
 
+  // Sync editor from React state when the note or `noteContent` changes (e.g. after load).
+  // Do NOT depend on `resourceDetails`: that object is often replaced after comments, ratings,
+  // downloads, etc. `noteContent` is not updated on every keystroke (only the DOM is), so
+  // re-running this when `resourceDetails` reference changes would reset the editor to stale
+  // state and wipe the user's edits.
   useEffect(() => {
     const isNotesEditorVisible =
       activePage === 'notes' ||
@@ -424,7 +436,7 @@ const ResourceLibraryDashboard = () => {
     if (isNotesEditorVisible && noteEditorRef.current && typeof noteContent === 'string') {
       noteEditorRef.current.innerHTML = noteContent;
     }
-  }, [activePage, selectedNoteId, noteContent, resourceDetails]);
+  }, [activePage, selectedNoteId, noteContent]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1204,11 +1216,17 @@ const ResourceLibraryDashboard = () => {
     }
     setNoteSaving(true);
     try {
-      await resourceLibraryService.updateResourceContent(selectedNoteId, {
-        title: noteTitle,
-        description: noteDescription,
-        content: noteEditorRef.current ? noteEditorRef.current.innerHTML : noteContent
-      });
+      const html = noteEditorRef.current ? noteEditorRef.current.innerHTML : noteContent;
+      await resourceLibraryService.updateResourceContent(
+        selectedNoteId,
+        {
+          title: noteTitle,
+          description: noteDescription,
+          content: html
+        },
+        user?.name || 'Student'
+      );
+      setNoteContent(html);
       message.success('Collaborative note saved.');
       await loadResources('NOTES');
       await loadRlNotifications();
@@ -2159,6 +2177,11 @@ const ResourceLibraryDashboard = () => {
 
         {activePage === 'resource-details' && (
           <div className="resource-detail-page">
+            <div className="resource-detail-back-row">
+              <Button type="text" icon={<ArrowLeftOutlined />} onClick={goBackFromResourceDetails} className="resource-detail-back-btn">
+                Back
+              </Button>
+            </div>
             {detailsLoading || !resourceDetails ? (
               <Card>Loading resource details...</Card>
             ) : (

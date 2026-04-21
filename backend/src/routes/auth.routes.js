@@ -155,12 +155,24 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'No account found with this email' });
     }
 
-    // Verify password
+    // Verify password — use bcrypt directly on the stored hash so we always compare correctly
+    // (some DB drivers return Buffer; comparePassword can fail if `this` or field shape differs).
+    const plain = String(password);
+    const stored = user.password;
+    const hashStr = Buffer.isBuffer(stored) ? stored.toString('utf8') : String(stored || '');
+
     let valid = false;
-    try {
-      valid = await user.comparePassword(password);
-    } catch {
-      valid = await bcrypt.compare(password, user.password);
+    if (hashStr.startsWith('$2')) {
+      valid = await bcrypt.compare(plain, hashStr);
+      if (!valid && plain.trim() !== plain) {
+        valid = await bcrypt.compare(plain.trim(), hashStr);
+      }
+    } else if (hashStr) {
+      try {
+        valid = await user.comparePassword(plain);
+      } catch {
+        valid = await bcrypt.compare(plain, hashStr);
+      }
     }
 
     if (!valid) {

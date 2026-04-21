@@ -246,7 +246,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         {!collapsed ? (
           <Space direction="vertical" size={2} style={{ width: '100%', textAlign: 'center' }}>
             <Title level={3} style={{ margin: 0, color: '#2d3e50' }}>StudySmart</Title>
-            <Text type="secondary"> Smart Insights & Predictions</Text>
           </Space>
         ) : (
           <Avatar size={40} icon={<BookOutlined />} style={{ backgroundColor: '#2d3e50' }} />

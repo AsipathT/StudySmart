@@ -31,7 +31,11 @@ const DEMO_ACCOUNTS = {
 
 const ResourceLibraryLoginPage = () => {
   const navigate = useNavigate();
-  const { login, demoLogin, user, token, loading: authLoading } = useAuth();
+  // Intentionally no longer use `demoLogin` here — it minted a fake token like
+  // "demo-<timestamp>" that the backend rejected with 401, bouncing students back
+  // to /login on the first API call. Students now sign in against the real API
+  // using the same Mongo-seeded accounts (kasun@gmail.com, nadeesha@gmail.com, ...).
+  const { login, user, token, loading: authLoading } = useAuth();
   const [role, setRole] = useState('student');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -84,15 +88,8 @@ const ResourceLibraryLoginPage = () => {
       navigate('/resource-library/dashboard');
       return;
     }
-    const demo = DEMO_ACCOUNTS.student.find(
-      (x) => x.email.toLowerCase() === emailLc && x.password === values.password
-    );
-    if (demo) {
-      demoLogin(demo);
-      setLoading(false);
-      navigate('/resource-library/dashboard');
-      return;
-    }
+    // Demo accounts are real rows in Mongo — always authenticate against the backend
+    // so we get a valid JWT that survives RL API calls.
     const result = await login(values.email, values.password);
     setLoading(false);
     if (!result.success) {
@@ -104,7 +101,13 @@ const ResourceLibraryLoginPage = () => {
 
   const handleDemoLogin = async (account) => {
     setError(null);
-    demoLogin(account);
+    setLoading(true);
+    const result = await login(account.email, account.password);
+    setLoading(false);
+    if (!result.success) {
+      message.error(result.error || 'Could not sign in with demo account.');
+      return;
+    }
     navigate('/resource-library/dashboard');
   };
 

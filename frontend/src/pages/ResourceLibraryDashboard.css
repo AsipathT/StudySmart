@@ -773,6 +773,9 @@
 }
 
 .resource-detail-page{display:flex;flex-direction:column;gap:16px;padding-bottom:28px}
+.resource-detail-back-row{display:flex;align-items:center;justify-content:flex-start;margin:0 0 4px}
+.resource-detail-back-btn{padding:4px 10px 4px 4px;height:auto;color:#4338ca;font-weight:600}
+.resource-detail-back-btn:hover{color:#312e81;background:rgba(79,70,229,.08)}
 .resource-detail-top,.resource-preview-card,.resource-collab-note-card,.resource-comments-card{
   border:1px solid #e1e7f5;
   border-radius:16px;
@@ -3428,4 +3431,302 @@ html[data-theme="light"] .rl-auth-page .ant-segmented .ant-segmented-item-select
     justify-content:flex-end;
     flex-wrap:wrap;
   }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   RESOURCE LIBRARY — POLISH LAYER (scoped)
+   Only affects elements inside `.rl-wrap` or in modals opened from the
+   Resource Library (via `rl-light-modal` / `rl-delete-confirm-modal`
+   wrapClassName). Nothing outside the library changes.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.rl-wrap{
+  --rl-ink:#0f172a;
+  --rl-ink-soft:#475569;
+  --rl-muted:#64748b;
+  --rl-hairline:#e6ecf7;
+  --rl-hairline-soft:#eef2fa;
+  --rl-surface:#ffffff;
+  --rl-surface-2:#f9fbff;
+  --rl-surface-3:#f3f6ff;
+  --rl-brand:#4f46e5;
+  --rl-brand-strong:#312e81;
+  --rl-brand-soft:#eef2ff;
+  --rl-accent:#6f2ce0;
+  --rl-gradient:linear-gradient(90deg,#2563eb,#6f2ce0);
+  --rl-shadow-sm:0 4px 10px rgba(15,23,42,.05);
+  --rl-shadow-md:0 10px 24px rgba(15,23,42,.08);
+  --rl-shadow-lg:0 16px 36px rgba(15,23,42,.12);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+
+/* Section rhythm ---------------------------------------------------------- */
+.rl-wrap .rl-actions{margin-bottom:18px;gap:10px}
+.rl-wrap .rl-actions button{
+  padding:10px 18px;
+  border-radius:12px;
+  font-size:13.5px;
+  letter-spacing:.01em;
+  box-shadow:0 10px 22px rgba(79,70,229,.22);
+  transition:transform .18s ease, box-shadow .2s ease, filter .18s ease;
+}
+.rl-wrap .rl-actions button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 14px 28px rgba(79,70,229,.28);
+  filter:saturate(1.05);
+}
+.rl-wrap .rl-actions button:active{transform:translateY(0);filter:saturate(1)}
+
+.rl-wrap .rl-title-row{margin:6px 0 12px;align-items:flex-end}
+.rl-wrap .rl-title{
+  font-size:26px;
+  letter-spacing:-.015em;
+  color:var(--rl-ink);
+}
+.rl-wrap .view-all-btn{
+  padding:7px 12px;
+  font-size:12.5px;
+  border-radius:10px;
+  transition:background .15s ease, border-color .15s ease, color .15s ease;
+}
+.rl-wrap .view-all-btn:hover{
+  background:#e0e7ff;
+  border-color:#c7d2fe;
+  color:#3730a3;
+}
+
+/* Metric tiles ------------------------------------------------------------ */
+.rl-wrap .rl-metrics{gap:12px;margin:10px 0 18px}
+.rl-wrap .rl-metric{
+  padding:14px 14px 15px;
+  border-color:rgba(148,163,184,.26);
+  box-shadow:var(--rl-shadow-sm);
+}
+.rl-wrap .rl-metric:hover{box-shadow:var(--rl-shadow-md)}
+.rl-wrap .metric-icon{
+  width:34px;height:34px;
+  padding:0;
+  font-size:16px;
+  border-radius:10px;
+}
+.rl-wrap .metric-label{
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#64748b;
+  margin-top:6px;
+}
+.rl-wrap .metric-value{font-size:24px;margin-top:2px}
+
+/* Recent / resource cards ------------------------------------------------- */
+.rl-wrap .rl-recent{gap:16px}
+.rl-wrap .rl-card{
+  border-color:var(--rl-hairline);
+  border-radius:16px;
+  box-shadow:var(--rl-shadow-sm);
+  transition:transform .18s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.rl-wrap .rl-card:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--rl-shadow-md);
+  border-color:#d8def3;
+}
+.rl-wrap .rl-cover-wrap{height:142px}
+.rl-wrap .rl-cover{
+  background:
+    radial-gradient(120% 80% at 20% 0%,rgba(79,70,229,.35),transparent 55%),
+    radial-gradient(120% 80% at 100% 100%,rgba(111,44,224,.28),transparent 60%),
+    linear-gradient(135deg,#312e81 0%,#4338ca 45%,#6d28d9 100%);
+}
+.rl-wrap .rl-type-badge{
+  top:10px;left:10px;
+  padding:4px 9px;
+  font-size:10.5px;
+  letter-spacing:.04em;
+  border-radius:999px;
+  box-shadow:0 4px 10px rgba(15,23,42,.18);
+}
+.rl-wrap .rl-card-admin-actions{top:10px;right:10px;gap:6px}
+.rl-wrap .rl-card-icon-btn{width:30px;height:30px;border-radius:9px}
+
+.rl-wrap .rl-content{padding:14px 16px 16px}
+.rl-wrap .rl-content h4{
+  font-size:16.5px;
+  letter-spacing:-.005em;
+  color:var(--rl-ink);
+}
+.rl-wrap .rl-content .tile-desc{
+  font-size:13px;color:#546079;line-height:1.5;min-height:40px;
+}
+.rl-wrap .tile-card-head{margin-bottom:8px}
+.rl-wrap .tile-programme{font-size:11.5px;letter-spacing:.08em;color:#3b4bc8}
+.rl-wrap .tile-module{font-size:12px;color:#4b5ad0}
+.rl-wrap .tile-rating{font-size:13px;letter-spacing:1.2px}
+.rl-wrap .tile-difficulty{
+  padding:3px 10px;font-size:10.5px;letter-spacing:.04em;
+  text-transform:uppercase;font-weight:800;
+}
+
+.rl-wrap .tile-divider{
+  height:1px;
+  margin:12px 0 10px;
+  background:linear-gradient(90deg,transparent,#e1e7f5 18%,#e1e7f5 82%,transparent);
+}
+.rl-wrap .tile-meta{
+  gap:10px 14px;color:#5a6478;font-size:12px;
+  align-items:center;
+}
+.rl-wrap .tile-meta .anticon{color:#6b7693;font-size:13px}
+.rl-wrap .tile-footer{margin-top:12px;min-height:30px}
+.rl-wrap .tile-avatar{
+  background:linear-gradient(135deg,#6366f1,#7c3aed);
+  box-shadow:0 4px 10px rgba(99,102,241,.26);
+}
+.rl-wrap .tile-tag-badge{
+  background:var(--rl-brand-soft);
+  color:#3f4dc5;
+  border-color:#dde3fb;
+  border-radius:999px;
+  padding:3px 10px;
+  font-size:11.5px;
+  letter-spacing:.02em;
+  text-transform:lowercase;
+}
+
+/* Leaderboard panels ------------------------------------------------------ */
+.rl-wrap .rl-bottom{gap:16px;margin-top:18px}
+.rl-wrap .rl-dash-panel{box-shadow:var(--rl-shadow-sm)}
+.rl-wrap .rl-dash-panel__head{padding:10px 12px}
+.rl-wrap .rl-dash-panel__title{font-size:13.5px;letter-spacing:-.005em}
+.rl-wrap .rl-dash-panel__list{padding:8px 10px 10px;gap:6px}
+.rl-wrap .rl-leader-row{border-color:#e4eaf6}
+.rl-wrap .rl-leader-row__inner{padding:7px 10px;gap:10px;min-height:34px}
+.rl-wrap .rl-leader-rank{width:24px;height:24px;border-radius:7px;font-size:11px}
+.rl-wrap .rl-leader-title{font-size:12.5px}
+.rl-wrap .rl-leader-avatar{width:28px;height:28px;font-size:12px}
+.rl-wrap .rl-quality-meter__bar,
+.rl-wrap .rl-upload-meter__bar{height:6px}
+
+/* Sidebar (when not embedded) -------------------------------------------- */
+.rl-wrap .rl-nav button{font-size:13px;letter-spacing:.01em}
+.rl-wrap .rl-nav .active{
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+}
+.rl-wrap .rl-logout{
+  transition:background .15s ease, border-color .15s ease;
+}
+.rl-wrap .rl-logout:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.36)}
+
+/* Notifications dropdown -------------------------------------------------- */
+.rl-wrap .rl-notify-header{font-size:13.5px}
+.rl-wrap .rl-notify-item{transition:background .14s ease}
+.rl-wrap .rl-notify-item:hover{background:#f5f7ff}
+
+/* Embedded header card (when mounted inside the main app) ---------------- */
+.rl-wrap.rl-embedded .rl-embedded-top{
+  padding:14px 18px;
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(79,70,229,.08),rgba(111,44,224,.05));
+  border:1px solid rgba(79,70,229,.16);
+  box-shadow:var(--rl-shadow-sm);
+}
+.rl-wrap.rl-embedded .rl-embedded-top-title{font-size:15.5px;letter-spacing:-.01em}
+
+/* Modals opened from the Resource Library --------------------------------- */
+.rl-light-modal .ant-modal-content{
+  border-radius:16px;
+  padding:0;
+  overflow:hidden;
+  box-shadow:0 24px 60px rgba(15,23,42,.22), 0 6px 16px rgba(15,23,42,.08);
+  border:1px solid #e5eaf6;
+}
+.rl-light-modal .ant-modal-header{
+  margin:0;
+  padding:16px 22px;
+  background:linear-gradient(135deg,#eef2ff 0%,#faf5ff 100%);
+  border-bottom:1px solid #e2e8f6;
+}
+.rl-light-modal .ant-modal-title{
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-.01em;
+  color:var(--rl-brand-strong,#312e81);
+}
+.rl-light-modal .ant-modal-close{top:12px;inset-inline-end:14px}
+.rl-light-modal .ant-modal-body{padding:20px 22px 22px}
+.rl-light-modal .ant-modal-footer{padding:12px 22px 18px;border-top:1px solid #eef1fa}
+
+.rl-light-modal .ant-form-item-label > label{
+  font-weight:700;
+  color:#1f2744;
+  font-size:12.5px;
+  letter-spacing:.01em;
+}
+.rl-light-modal .ant-input,
+.rl-light-modal .ant-input-affix-wrapper,
+.rl-light-modal .ant-select .ant-select-selector,
+.rl-light-modal .ant-picker{
+  border-radius:10px !important;
+  border-color:#dbe2f4 !important;
+}
+.rl-light-modal .ant-input:focus,
+.rl-light-modal .ant-input-affix-wrapper:focus-within,
+.rl-light-modal .ant-select-focused .ant-select-selector,
+.rl-light-modal .ant-picker-focused{
+  border-color:#6366f1 !important;
+  box-shadow:0 0 0 3px rgba(99,102,241,.14) !important;
+}
+.rl-light-modal .ant-upload .ant-btn{
+  border-radius:10px;
+  border-color:#d8deef;
+  font-weight:600;
+  color:#312e81;
+}
+.rl-light-modal .ant-upload .ant-btn:hover{
+  border-color:#6366f1;
+  color:#4338ca;
+  background:#eef2ff;
+}
+.rl-light-modal .ant-upload-list-item{border-radius:8px}
+
+.rl-light-modal .ant-btn-primary{
+  background:linear-gradient(90deg,#4f46e5,#7c3aed) !important;
+  border:0 !important;
+  border-radius:11px !important;
+  height:auto;
+  padding:9px 18px !important;
+  font-weight:700;
+  box-shadow:0 10px 22px rgba(79,70,229,.22);
+  transition:transform .18s ease, box-shadow .2s ease, filter .18s ease;
+}
+.rl-light-modal .ant-btn-primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 14px 28px rgba(79,70,229,.3);
+  filter:saturate(1.05);
+}
+.rl-light-modal .ant-btn-primary:active{transform:translateY(0)}
+
+.rl-light-modal .ant-btn-default{
+  border-radius:11px !important;
+  border-color:#d8deef !important;
+  color:#1f2744 !important;
+  font-weight:600 !important;
+}
+.rl-light-modal .ant-btn-default:hover{
+  border-color:#6366f1 !important;
+  color:#3730a3 !important;
+  background:#f5f7ff !important;
+}
+
+/* Small-screen tuning ----------------------------------------------------- */
+@media (max-width:900px){
+  .rl-wrap .rl-recent{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rl-wrap .rl-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .rl-wrap .rl-recent{grid-template-columns:1fr}
+  .rl-wrap .rl-metrics{grid-template-columns:1fr}
+  .rl-wrap .rl-title{font-size:22px}
 }

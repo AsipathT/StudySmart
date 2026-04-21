@@ -1,23 +1,32 @@
 const express = require('express');
+const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
 const controller = require('../controllers/resourceLibrary.controller');
 
 const router = express.Router();
 
+// Multer's diskStorage only auto-creates a string destination. We use a function, so ensure the
+// target directory exists before returning it, otherwise writes fail with ENOENT (surfaces as HTTP 500).
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const url = String(req.originalUrl || '').split('?')[0];
+    let dest;
     if (url.includes('/modules')) {
-      return cb(null, path.join(__dirname, '../uploads/resource-library/modules'));
+      dest = path.join(__dirname, '../uploads/resource-library/modules');
+    } else if (/\/requests\/[^/]+\/messages$/.test(url)) {
+      dest = path.join(__dirname, '../uploads/resource-library/request-chat');
+    } else if (/\/resource-library\/requests$/.test(url)) {
+      dest = path.join(__dirname, '../uploads/resource-library/requests');
+    } else {
+      dest = path.join(__dirname, '../uploads/resource-library/resources');
     }
-    if (/\/requests\/[^/]+\/messages$/.test(url)) {
-      return cb(null, path.join(__dirname, '../uploads/resource-library/request-chat'));
+    try {
+      fs.mkdirSync(dest, { recursive: true });
+    } catch (e) {
+      return cb(e);
     }
-    if (/\/resource-library\/requests$/.test(url)) {
-      return cb(null, path.join(__dirname, '../uploads/resource-library/requests'));
-    }
-    return cb(null, path.join(__dirname, '../uploads/resource-library/resources'));
+    return cb(null, dest);
   },
   filename: (req, file, cb) => {
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;

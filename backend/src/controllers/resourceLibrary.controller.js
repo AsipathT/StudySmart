@@ -420,6 +420,16 @@ exports.uploadResource = async (req, res) => {
   if (['doc', 'docx', 'txt', 'md'].includes(extension)) type = 'NOTES';
   if (['mp4', 'webm', 'mov', 'mkv', 'avi'].includes(extension)) type = 'VIDEO';
 
+  // Safety net: never insert a DB row unless the uploaded bytes are actually on disk.
+  // This prevents "Cannot GET /uploads/..." later if the write silently failed.
+  const writtenPath = req.file.path || path.join(__dirname, '../uploads/resource-library/resources', req.file.filename);
+  if (!fs.existsSync(writtenPath)) {
+    return res.status(500).json({
+      success: false,
+      message: 'Upload failed: the file was not saved to disk. Please try again.'
+    });
+  }
+
   const authorName = String(req.body.authorName || '').trim() || 'Student';
   const row = await ResourceItem.create({
     programmeId,
@@ -508,13 +518,16 @@ exports.addComment = async (req, res) => {
 exports.getResourceContent = async (req, res) => {
   const resource = await ResourceItem.findByPk(req.params.id);
   if (!resource) return res.status(404).json({ success: false, message: 'Resource not found' });
+  const isText = String(resource.fileMime || '').startsWith('text/') || /\.(txt|md)$/i.test(String(resource.fileName || ''));
+  const isCollabNote = isCollaborativeNoteResource(resource);
+  if (!isText && !isCollabNote) {
+    return res.status(400).json({ success: false, message: 'This resource does not support text collaboration.' });
+  }
+  // If the backing file vanished (older orphaned notes), return empty content so the editor can
+  // open and the next save (which self-heals the file) can persist the user's edits.
   const filePath = resolveResourceFilePath(resource.fileUrl);
   if (!filePath || !fs.existsSync(filePath)) {
-    return res.status(404).json({ success: false, message: 'Resource content file not found' });
-  }
-  const isText = String(resource.fileMime || '').startsWith('text/') || /\.(txt|md)$/i.test(String(resource.fileName || ''));
-  if (!isText) {
-    return res.status(400).json({ success: false, message: 'This resource does not support text collaboration.' });
+    return res.json({ success: true, data: { content: '' } });
   }
   const content = fs.readFileSync(filePath, 'utf8');
   return res.json({ success: true, data: { content } });
@@ -599,16 +612,45 @@ exports.updateResourceContent = async (req, res) => {
   const resource = await ResourceItem.findByPk(req.params.id);
   if (!resource) return res.status(404).json({ success: false, message: 'Resource not found' });
   if (!requireCollaborativeOrAdminOrUploaderForContent(req, res, resource)) return;
-  const filePath = resolveResourceFilePath(resource.fileUrl);
-  if (!filePath || !fs.existsSync(filePath)) {
-    return res.status(404).json({ success: false, message: 'Resource content file not found' });
-  }
+
   const isText = String(resource.fileMime || '').startsWith('text/') || /\.(txt|md)$/i.test(String(resource.fileName || ''));
-  if (!isText) {
+  const isCollabNote = isCollaborativeNoteResource(resource);
+  // Non-text, non-collab rows (PDF/PPT/VIDEO) still don't support text collaboration.
+  if (!isText && !isCollabNote) {
     return res.status(400).json({ success: false, message: 'This resource does not support text collaboration.' });
   }
+
+  // Resolve (or recover) the on-disk path. Older collaborative notes sometimes lost their
+  // backing file because the uploads directory didn't exist when they were originally created.
+  // Instead of 404-ing the save and losing the user's edits, we re-materialize the file here.
+  let filePath = resolveResourceFilePath(resource.fileUrl);
+  if (!filePath) {
+    const safeTitle = String(resource.title || 'collaborative-note').replace(/\s+/g, '-').toLowerCase();
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeTitle}.md`;
+    resource.fileUrl = `/uploads/resource-library/resources/${filename}`;
+    resource.fileName = filename;
+    resource.fileMime = resource.fileMime || 'text/markdown';
+    filePath = resolveResourceFilePath(resource.fileUrl);
+  }
+
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: `Could not prepare storage: ${e.message}` });
+  }
+
   const content = String(req.body.content || '');
-  fs.writeFileSync(filePath, content, 'utf8');
+  try {
+    fs.writeFileSync(filePath, content, 'utf8');
+  } catch (e) {
+    return res.status(500).json({ success: false, message: `Could not save note content: ${e.message}` });
+  }
+
+  try {
+    const stat = fs.statSync(filePath);
+    resource.fileSize = stat.size;
+  } catch { /* size is not critical; ignore */ }
+
   if (req.body.title) resource.title = String(req.body.title).trim() || resource.title;
   if (req.body.description) resource.description = String(req.body.description).trim() || resource.description;
   await resource.save();
@@ -682,6 +724,14 @@ exports.replaceResourceAttachment = async (req, res) => {
   const isVideoUrl = /^https?:\/\//i.test(videoUrl);
 
   if (req.file) {
+    // Confirm the new file landed on disk before we overwrite the old attachment row.
+    const writtenPath = req.file.path || path.join(__dirname, '../uploads/resource-library/resources', req.file.filename);
+    if (!fs.existsSync(writtenPath)) {
+      return res.status(500).json({
+        success: false,
+        message: 'Upload failed: the replacement file was not saved to disk. Please try again.'
+      });
+    }
     unlinkLocalResourceFile(resource.fileUrl);
     const inferred = inferTypeFromFilename(req.file.originalname);
     resource.type = inferred || resource.type;
