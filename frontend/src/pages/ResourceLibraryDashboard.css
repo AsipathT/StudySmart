@@ -2391,12 +2391,12 @@ html[data-theme="light"] .rl-auth-page .ant-segmented .ant-segmented-item-select
     0 18px 36px -16px rgba(30, 64, 175, 0.18) !important;
 }
 .rl-request-card::before {
-  content: '';
+  content: none;
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 6px;
+  width: 0;
   z-index: 2;
   border-radius: 18px 0 0 18px;
 }
