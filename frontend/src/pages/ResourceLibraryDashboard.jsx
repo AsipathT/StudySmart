@@ -2038,11 +2038,6 @@ const ResourceLibraryDashboard = () => {
             <header className="rl-requests-page__head">
               <div className="rl-requests-page__head-text">
                 <h2 className="rl-requests-page__title">Requests</h2>
-                {!isAdmin ? (
-                  <p className="rl-requests-page__subtitle">
-                    Submit a request about missing resources, incorrect content, or access issues.
-                  </p>
-                ) : null}
               </div>
               {!isAdmin ? (
                 <Button type="primary" className="rl-requests-create-btn" onClick={() => setOpenRequest(true)}>
