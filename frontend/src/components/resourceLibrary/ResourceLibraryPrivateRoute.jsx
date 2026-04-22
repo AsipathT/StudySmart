@@ -9,7 +9,7 @@ const ResourceLibraryPrivateRoute = ({ children }) => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
-        <Spin size="large" tip="Loading..." />
+        <Spin size="large" />
       </div>
     );
   }

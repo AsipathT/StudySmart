@@ -117,7 +117,7 @@ const UserAnalyticsDashboard = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
-        <Spin size="large" tip="Loading analytics..." />
+        <Spin size="large" />
       </div>
     );
   }

@@ -7,10 +7,20 @@ const withRlUserName = (userName) => ({
   headers: { 'x-rl-user-name': String(userName || 'Student').trim() || 'Student' },
 });
 
+/** Send both role + user-name so backend can match "uploader OR admin" checks. */
+const withRoleAndUser = (role, userName) => ({
+  headers: {
+    'x-rl-role': role || 'student',
+    'x-rl-user-name': String(userName || 'Student').trim() || 'Student',
+  },
+});
+
 const resourceLibraryService = {
-  getNotifications: () => api.get('/resource-library/notifications').then((r) => r.data),
-  markNotificationRead: (id) => api.post(`/resource-library/notifications/${id}/read`).then((r) => r.data),
-  markAllNotificationsRead: () => api.post('/resource-library/notifications/read-all').then((r) => r.data),
+  getNotifications: (userName) => api.get('/resource-library/notifications', withRlUserName(userName)).then((r) => r.data),
+  markNotificationRead: (id, userName) =>
+    api.post(`/resource-library/notifications/${id}/read`, null, withRlUserName(userName)).then((r) => r.data),
+  markAllNotificationsRead: (userName) =>
+    api.post('/resource-library/notifications/read-all', null, withRlUserName(userName)).then((r) => r.data),
   getOverview: () => api.get('/resource-library/overview').then((r) => r.data),
   getTopQualityResources: () => api.get('/resource-library/top-quality').then((r) => r.data),
   getTopContributors: () => api.get('/resource-library/top-contributors').then((r) => r.data),
@@ -32,10 +42,12 @@ const resourceLibraryService = {
   updateResourceContent: (id, payload, userName) =>
     api.put(`/resource-library/resources/${id}/content`, payload, withRlUserName(userName)).then((r) => r.data),
   generateFlashcards: (payload) => api.post('/resource-library/flashcards/generate', payload).then((r) => r.data),
-  updateResource: (id, payload, role) => api.put(`/resource-library/resources/${id}`, payload, withRole(role)).then((r) => r.data),
-  replaceResourceAttachment: (id, formData, role) =>
-    apiForm.put(`/resource-library/resources/${id}/attachment`, formData, withRole(role)).then((r) => r.data),
-  deleteResource: (id, role) => api.delete(`/resource-library/resources/${id}`, withRole(role)).then((r) => r.data),
+  updateResource: (id, payload, role, userName) =>
+    api.put(`/resource-library/resources/${id}`, payload, withRoleAndUser(role, userName)).then((r) => r.data),
+  replaceResourceAttachment: (id, formData, role, userName) =>
+    apiForm.put(`/resource-library/resources/${id}/attachment`, formData, withRoleAndUser(role, userName)).then((r) => r.data),
+  deleteResource: (id, role, userName) =>
+    api.delete(`/resource-library/resources/${id}`, withRoleAndUser(role, userName)).then((r) => r.data),
   recordView: (id) => api.post(`/resource-library/resources/${id}/view`).then((r) => r.data),
   recordDownload: (id) => api.post(`/resource-library/resources/${id}/download`).then((r) => r.data),
   submitRating: (id, payload) => api.post(`/resource-library/resources/${id}/rating`, payload).then((r) => r.data),

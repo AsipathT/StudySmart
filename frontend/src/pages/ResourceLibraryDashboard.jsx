@@ -387,7 +387,7 @@ const ResourceLibraryDashboard = () => {
 
   const loadRlNotifications = async () => {
     try {
-      const res = await resourceLibraryService.getNotifications();
+      const res = await resourceLibraryService.getNotifications(user?.name || 'Student');
       if (res?.success && res.data) {
         setRlNotifications(res.data.notifications || []);
         setRlUnread(res.data.unreadCount ?? 0);
@@ -401,7 +401,7 @@ const ResourceLibraryDashboard = () => {
     loadRlNotifications();
     const id = setInterval(loadRlNotifications, 45000);
     return () => clearInterval(id);
-  }, []);
+  }, [user?.name]);
 
   useEffect(() => {
     loadOverview();
@@ -555,6 +555,10 @@ const ResourceLibraryDashboard = () => {
   ];
 
   const openEditResourceModal = async (r) => {
+    if (!canManageResource(r)) {
+      message.error('Only the uploader or a resource admin can edit these parameters.');
+      return;
+    }
     setEditingResourceId(r.id);
     setEditingResourceSnapshot({
       authorName: r.authorName,
@@ -610,19 +614,20 @@ const ResourceLibraryDashboard = () => {
             .map((t) => t.trim())
             .filter(Boolean)
         },
-        user?.role
+        user?.role,
+        user?.name
       );
       if (editResourceAttachmentFile) {
         const fd = new FormData();
         fd.append('resourceFile', editResourceAttachmentFile);
-        await resourceLibraryService.replaceResourceAttachment(id, fd, user?.role);
+        await resourceLibraryService.replaceResourceAttachment(id, fd, user?.role, user?.name);
       } else {
         const snap = editingResourceSnapshot;
         const newUrl = String(values.replaceVideoUrl || '').trim();
         if (snap && isVideoResource(snap) && newUrl && newUrl !== String(snap.fileUrl || '')) {
           const fd = new FormData();
           fd.append('videoUrl', newUrl);
-          await resourceLibraryService.replaceResourceAttachment(id, fd, user?.role);
+          await resourceLibraryService.replaceResourceAttachment(id, fd, user?.role, user?.name);
         }
       }
       message.success('Resource updated.');
@@ -658,7 +663,7 @@ const ResourceLibraryDashboard = () => {
           return;
         }
         try {
-          await resourceLibraryService.deleteResource(r.id, user?.role);
+          await resourceLibraryService.deleteResource(r.id, user?.role, user?.name);
           message.success('Resource deleted.');
           if (selectedResourceId === r.id) {
             setSelectedResourceId(null);
@@ -1243,13 +1248,15 @@ const ResourceLibraryDashboard = () => {
     setNoteSaving(true);
     try {
       const html = noteEditorRef.current ? noteEditorRef.current.innerHTML : noteContent;
+      // Only the uploader or a resource admin may change the upload-time parameters
+      // (title / description). Other collaborators can still save the note body.
+      const canEditParams = canManageResourceById(selectedNoteId);
+      const payload = canEditParams
+        ? { title: noteTitle, description: noteDescription, content: html }
+        : { content: html };
       await resourceLibraryService.updateResourceContent(
         selectedNoteId,
-        {
-          title: noteTitle,
-          description: noteDescription,
-          content: html
-        },
+        payload,
         user?.name || 'Student'
       );
       setNoteContent(html);
@@ -1273,7 +1280,7 @@ const ResourceLibraryDashboard = () => {
   const handleRlNotificationClick = async (n) => {
     if (!n.read) {
       try {
-        await resourceLibraryService.markNotificationRead(n.id);
+        await resourceLibraryService.markNotificationRead(n.id, user?.name || 'Student');
       } catch {
         /* ignore */
       }
@@ -1301,7 +1308,7 @@ const ResourceLibraryDashboard = () => {
   const handleMarkAllRlNotificationsRead = async (e) => {
     e?.stopPropagation?.();
     try {
-      await resourceLibraryService.markAllNotificationsRead();
+      await resourceLibraryService.markAllNotificationsRead(user?.name || 'Student');
       await loadRlNotifications();
     } catch {
       /* ignore */
@@ -1387,7 +1394,7 @@ const ResourceLibraryDashboard = () => {
       return;
     }
     if (!window.confirm('Delete this collaborative note? This cannot be undone.')) return;
-    await resourceLibraryService.deleteResource(noteId, user?.role);
+    await resourceLibraryService.deleteResource(noteId, user?.role, user?.name);
     message.success('Collaborative note deleted.');
     if (selectedNoteId === noteId) {
       setSelectedNoteId(null);
@@ -1652,7 +1659,7 @@ const ResourceLibraryDashboard = () => {
                 )}
                 {renderResourceCoverOpenControl(r)}
                 <span className={`rl-type-badge type-${String(r.type || 'NOTES').toLowerCase()}`}>{r.type}</span>
-                {(isAdmin || canManageResource(r) || isCollaborativeNoteResource(r)) ? (
+                {(isAdmin || canManageResource(r)) ? (
                   <div className="rl-card-admin-actions" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="rl-card-icon-btn" title="Edit resource" aria-label="Edit resource" onClick={() => openEditResourceModal(r)}>
                       <EditOutlined />
@@ -1818,7 +1825,7 @@ const ResourceLibraryDashboard = () => {
                   )}
                   {renderResourceCoverOpenControl(r)}
                   <span className={`rl-type-badge type-${String(r.type || 'NOTES').toLowerCase()}`}>{r.type}</span>
-                  {(isAdmin || canManageResource(r) || isCollaborativeNoteResource(r)) ? (
+                  {(isAdmin || canManageResource(r)) ? (
                     <div className="rl-card-admin-actions" onClick={(e) => e.stopPropagation()}>
                       <button type="button" className="rl-card-icon-btn" title="Edit resource" aria-label="Edit resource" onClick={() => openEditResourceModal(r)}>
                         <EditOutlined />
@@ -1911,7 +1918,7 @@ const ResourceLibraryDashboard = () => {
                       >
                         <div className="note-card-top">
                           <span className={`rl-type-badge type-${String(n.type || 'NOTES').toLowerCase()}`}>{n.type || 'NOTES'}</span>
-                          {(isAdmin || canManageResource(n) || isCollaborativeNoteResource(n)) ? (
+                          {(isAdmin || canManageResource(n)) ? (
                             <div className="note-card-top-actions" onClick={(e) => e.stopPropagation()}>
                               <button type="button" className="rl-card-icon-btn" title="Edit resource" aria-label="Edit resource" onClick={() => openEditResourceModal(n)}>
                                 <EditOutlined />
@@ -1967,7 +1974,7 @@ const ResourceLibraryDashboard = () => {
                       value={noteTitle}
                       onChange={(e) => setNoteTitle(e.target.value)}
                       placeholder="Note title"
-                      readOnly={!canEditCollaborativeNoteContentById(selectedNoteId)}
+                      readOnly={!canManageResourceById(selectedNoteId)}
                     />
                     {selectedNoteId && canManageResourceById(selectedNoteId) ? (
                       <Button danger onClick={() => deleteCollaborativeNote(selectedNoteId)}>Delete Note</Button>
@@ -1981,7 +1988,7 @@ const ResourceLibraryDashboard = () => {
                     onChange={(e) => setNoteDescription(e.target.value)}
                     placeholder="Short description"
                     style={{ marginTop: 10 }}
-                    readOnly={!canEditCollaborativeNoteContentById(selectedNoteId)}
+                    readOnly={!canManageResourceById(selectedNoteId)}
                   />
                   <div className="word-toolbar">
                     {canEditCollaborativeNoteContentById(selectedNoteId) ? (
@@ -2151,7 +2158,7 @@ const ResourceLibraryDashboard = () => {
                   const created = r.createdAt || r.created_at;
                   return (
                   <li key={r.id}>
-                    <Card className={`rl-request-card rl-request-card--${reqStatusKey}`} bordered={false}>
+                    <Card className={`rl-request-card rl-request-card--${reqStatusKey}`} variant="borderless">
                       <div className="rl-request-card__head">
                         <div className="rl-request-card__head-main">
                           <div className="rl-request-card__top">
@@ -2518,7 +2525,7 @@ const ResourceLibraryDashboard = () => {
                           <div className="word-editor-shell resource-collab-editor-shell">
                             {noteLoading ? (
                               <div className="resource-collab-note-loading-overlay">
-                                <Spin size="large" tip="Loading note…" />
+                                <Spin size="large" />
                               </div>
                             ) : null}
                             <div

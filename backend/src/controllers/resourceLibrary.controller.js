@@ -651,8 +651,13 @@ exports.updateResourceContent = async (req, res) => {
     resource.fileSize = stat.size;
   } catch { /* size is not critical; ignore */ }
 
-  if (req.body.title) resource.title = String(req.body.title).trim() || resource.title;
-  if (req.body.description) resource.description = String(req.body.description).trim() || resource.description;
+  // Title/description are upload-time parameters → only uploader or resource admin may
+  // change them here. Any other collaborator can still save their content edits above.
+  const canEditParams = isRlAdmin(req) || isResourceUploader(req, resource);
+  if (canEditParams) {
+    if (req.body.title) resource.title = String(req.body.title).trim() || resource.title;
+    if (req.body.description) resource.description = String(req.body.description).trim() || resource.description;
+  }
   await resource.save();
   await createRlNotification({
     kind: 'update',
@@ -666,7 +671,10 @@ exports.updateResourceContent = async (req, res) => {
 exports.updateResource = async (req, res) => {
   const resource = await ResourceItem.findByPk(req.params.id);
   if (!resource) return res.status(404).json({ success: false, message: 'Resource not found' });
-  if (!requireCollaborativeOrAdminOrUploader(req, res, resource)) return;
+  // Resource parameters (title, description, programme, module, tags) may only be changed by
+  // the uploader or a resource admin — even for collaborative notes. Everyone else can still
+  // edit the **body** of a collab note via `updateResourceContent` below.
+  if (!requireAdminOrUploader(req, res, resource)) return;
   const { title, description, programmeId, moduleId, tags } = req.body;
   if (title !== undefined) {
     const t = String(title).trim();

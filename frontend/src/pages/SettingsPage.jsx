@@ -6,7 +6,6 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const SettingsPage = () => {
-  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 

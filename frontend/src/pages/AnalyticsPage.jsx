@@ -563,7 +563,8 @@ const AnalyticsPage = () => {
       // SOURCE 4: /api/analytics/student/:id
       if (scores.length === 0) {
         const userId = user?.id || user?._id || user?.studentId;
-        if (userId) {
+        const roleLc = String(user?.role || '').toLowerCase();
+        if (userId && (roleLc === 'student' || roleLc === 'resource_admin_student')) {
           const dashRaw = await analyticsService.getStudentDashboard(userId).catch(() => null);
           const dash    = unwrap(dashRaw);
           const dashSubj = dash?.subjects || [];
