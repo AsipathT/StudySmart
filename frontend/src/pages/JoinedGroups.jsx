@@ -7,8 +7,7 @@ import { useNavigate } from "react-router-dom";
 const pageStyle = {
   minHeight: "100vh",
   padding: "24px",
-  background:
-    "radial-gradient(circle at top left, rgba(99,102,241,0.16), transparent 26%), radial-gradient(circle at top right, rgba(168,85,247,0.14), transparent 28%), linear-gradient(180deg, #f8fbff 0%, #eef2ff 45%, #f8fafc 100%)",
+  background: "linear-gradient(180deg, #f3f4f6 0%, #eef2f7 45%, #f8fafc 100%)",
   position: "relative",
   overflow: "hidden",
 };
@@ -22,7 +21,7 @@ const floatingOrb = (top, left, size, bg, delay = "0s") => ({
   borderRadius: "50%",
   background: bg,
   filter: "blur(10px)",
-  opacity: 0.5,
+  opacity: 0.25,
   animation: "floaty 8s ease-in-out infinite",
   animationDelay: delay,
   pointerEvents: "none",
@@ -38,21 +37,20 @@ const wrapperStyle = {
 const heroCard = {
   position: "relative",
   overflow: "hidden",
-  background:
-    "linear-gradient(135deg, #0f172a 0%, #312e81 38%, #6d28d9 72%, #9333ea 100%)",
-  borderRadius: "30px",
+  background: "linear-gradient(135deg, #2f5fd0 0%, #3f7ee8 55%, #6466f1 100%)",
+  borderRadius: "28px",
   padding: "32px",
   color: "#ffffff",
-  boxShadow: "0 24px 55px rgba(79, 70, 229, 0.24)",
+  boxShadow: "0 14px 30px rgba(59, 130, 246, 0.18)",
   marginBottom: "24px",
-  border: "1px solid rgba(255,255,255,0.12)",
+  border: "1px solid rgba(255,255,255,0.14)",
 };
 
 const heroGlow = {
   position: "absolute",
   inset: 0,
   background:
-    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.16), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.12), transparent 20%), radial-gradient(circle at 72% 82%, rgba(255,255,255,0.08), transparent 26%)",
+    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.14), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.10), transparent 20%), radial-gradient(circle at 72% 82%, rgba(255,255,255,0.08), transparent 26%)",
   pointerEvents: "none",
 };
 
@@ -76,12 +74,12 @@ const heroText = {
 };
 
 const sectionCard = {
-  background: "rgba(255,255,255,0.82)",
+  background: "#ffffff",
   backdropFilter: "blur(14px)",
-  borderRadius: "28px",
+  borderRadius: "24px",
   padding: "24px",
-  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.08)",
-  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
+  border: "1px solid #e2e8f0",
 };
 
 const sectionHeader = {
@@ -120,8 +118,8 @@ const countBadge = {
   gap: "8px",
   padding: "12px 16px",
   borderRadius: "16px",
-  background: "linear-gradient(135deg, #eef2ff, #f5f3ff)",
-  border: "1px solid #ddd6fe",
+  background: "#eef2ff",
+  border: "1px solid #c7d2fe",
   color: "#4f46e5",
   fontWeight: 800,
   fontSize: "14px",
@@ -134,11 +132,11 @@ const gridStyle = {
 };
 
 const baseGroupCard = {
-  background: "rgba(255,255,255,0.96)",
+  background: "#ffffff",
   borderRadius: "24px",
   overflow: "hidden",
   border: "1px solid #e2e8f0",
-  boxShadow: "0 14px 30px rgba(15, 23, 42, 0.08)",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
   transition: "all 0.28s ease",
 };
 
@@ -150,8 +148,7 @@ const imageWrap = {
 const imageOverlay = {
   position: "absolute",
   inset: 0,
-  background:
-    "linear-gradient(to top, rgba(15,23,42,0.34), rgba(15,23,42,0.04))",
+  background: "linear-gradient(to top, rgba(15,23,42,0.28), rgba(15,23,42,0.04))",
 };
 
 const imageStyle = {
@@ -180,8 +177,8 @@ const joinedBadge = {
   borderRadius: "999px",
   fontSize: "12px",
   fontWeight: 800,
-  background: "linear-gradient(135deg, #dcfce7, #bbf7d0)",
-  color: "#166534",
+  background: "#e8f7ee",
+  color: "#16a34a",
   border: "1px solid rgba(255,255,255,0.7)",
 };
 
@@ -210,8 +207,8 @@ const chipWrap = {
 const chipStyle = {
   padding: "8px 13px",
   borderRadius: "999px",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
-  color: "#334155",
+  background: "#f8fafc",
+  color: "#475569",
   fontSize: "12px",
   fontWeight: 700,
   border: "1px solid #e2e8f0",
@@ -227,7 +224,7 @@ const progressText = {
 const progressTrack = {
   width: "100%",
   height: "12px",
-  background: "#e2e8f0",
+  background: "#e5e7eb",
   borderRadius: "999px",
   overflow: "hidden",
   marginBottom: "18px",
@@ -243,11 +240,11 @@ const chatButton = {
   border: "none",
   borderRadius: "14px",
   padding: "12px",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
   color: "#fff",
   fontWeight: 800,
   cursor: "pointer",
-  boxShadow: "0 12px 22px rgba(99,102,241,0.18)",
+  boxShadow: "0 10px 22px rgba(79, 70, 229, 0.25)",
   transition: "all 0.25s ease",
 };
 
@@ -256,18 +253,19 @@ const leaveButton = {
   border: "none",
   borderRadius: "14px",
   padding: "12px",
-  background: "linear-gradient(135deg, #fff1f2, #fee2e2)",
+  background: "#fef2f2",
   color: "#dc2626",
   fontWeight: 800,
   cursor: "pointer",
   transition: "all 0.25s ease",
+  border: "1px solid #fecaca",
 };
 
 const emptyState = {
   textAlign: "center",
   padding: "56px 24px",
   color: "#64748b",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
+  background: "#f8fafc",
   border: "2px dashed #cbd5e1",
   borderRadius: "22px",
 };
@@ -331,9 +329,9 @@ const JoinedGroups = () => {
         `}
       </style>
 
-      <div style={floatingOrb("80px", "-40px", "180px", "rgba(129,140,248,0.28)")}></div>
-      <div style={floatingOrb("430px", "90%", "160px", "rgba(192,132,252,0.24)", "1s")}></div>
-      <div style={floatingOrb("78%", "6%", "130px", "rgba(96,165,250,0.18)", "2s")}></div>
+      <div style={floatingOrb("80px", "-40px", "180px", "rgba(59,130,246,0.10)")}></div>
+      <div style={floatingOrb("430px", "90%", "160px", "rgba(99,102,241,0.10)", "1s")}></div>
+      <div style={floatingOrb("78%", "6%", "130px", "rgba(148,163,184,0.10)", "2s")}></div>
 
       <div style={wrapperStyle}>
         <div style={heroCard}>
@@ -401,10 +399,10 @@ const JoinedGroups = () => {
                           : "translateY(0)",
                       boxShadow:
                         hoveredCard === cardKey
-                          ? "0 22px 40px rgba(79, 70, 229, 0.14)"
+                          ? "0 18px 34px rgba(59, 130, 246, 0.12)"
                           : baseGroupCard.boxShadow,
                       borderColor:
-                        hoveredCard === cardKey ? "#c7d2fe" : "#e2e8f0",
+                        hoveredCard === cardKey ? "#bfdbfe" : "#e2e8f0",
                     }}
                     onMouseEnter={() => setHoveredCard(cardKey)}
                     onMouseLeave={() => setHoveredCard(null)}
@@ -456,8 +454,7 @@ const JoinedGroups = () => {
                           style={{
                             width: `${progress}%`,
                             height: "100%",
-                            background:
-                              "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+                            background: "linear-gradient(135deg, #3b82f6, #6366f1)",
                             borderRadius: "999px",
                             transition: "width 0.35s ease",
                           }}
@@ -477,7 +474,7 @@ const JoinedGroups = () => {
                                 : "translateY(0)",
                             boxShadow:
                               hoveredButton === `chat-${cardKey}`
-                                ? "0 14px 26px rgba(99,102,241,0.24)"
+                                ? "0 14px 26px rgba(79, 70, 229, 0.28)"
                                 : chatButton.boxShadow,
                           }}
                         >

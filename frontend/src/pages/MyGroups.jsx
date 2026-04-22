@@ -8,7 +8,7 @@ const pageStyle = {
   minHeight: "100vh",
   padding: "24px",
   background:
-    "radial-gradient(circle at top left, rgba(99,102,241,0.16), transparent 26%), radial-gradient(circle at top right, rgba(168,85,247,0.14), transparent 28%), linear-gradient(180deg, #f8fbff 0%, #eef2ff 45%, #f8fafc 100%)",
+    "linear-gradient(180deg, #f5f5f7 0%, #eef1f6 45%, #f7f8fc 100%)",
   position: "relative",
   overflow: "hidden",
 };
@@ -22,7 +22,7 @@ const floatingOrb = (top, left, size, bg, delay = "0s") => ({
   borderRadius: "50%",
   background: bg,
   filter: "blur(10px)",
-  opacity: 0.5,
+  opacity: 0.25,
   animation: "floaty 8s ease-in-out infinite",
   animationDelay: delay,
   pointerEvents: "none",
@@ -38,12 +38,11 @@ const wrapperStyle = {
 const heroCard = {
   position: "relative",
   overflow: "hidden",
-  background:
-    "linear-gradient(135deg, #0f172a 0%, #312e81 38%, #6d28d9 72%, #9333ea 100%)",
+  background: "linear-gradient(135deg, #3f6fe0 0%, #4e79e8 55%, #6c63e8 100%)",
   borderRadius: "30px",
   padding: "32px",
   color: "#ffffff",
-  boxShadow: "0 24px 55px rgba(79, 70, 229, 0.24)",
+  boxShadow: "0 18px 40px rgba(90, 103, 216, 0.22)",
   marginBottom: "24px",
   border: "1px solid rgba(255,255,255,0.12)",
 };
@@ -52,7 +51,7 @@ const heroGlow = {
   position: "absolute",
   inset: 0,
   background:
-    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.16), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.12), transparent 20%), radial-gradient(circle at 72% 82%, rgba(255,255,255,0.08), transparent 26%)",
+    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.14), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.10), transparent 20%), radial-gradient(circle at 72% 82%, rgba(255,255,255,0.08), transparent 26%)",
   pointerEvents: "none",
 };
 
@@ -67,7 +66,7 @@ const heroTitle = {
 
 const heroText = {
   marginTop: "10px",
-  color: "rgba(255,255,255,0.9)",
+  color: "rgba(255,255,255,0.92)",
   fontSize: "15px",
   lineHeight: 1.8,
   maxWidth: "760px",
@@ -76,12 +75,12 @@ const heroText = {
 };
 
 const sectionCard = {
-  background: "rgba(255,255,255,0.82)",
+  background: "#fdfdfd",
   backdropFilter: "blur(14px)",
   borderRadius: "28px",
   padding: "24px",
-  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.08)",
-  border: "1px solid rgba(226,232,240,0.95)",
+  boxShadow: "0 12px 28px rgba(15, 23, 42, 0.06)",
+  border: "1px solid #e6eaf2",
 };
 
 const headerWrap = {
@@ -103,13 +102,13 @@ const titleStyle = {
   margin: 0,
   fontSize: "30px",
   fontWeight: 800,
-  color: "#0f172a",
+  color: "#172033",
   letterSpacing: "-0.6px",
 };
 
 const subtitleStyle = {
   margin: 0,
-  color: "#64748b",
+  color: "#6b7280",
   fontSize: "15px",
   lineHeight: 1.7,
 };
@@ -120,9 +119,9 @@ const summaryBadge = {
   gap: "8px",
   padding: "12px 16px",
   borderRadius: "16px",
-  background: "linear-gradient(135deg, #eef2ff, #f5f3ff)",
-  border: "1px solid #ddd6fe",
-  color: "#4f46e5",
+  background: "#f1efff",
+  border: "1px solid #d9d3ff",
+  color: "#6a5acd",
   fontWeight: 800,
   fontSize: "14px",
 };
@@ -134,12 +133,12 @@ const gridStyle = {
 };
 
 const baseGroupCard = {
-  background: "rgba(255,255,255,0.96)",
+  background: "#ffffff",
   borderRadius: "24px",
   overflow: "hidden",
-  border: "1px solid #e2e8f0",
-  boxShadow: "0 14px 30px rgba(15, 23, 42, 0.08)",
-  transition: "transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease",
+  border: "1px solid #e6eaf2",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
+  transition: "all 0.25s ease",
 };
 
 const imageWrap = {
@@ -151,7 +150,7 @@ const imageOverlay = {
   position: "absolute",
   inset: 0,
   background:
-    "linear-gradient(to top, rgba(15,23,42,0.34), rgba(15,23,42,0.04))",
+    "linear-gradient(to top, rgba(17,24,39,0.24), rgba(17,24,39,0.03))",
 };
 
 const imageStyle = {
@@ -173,14 +172,14 @@ const badgeStyle = {
   fontSize: "12px",
   fontWeight: 800,
   marginBottom: "12px",
-  background: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
-  color: "#5b21b6",
-  border: "1px solid rgba(255,255,255,0.7)",
+  background: "#f1efff",
+  color: "#5b50c9",
+  border: "1px solid #ddd7ff",
 };
 
 const descriptionStyle = {
   margin: "0 0 14px",
-  color: "#475569",
+  color: "#5f6b7a",
   lineHeight: 1.7,
   fontSize: "14px",
 };
@@ -196,17 +195,17 @@ const chipWrap = {
 const chipStyle = {
   padding: "8px 13px",
   borderRadius: "999px",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
-  color: "#334155",
+  background: "#f8f9fc",
+  color: "#4b5563",
   fontSize: "12px",
   fontWeight: 700,
   transition: "all 0.2s ease",
-  border: "1px solid #e2e8f0",
+  border: "1px solid #e4e9f2",
 };
 
 const progressLabel = {
   marginBottom: "8px",
-  color: "#475569",
+  color: "#4b5563",
   fontSize: "13px",
   fontWeight: 700,
 };
@@ -214,7 +213,7 @@ const progressLabel = {
 const progressTrack = {
   width: "100%",
   height: "12px",
-  background: "#e2e8f0",
+  background: "#eceff5",
   borderRadius: "999px",
   overflow: "hidden",
   marginBottom: "18px",
@@ -233,20 +232,21 @@ const primaryButton = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
-  color: "#fff",
-  boxShadow: "0 12px 22px rgba(99,102,241,0.18)",
+  
+  color: "#ffffff",
+  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+boxShadow: "0 12px 24px rgba(79, 70, 229, 0.25)",
   transition: "all 0.25s ease",
 };
 
 const secondaryButton = {
-  border: "none",
+  border: "1px solid #e3e7ef",
   borderRadius: "14px",
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #eef2ff, #e0e7ff)",
-  color: "#4338ca",
+  background: "#f8f9fc",
+  color: "#2f3a4c",
   transition: "all 0.25s ease",
 };
 
@@ -256,19 +256,19 @@ const neutralButton = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
-  color: "#1e293b",
+  background: "#eef2f7",
+  color: "#243041",
   transition: "all 0.25s ease",
 };
 
 const dangerButton = {
-  border: "none",
+  border: "1px solid #ffd8de",
   borderRadius: "14px",
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #fff1f2, #fee2e2)",
-  color: "#dc2626",
+  background: "#fff1f3",
+  color: "#dc4c64",
   transition: "all 0.25s ease",
 };
 
@@ -299,34 +299,34 @@ const inputStyle = {
   width: "100%",
   padding: "13px 14px",
   borderRadius: "14px",
-  border: "1px solid #dbe2ea",
+  border: "1px solid #dce3ec",
   fontSize: "14px",
   outline: "none",
   boxSizing: "border-box",
-  background: "#fff",
+  background: "#ffffff",
   boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
 };
 
 const emptyState = {
   textAlign: "center",
   padding: "56px 24px",
-  border: "2px dashed #cbd5e1",
+  border: "2px dashed #d7dde8",
   borderRadius: "22px",
-  color: "#64748b",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
+  color: "#6b7280",
+  background: "#fafbfc",
 };
 
 const modalSectionTitle = {
   margin: "0 0 8px",
   fontSize: "28px",
   fontWeight: 800,
-  color: "#0f172a",
+  color: "#172033",
   letterSpacing: "-0.5px",
 };
 
 const modalSectionText = {
   margin: "0 0 22px",
-  color: "#64748b",
+  color: "#6b7280",
   fontSize: "14px",
   lineHeight: 1.7,
 };
@@ -498,9 +498,9 @@ const MyGroups = () => {
         `}
       </style>
 
-      <div style={floatingOrb("80px", "-40px", "180px", "rgba(129,140,248,0.28)")}></div>
-      <div style={floatingOrb("430px", "90%", "160px", "rgba(192,132,252,0.24)", "1s")}></div>
-      <div style={floatingOrb("78%", "6%", "130px", "rgba(96,165,250,0.18)", "2s")}></div>
+      <div style={floatingOrb("80px", "-40px", "180px", "rgba(99,102,241,0.12)")}></div>
+      <div style={floatingOrb("430px", "90%", "160px", "rgba(129,140,248,0.12)", "1s")}></div>
+      <div style={floatingOrb("78%", "6%", "130px", "rgba(99,102,241,0.10)", "2s")}></div>
 
       <div style={wrapperStyle}>
         <div style={heroCard}>
@@ -564,9 +564,9 @@ const MyGroups = () => {
                       transform: hoveredCard === cardKey ? "translateY(-7px)" : "translateY(0)",
                       boxShadow:
                         hoveredCard === cardKey
-                          ? "0 22px 40px rgba(79, 70, 229, 0.14)"
+                          ? "0 18px 34px rgba(108, 99, 232, 0.18)"
                           : baseGroupCard.boxShadow,
-                      borderColor: hoveredCard === cardKey ? "#c7d2fe" : "#e2e8f0",
+                      borderColor: hoveredCard === cardKey ? "#d8d4ff" : "#e6eaf2",
                     }}
                     onMouseEnter={() => setHoveredCard(cardKey)}
                     onMouseLeave={() => setHoveredCard(null)}
@@ -591,7 +591,7 @@ const MyGroups = () => {
                       <h3
                         style={{
                           margin: "0 0 8px",
-                          color: "#0f172a",
+                          color: "#172033",
                           fontSize: "22px",
                           fontWeight: 800,
                           letterSpacing: "-0.4px",
@@ -626,7 +626,7 @@ const MyGroups = () => {
                             width: `${progress}%`,
                             height: "100%",
                             background:
-                              "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+                              "linear-gradient(90deg, #5b6ee1 0%, #7a67ee 100%)",
                             borderRadius: "999px",
                             transition: "width 0.35s ease",
                           }}
@@ -644,7 +644,7 @@ const MyGroups = () => {
                               hoveredButton === `edit-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
                             boxShadow:
                               hoveredButton === `edit-${cardKey}`
-                                ? "0 10px 20px rgba(67, 56, 202, 0.12)"
+                                ?"0 10px 20px rgba(79, 70, 229, 0.18)"
                                 : "none",
                           }}
                         >
@@ -661,7 +661,7 @@ const MyGroups = () => {
                               hoveredButton === `delete-${cardKey}` ? "translateY(-2px)" : "translateY(0)",
                             boxShadow:
                               hoveredButton === `delete-${cardKey}`
-                                ? "0 10px 20px rgba(220, 38, 38, 0.12)"
+                                ? "0 10px 20px rgba(220, 76, 100, 0.12)"
                                 : "none",
                           }}
                         >
@@ -679,7 +679,7 @@ const MyGroups = () => {
                 No groups created yet
               </h3>
               <p style={{ margin: 0 }}>
-                You haven't created any groups yet.
+                You haven&apos;t created any groups yet.
               </p>
             </div>
           )}
@@ -698,7 +698,7 @@ const MyGroups = () => {
             overflow: "hidden",
             padding: "24px",
             background:
-              "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))",
+              "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,248,252,0.98))",
           },
           body: {
             paddingTop: "4px",

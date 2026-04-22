@@ -6,8 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const pageStyle = {
   minHeight: "100vh",
-  background:
-    "radial-gradient(circle at top left, rgba(99,102,241,0.18), transparent 28%), radial-gradient(circle at top right, rgba(168,85,247,0.16), transparent 30%), linear-gradient(180deg, #f8fbff 0%, #eef2ff 45%, #f8fafc 100%)",
+  background: "linear-gradient(180deg, #f3f4f6 0%, #eef2f7 45%, #f8fafc 100%)",
   padding: "24px",
   position: "relative",
   overflow: "hidden",
@@ -22,7 +21,7 @@ const floatingOrb = (top, left, size, bg, delay = "0s") => ({
   borderRadius: "50%",
   background: bg,
   filter: "blur(10px)",
-  opacity: 0.55,
+  opacity: 0.25,
   animation: `floaty 8s ease-in-out infinite`,
   animationDelay: delay,
   pointerEvents: "none",
@@ -38,21 +37,20 @@ const wrapperStyle = {
 const heroCard = {
   position: "relative",
   overflow: "hidden",
-  background:
-    "linear-gradient(135deg, #4338ca 0%, #6d28d9 42%, #9333ea 100%)",
-  borderRadius: "32px",
+  background: "linear-gradient(135deg, #2f5fd0 0%, #3f7ee8 55%, #6466f1 100%)",
+  borderRadius: "28px",
   padding: "34px",
   color: "#ffffff",
-  boxShadow: "0 25px 60px rgba(99, 102, 241, 0.35)",
+  boxShadow: "0 14px 30px rgba(59, 130, 246, 0.18)",
   marginBottom: "24px",
-  border: "1px solid rgba(255,255,255,0.16)",
+  border: "1px solid rgba(255,255,255,0.14)",
 };
 
 const heroGlow = {
   position: "absolute",
   inset: 0,
   background:
-    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.22), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.16), transparent 20%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.12), transparent 25%)",
+    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.14), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.10), transparent 20%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08), transparent 25%)",
   pointerEvents: "none",
 };
 
@@ -86,23 +84,23 @@ const heroActions = {
 
 const primaryButton = {
   border: "none",
-  borderRadius: "16px",
+  borderRadius: "14px",
   padding: "13px 22px",
   fontWeight: 800,
   cursor: "pointer",
   background: "#ffffff",
-  color: "#4338ca",
-  boxShadow: "0 12px 25px rgba(255,255,255,0.18)",
+  color: "#334155",
+  boxShadow: "0 8px 18px rgba(255,255,255,0.12)",
   transition: "all 0.25s ease",
 };
 
 const secondaryButton = {
   border: "1px solid rgba(255,255,255,0.22)",
-  borderRadius: "16px",
+  borderRadius: "14px",
   padding: "13px 22px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "rgba(255,255,255,0.12)",
+  background: "rgba(255,255,255,0.10)",
   backdropFilter: "blur(10px)",
   color: "#ffffff",
   transition: "all 0.25s ease",
@@ -116,12 +114,12 @@ const statsGrid = {
 };
 
 const statCard = {
-  background: "rgba(255,255,255,0.78)",
+  background: "#ffffff",
   backdropFilter: "blur(14px)",
-  borderRadius: "24px",
+  borderRadius: "22px",
   padding: "22px",
-  border: "1px solid rgba(226,232,240,0.9)",
-  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.08)",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
   position: "relative",
   overflow: "hidden",
 };
@@ -171,12 +169,12 @@ const contentGrid = {
 };
 
 const sectionCard = {
-  background: "rgba(255,255,255,0.78)",
+  background: "#ffffff",
   backdropFilter: "blur(14px)",
-  borderRadius: "28px",
+  borderRadius: "24px",
   padding: "24px",
-  border: "1px solid rgba(226,232,240,0.9)",
-  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.08)",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
 };
 
 const insightsCard = {
@@ -208,11 +206,11 @@ const listGrid = {
 };
 
 const groupCard = {
-  background: "rgba(255,255,255,0.94)",
+  background: "#ffffff",
   borderRadius: "24px",
   border: "1px solid #e2e8f0",
   overflow: "hidden",
-  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.08)",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
   transition: "all 0.3s ease",
 };
 
@@ -223,8 +221,7 @@ const imageWrapStyle = {
 const imageOverlay = {
   position: "absolute",
   inset: 0,
-  background:
-    "linear-gradient(to top, rgba(15,23,42,0.35), rgba(15,23,42,0.02))",
+  background: "linear-gradient(to top, rgba(15,23,42,0.28), rgba(15,23,42,0.02))",
 };
 
 const imageStyle = {
@@ -248,8 +245,8 @@ const chipWrap = {
 const chipStyle = {
   padding: "8px 13px",
   borderRadius: "999px",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
-  color: "#334155",
+  background: "#f8fafc",
+  color: "#475569",
   fontSize: "12px",
   fontWeight: 700,
   border: "1px solid #e2e8f0",
@@ -264,27 +261,27 @@ const statusBadge = (type) => ({
   marginBottom: "12px",
   background:
     type === "joined"
-      ? "linear-gradient(135deg, #dcfce7, #bbf7d0)"
+      ? "#e8f7ee"
       : type === "popular"
-      ? "linear-gradient(135deg, #ede9fe, #ddd6fe)"
+      ? "#eef2ff"
       : type === "full"
-      ? "linear-gradient(135deg, #fee2e2, #fecaca)"
-      : "linear-gradient(135deg, #e0f2fe, #bae6fd)",
+      ? "#fee2e2"
+      : "#e0f2fe",
   color:
     type === "joined"
-      ? "#166534"
+      ? "#16a34a"
       : type === "popular"
-      ? "#5b21b6"
+      ? "#4f46e5"
       : type === "full"
-      ? "#b91c1c"
-      : "#0369a1",
+      ? "#dc2626"
+      : "#2563eb",
   border: "1px solid rgba(255,255,255,0.6)",
 });
 
 const progressTrack = {
   width: "100%",
   height: "12px",
-  background: "#e2e8f0",
+  background: "#e5e7eb",
   borderRadius: "999px",
   overflow: "hidden",
   marginBottom: "14px",
@@ -298,11 +295,11 @@ const compactStatsGrid = {
 };
 
 const compactCard = {
-  background: "linear-gradient(135deg, #ffffff, #f8fafc)",
+  background: "#f8fafc",
   border: "1px solid #e2e8f0",
-  borderRadius: "20px",
+  borderRadius: "18px",
   padding: "16px",
-  boxShadow: "0 10px 20px rgba(15, 23, 42, 0.05)",
+  boxShadow: "0 6px 16px rgba(15, 23, 42, 0.04)",
 };
 
 const compactValue = {
@@ -314,9 +311,8 @@ const compactValue = {
 
 const featuredPanel = {
   marginTop: "18px",
-  background:
-    "linear-gradient(135deg, rgba(238,242,255,1), rgba(245,243,255,1), rgba(250,245,255,1))",
-  border: "1px solid #ddd6fe",
+  background: "#eef2ff",
+  border: "1px solid #c7d2fe",
   borderRadius: "20px",
   padding: "18px",
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
@@ -329,11 +325,11 @@ const popularList = {
 };
 
 const popularItem = {
-  background: "linear-gradient(135deg, #ffffff, #f8fafc)",
+  background: "#ffffff",
   border: "1px solid #e2e8f0",
   borderRadius: "18px",
   padding: "15px",
-  boxShadow: "0 10px 22px rgba(15, 23, 42, 0.05)",
+  boxShadow: "0 6px 16px rgba(15, 23, 42, 0.04)",
 };
 
 const emptyState = {
@@ -342,7 +338,7 @@ const emptyState = {
   border: "2px dashed #cbd5e1",
   borderRadius: "20px",
   color: "#64748b",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
+  background: "#f8fafc",
   marginTop: "16px",
 };
 
@@ -353,18 +349,21 @@ const actionButton = {
   padding: "12px 16px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+  background: "#f59e0b",
   color: "#ffffff",
-  boxShadow: "0 14px 26px rgba(99, 102, 241, 0.22)",
+  boxShadow: "0 10px 20px rgba(245, 158, 11, 0.22)",
   transition: "all 0.25s ease",
 };
 
 const viewButtonStyle = {
   ...actionButton,
-  background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
-  color: "#1e293b",
-  boxShadow: "none",
+  background: "#eef2ff",
+color: "#4f46e5",
+border: "1px solid #dcd7ff",
+  color: "#5b50c9",
+  boxShadow: "0 6px 14px rgba(108, 99, 232, 0.12)",
   width: "50%",
+  border: "1px solid #ddd7ff",
 };
 
 const modalImageStyle = {
@@ -399,7 +398,7 @@ const modalInfoGrid = {
 };
 
 const modalInfoCard = {
-  background: "linear-gradient(135deg, #ffffff, #f8fafc)",
+  background: "#ffffff",
   border: "1px solid #e2e8f0",
   borderRadius: "18px",
   padding: "14px",
@@ -432,7 +431,7 @@ const membersGrid = {
 };
 
 const memberCard = {
-  background: "linear-gradient(135deg, #ffffff, #f8fafc)",
+  background: "#ffffff",
   border: "1px solid #e2e8f0",
   borderRadius: "16px",
   padding: "13px",
@@ -453,8 +452,8 @@ const modalSecondaryButton = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #f1f5f9, #e2e8f0)",
-  color: "#1e293b",
+  background: "#f1f5f9",
+  color: "#334155",
 };
 
 const modalPrimaryButton = {
@@ -463,9 +462,9 @@ const modalPrimaryButton = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+  background: "#f59e0b",
   color: "#ffffff",
-  boxShadow: "0 14px 26px rgba(99, 102, 241, 0.22)",
+  boxShadow: "0 10px 20px rgba(245, 158, 11, 0.22)",
 };
 
 const StudyBuddyDashboard = () => {
@@ -583,7 +582,7 @@ const StudyBuddyDashboard = () => {
     }
   };
 
-  const modalAlreadyJoined = isUserJoined(selectedGroup);
+  const modalAlreadyJoined = selectedGroup ? isUserJoined(selectedGroup) : false;
   const modalMemberCount = selectedGroup?.members?.length || 0;
   const modalMaxMembers = selectedGroup?.maxMembers || 1;
   const modalIsFull = modalMemberCount >= modalMaxMembers;
@@ -619,9 +618,15 @@ const StudyBuddyDashboard = () => {
         `}
       </style>
 
-      <div style={floatingOrb("80px", "-40px", "180px", "rgba(129,140,248,0.28)")}></div>
-      <div style={floatingOrb("420px", "90%", "160px", "rgba(192,132,252,0.25)", "1s")}></div>
-      <div style={floatingOrb("75%", "5%", "130px", "rgba(96,165,250,0.20)", "2s")}></div>
+      <div
+        style={floatingOrb("80px", "-40px", "180px", "rgba(59,130,246,0.10)")}
+      ></div>
+      <div
+        style={floatingOrb("420px", "90%", "160px", "rgba(99,102,241,0.10)", "1s")}
+      ></div>
+      <div
+        style={floatingOrb("75%", "5%", "130px", "rgba(148,163,184,0.10)", "2s")}
+      ></div>
 
       <div style={wrapperStyle}>
         <div style={heroCard}>
@@ -635,7 +640,7 @@ const StudyBuddyDashboard = () => {
               width: "220px",
               height: "220px",
               borderRadius: "50%",
-              background: "rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.08)",
               filter: "blur(3px)",
             }}
           ></div>
@@ -648,7 +653,7 @@ const StudyBuddyDashboard = () => {
               width: "180px",
               height: "180px",
               borderRadius: "50%",
-              background: "rgba(255,255,255,0.09)",
+              background: "rgba(255,255,255,0.07)",
             }}
           ></div>
 
@@ -685,28 +690,36 @@ const StudyBuddyDashboard = () => {
 
         <div style={statsGrid}>
           <div className="study-dashboard-stat" style={statCard}>
-            <div style={statAccent("linear-gradient(135deg, #6366f1, #8b5cf6)")}></div>
+            <div
+              style={statAccent("linear-gradient(135deg, #93c5fd, #60a5fa)")}
+            ></div>
             <p style={statLabel}>Total Groups</p>
             <h2 style={statValue}>{stats.total}</h2>
             <p style={statHint}>All study groups available</p>
           </div>
 
           <div className="study-dashboard-stat" style={statCard}>
-            <div style={statAccent("linear-gradient(135deg, #22c55e, #4ade80)")}></div>
+            <div
+              style={statAccent("linear-gradient(135deg, #bbf7d0, #86efac)")}
+            ></div>
             <p style={statLabel}>Joined Groups</p>
             <h2 style={statValue}>{stats.joined}</h2>
             <p style={statHint}>Groups you are currently in</p>
           </div>
 
           <div className="study-dashboard-stat" style={statCard}>
-            <div style={statAccent("linear-gradient(135deg, #ec4899, #f97316)")}></div>
+            <div
+              style={statAccent("linear-gradient(135deg, #ddd6fe, #c4b5fd)")}
+            ></div>
             <p style={statLabel}>Created by You</p>
             <h2 style={statValue}>{stats.created}</h2>
             <p style={statHint}>Groups you manage</p>
           </div>
 
           <div className="study-dashboard-stat" style={statCard}>
-            <div style={statAccent("linear-gradient(135deg, #06b6d4, #3b82f6)")}></div>
+            <div
+              style={statAccent("linear-gradient(135deg, #fde68a, #fcd34d)")}
+            ></div>
             <p style={statLabel}>Open Groups</p>
             <h2 style={statValue}>{stats.open}</h2>
             <p style={statHint}>Groups still accepting members</p>
@@ -790,8 +803,7 @@ const StudyBuddyDashboard = () => {
                             style={{
                               width: `${progress}%`,
                               height: "100%",
-                              background:
-                                "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+                              background: "linear-gradient(135deg, #3b82f6, #6366f1)",
                               borderRadius: "999px",
                             }}
                           />
@@ -808,12 +820,14 @@ const StudyBuddyDashboard = () => {
 
                           <button
                             className="study-dashboard-btn"
-                            style={{
-                              ...actionButton,
-                              width: "50%",
-                              opacity: alreadyJoined || isFull ? 0.6 : 1,
-                              cursor: alreadyJoined || isFull ? "not-allowed" : "pointer",
-                            }}
+                          style={{
+  ...actionButton,
+  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+boxShadow: "0 10px 22px rgba(79, 70, 229, 0.25)",
+  width: "50%",
+  opacity: alreadyJoined || isFull ? 0.6 : 1,
+  cursor: alreadyJoined || isFull ? "not-allowed" : "pointer",
+}}
                             onClick={() => handleJoinGroup(group._id)}
                             disabled={alreadyJoined || isFull}
                           >
@@ -863,10 +877,10 @@ const StudyBuddyDashboard = () => {
             </div>
 
             <div style={featuredPanel}>
-              <h3 style={{ margin: "0 0 8px", color: "#312e81", fontSize: "18px" }}>
+              <h3 style={{ margin: "0 0 8px", color: "#334155", fontSize: "18px" }}>
                 Most Popular Right Now
               </h3>
-              <p style={{ margin: 0, color: "#6366f1", fontSize: "14px", lineHeight: 1.7 }}>
+              <p style={{ margin: 0, color: "#64748b", fontSize: "14px", lineHeight: 1.7 }}>
                 Quick view of the most active groups on the platform.
               </p>
             </div>
@@ -1003,8 +1017,7 @@ const StudyBuddyDashboard = () => {
                   style={{
                     width: `${Math.min((modalMemberCount / modalMaxMembers) * 100, 100)}%`,
                     height: "100%",
-                    background:
-                      "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+                    background: "linear-gradient(135deg, #3b82f6, #6366f1)",
                     borderRadius: "999px",
                   }}
                 />
