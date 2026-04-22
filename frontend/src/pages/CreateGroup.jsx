@@ -15,44 +15,24 @@ const buildingOptions = {
 
 const pageStyle = {
   minHeight: "100vh",
-  background:
-    "radial-gradient(circle at 0% 0%, rgba(99,102,241,0.22), transparent 28%), radial-gradient(circle at 100% 0%, rgba(168,85,247,0.18), transparent 30%), radial-gradient(circle at 50% 100%, rgba(59,130,246,0.10), transparent 30%), linear-gradient(180deg, #f5f7ff 0%, #eef2ff 48%, #f8fafc 100%)",
+  background: "linear-gradient(180deg, #f3f4f8 0%, #eef1f6 100%)",
   padding: "26px",
-  position: "relative",
-  overflow: "hidden",
 };
-
-const floatingOrb = (top, left, size, bg, delay = "0s") => ({
-  position: "absolute",
-  top,
-  left,
-  width: size,
-  height: size,
-  borderRadius: "50%",
-  background: bg,
-  filter: "blur(18px)",
-  opacity: 0.55,
-  animation: "floaty 9s ease-in-out infinite",
-  animationDelay: delay,
-  pointerEvents: "none",
-});
 
 const wrapperStyle = {
   maxWidth: "1280px",
   margin: "0 auto",
-  position: "relative",
-  zIndex: 2,
 };
 
 const heroCard = {
   position: "relative",
   overflow: "hidden",
   background:
-    "linear-gradient(135deg, #0b1023 0%, #1e1b4b 28%, #4c1d95 68%, #7c3aed 100%)",
+    "linear-gradient(135deg, #3f6fe0 0%, #4e79e8 55%, #6c63e8 100%)",
   borderRadius: "34px",
   padding: "34px",
   color: "#ffffff",
-  boxShadow: "0 30px 70px rgba(76, 29, 149, 0.30)",
+  boxShadow: "0 22px 50px rgba(90, 103, 216, 0.18)",
   marginBottom: "24px",
   border: "1px solid rgba(255,255,255,0.12)",
 };
@@ -61,7 +41,7 @@ const heroGlow = {
   position: "absolute",
   inset: 0,
   background:
-    "radial-gradient(circle at 18% 20%, rgba(255,255,255,0.18), transparent 20%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.12), transparent 22%), radial-gradient(circle at 75% 82%, rgba(255,255,255,0.08), transparent 26%)",
+    "radial-gradient(circle at 18% 20%, rgba(255,255,255,0.14), transparent 20%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.10), transparent 22%), radial-gradient(circle at 75% 82%, rgba(255,255,255,0.06), transparent 26%)",
   pointerEvents: "none",
 };
 
@@ -77,7 +57,7 @@ const heroTitle = {
 const heroText = {
   margin: "12px 0 0",
   fontSize: "15px",
-  color: "rgba(255,255,255,0.88)",
+  color: "rgba(255,255,255,0.90)",
   lineHeight: 1.85,
   maxWidth: "760px",
   position: "relative",
@@ -96,8 +76,8 @@ const heroBadgeRow = {
 const heroBadge = {
   padding: "9px 14px",
   borderRadius: "999px",
-  background: "rgba(255,255,255,0.12)",
-  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.14)",
+  border: "1px solid rgba(255,255,255,0.16)",
   color: "#ffffff",
   fontSize: "12px",
   fontWeight: 800,
@@ -112,12 +92,11 @@ const contentGrid = {
 };
 
 const formCard = {
-  background: "rgba(255,255,255,0.68)",
-  backdropFilter: "blur(18px)",
+  background: "#f8f9ff",
   borderRadius: "32px",
   padding: "30px",
-  border: "1px solid rgba(226,232,240,0.9)",
-  boxShadow: "0 25px 60px rgba(15, 23, 42, 0.10)",
+  border: "1px solid #e6eaf2",
+  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.06)",
 };
 
 const sidePanel = {
@@ -128,21 +107,20 @@ const sidePanel = {
 const sideCardDark = {
   position: "relative",
   overflow: "hidden",
-  background: "linear-gradient(135deg, #111827, #312e81, #6d28d9)",
+  background: "linear-gradient(135deg, #5a4fcf, #6c63e8, #7d6df0)",
   color: "#ffffff",
   borderRadius: "28px",
   padding: "24px",
-  boxShadow: "0 20px 45px rgba(49, 46, 129, 0.24)",
+  boxShadow: "0 18px 38px rgba(108, 99, 232, 0.20)",
   border: "1px solid rgba(255,255,255,0.10)",
 };
 
 const sideCardLight = {
-  background: "rgba(255,255,255,0.82)",
-  backdropFilter: "blur(14px)",
+  background: "#ffffff",
   borderRadius: "24px",
   padding: "20px",
-  border: "1px solid rgba(226,232,240,0.95)",
-  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.07)",
+  border: "1px solid #e6eaf2",
+  boxShadow: "0 14px 30px rgba(15, 23, 42, 0.05)",
 };
 
 const sideTitle = {
@@ -155,7 +133,7 @@ const sideText = {
   margin: "8px 0 0",
   fontSize: "13px",
   lineHeight: 1.7,
-  color: "rgba(255,255,255,0.84)",
+  color: "rgba(255,255,255,0.86)",
 };
 
 const sideMiniGrid = {
@@ -167,9 +145,8 @@ const sideMiniGrid = {
 const sideMiniItem = {
   padding: "14px",
   borderRadius: "18px",
-  background: "rgba(255,255,255,0.10)",
-  border: "1px solid rgba(255,255,255,0.10)",
-  backdropFilter: "blur(8px)",
+  background: "rgba(255,255,255,0.12)",
+  border: "1px solid rgba(255,255,255,0.12)",
 };
 
 const sideMiniTitle = {
@@ -182,20 +159,20 @@ const sideMiniText = {
   margin: 0,
   fontSize: "12px",
   lineHeight: 1.6,
-  color: "rgba(255,255,255,0.78)",
+  color: "rgba(255,255,255,0.80)",
 };
 
 const sectionTitle = {
   margin: "0 0 6px",
   fontSize: "24px",
   fontWeight: 900,
-  color: "#0f172a",
+  color: "#172033",
   letterSpacing: "-0.5px",
 };
 
 const sectionText = {
   margin: "0 0 24px",
-  color: "#64748b",
+  color: "#6b7280",
   fontSize: "14px",
   lineHeight: 1.7,
 };
@@ -238,8 +215,8 @@ const inputShell = {
   position: "relative",
   borderRadius: "18px",
   padding: "1px",
-  background: "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(168,85,247,0.18), rgba(255,255,255,0.9))",
-  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.05)",
+  background: "#e9edf5",
+  boxShadow: "0 6px 16px rgba(15, 23, 42, 0.03)",
 };
 
 const inputStyle = {
@@ -250,9 +227,9 @@ const inputStyle = {
   fontSize: "14px",
   outline: "none",
   boxSizing: "border-box",
-  background: "rgba(255,255,255,0.96)",
+  background: "#fdfdff",
   transition: "all 0.25s ease",
-  color: "#0f172a",
+  color: "#172033",
 };
 
 const textareaStyle = {
@@ -260,17 +237,15 @@ const textareaStyle = {
   minHeight: "150px",
   resize: "vertical",
   lineHeight: 1.75,
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))",
+  background: "#ffffff",
 };
 
 const fancyPanel = {
-  background:
-    "linear-gradient(135deg, rgba(255,255,255,0.72), rgba(238,242,255,0.78), rgba(245,243,255,0.78))",
-  border: "1px solid #ddd6fe",
+  background: "#f4f6ff",
+  border: "1px solid #e3e7f1",
   borderRadius: "26px",
   padding: "22px",
-  boxShadow: "0 16px 35px rgba(79, 70, 229, 0.07)",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
 };
 
 const panelHeader = {
@@ -285,14 +260,14 @@ const panelHeader = {
 const panelTitle = {
   margin: 0,
   fontSize: "19px",
-  color: "#0f172a",
+  color: "#172033",
   fontWeight: 900,
   letterSpacing: "-0.3px",
 };
 
 const panelText = {
   margin: "6px 0 0",
-  color: "#64748b",
+  color: "#6b7280",
   fontSize: "13px",
   lineHeight: 1.7,
 };
@@ -300,8 +275,8 @@ const panelText = {
 const panelBadge = {
   padding: "8px 12px",
   borderRadius: "999px",
-  background: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
-  color: "#5b21b6",
+  background: "#ece9ff",
+  color: "#5b50c9",
   fontSize: "12px",
   fontWeight: 800,
 };
@@ -309,17 +284,16 @@ const panelBadge = {
 const previewCard = {
   borderRadius: "24px",
   overflow: "hidden",
-  border: "1px solid #e2e8f0",
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))",
-  boxShadow: "0 18px 35px rgba(15, 23, 42, 0.08)",
+  border: "1px solid #e6eaf2",
+  background: "#ffffff",
+  boxShadow: "0 14px 28px rgba(15, 23, 42, 0.05)",
 };
 
 const previewImageWrap = {
   position: "relative",
   minHeight: "250px",
   background:
-    "linear-gradient(135deg, #312e81 0%, #4f46e5 40%, #7c3aed 100%)",
+    "linear-gradient(135deg, #5a4fcf 0%, #4e79e8 45%, #6c63e8 100%)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -333,7 +307,7 @@ const previewImage = {
 };
 
 const previewPlaceholder = {
-  color: "rgba(255,255,255,0.88)",
+  color: "rgba(255,255,255,0.90)",
   fontSize: "14px",
   textAlign: "center",
   padding: "24px",
@@ -355,11 +329,11 @@ const previewChipWrap = {
 const previewChip = {
   padding: "8px 12px",
   borderRadius: "999px",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
-  color: "#334155",
+  background: "#eef2ff",
+color: "#4f46e5",
   fontSize: "12px",
   fontWeight: 800,
-  border: "1px solid #e2e8f0",
+  border: "1px solid #e6eaf2",
 };
 
 const tipsRow = {
@@ -370,24 +344,24 @@ const tipsRow = {
 };
 
 const tipCard = {
-  background: "rgba(255,255,255,0.82)",
-  border: "1px solid #e2e8f0",
+  background: "#ffffff",
+  border: "1px solid #e6eaf2",
   borderRadius: "18px",
   padding: "14px",
-  boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
+  boxShadow: "0 8px 18px rgba(15, 23, 42, 0.03)",
 };
 
 const tipTitle = {
   margin: "0 0 6px",
   fontSize: "14px",
   fontWeight: 800,
-  color: "#1e293b",
+  color: "#243041",
 };
 
 const tipText = {
   margin: 0,
   fontSize: "13px",
-  color: "#64748b",
+  color: "#6b7280",
   lineHeight: 1.6,
 };
 
@@ -404,9 +378,10 @@ const primaryButton = {
   padding: "14px 24px",
   fontWeight: 900,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+ 
   color: "#ffffff",
-  boxShadow: "0 16px 30px rgba(79, 70, 229, 0.30)",
+  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+boxShadow: "0 16px 30px rgba(79, 70, 229, 0.25)",
   transition: "all 0.25s ease",
 };
 
@@ -417,8 +392,8 @@ const secondaryButton = {
   fontWeight: 900,
   cursor: "pointer",
   background: "linear-gradient(135deg, #ffffff, #eef2f7)",
-  color: "#1e293b",
-  boxShadow: "0 10px 22px rgba(15, 23, 42, 0.06)",
+  color: "#243041",
+  boxShadow: "0 10px 22px rgba(15, 23, 42, 0.05)",
   transition: "all 0.25s ease",
 };
 
@@ -513,21 +488,16 @@ const CreateGroup = () => {
     <div style={pageStyle}>
       <style>
         {`
-          @keyframes floaty {
-            0%, 100% { transform: translateY(0px) translateX(0px); }
-            50% { transform: translateY(-18px) translateX(10px); }
-          }
-
           .create-group-form input:focus,
           .create-group-form textarea:focus,
           .create-group-form select:focus {
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.16);
+            box-shadow: 0 0 0 3px rgba(108, 99, 232, 0.14);
             transform: translateY(-1px);
           }
 
           .create-group-form input::placeholder,
           .create-group-form textarea::placeholder {
-            color: #94a3b8;
+            color: #9aa4b2;
           }
 
           @media (max-width: 980px) {
@@ -537,10 +507,6 @@ const CreateGroup = () => {
           }
         `}
       </style>
-
-      <div style={floatingOrb("80px", "-40px", "180px", "rgba(129,140,248,0.30)")}></div>
-      <div style={floatingOrb("420px", "92%", "170px", "rgba(192,132,252,0.24)", "1s")}></div>
-      <div style={floatingOrb("82%", "5%", "140px", "rgba(96,165,250,0.20)", "2s")}></div>
 
       <div style={wrapperStyle}>
         <div style={heroCard}>
@@ -596,7 +562,7 @@ const CreateGroup = () => {
               <div style={formGrid}>
                 <div style={fieldWrap}>
                   <label style={labelStyle}>
-                    <span style={labelDot("#6366f1")}></span>
+                    <span style={labelDot("#5b63e6")}></span>
                     Group Name
                   </label>
                   <div style={inputShell}>
@@ -614,7 +580,7 @@ const CreateGroup = () => {
 
                 <div style={fieldWrap}>
                   <label style={labelStyle}>
-                    <span style={labelDot("#8b5cf6")}></span>
+                    <span style={labelDot("#7d6df0")}></span>
                     Subject
                   </label>
                   <div style={inputShell}>
@@ -632,7 +598,7 @@ const CreateGroup = () => {
 
                 <div style={{ ...fieldWrap, ...fullWidth }}>
                   <label style={labelStyle}>
-                    <span style={labelDot("#ec4899")}></span>
+                    <span style={labelDot("#6366f1")}></span>
                     Description
                   </label>
                   <div style={inputShell}>
@@ -648,7 +614,7 @@ const CreateGroup = () => {
 
                 <div style={fieldWrap}>
                   <label style={labelStyle}>
-                    <span style={labelDot("#06b6d4")}></span>
+                    <span style={labelDot("#4e79e8")}></span>
                     Maximum Members
                   </label>
                   <div style={inputShell}>
@@ -667,7 +633,7 @@ const CreateGroup = () => {
 
                 <div style={fieldWrap}>
                   <label style={labelStyle}>
-                    <span style={labelDot("#f59e0b")}></span>
+                    <span style={labelDot("#6366f1")}></span>
                     Image URL
                   </label>
                   <div style={inputShell}>
@@ -697,7 +663,7 @@ const CreateGroup = () => {
                     <div style={formGrid}>
                       <div style={fieldWrap}>
                         <label style={labelStyle}>
-                          <span style={labelDot("#6366f1")}></span>
+                          <span style={labelDot("#5b63e6")}></span>
                           Select Days
                         </label>
                         <div style={inputShell}>
@@ -722,7 +688,7 @@ const CreateGroup = () => {
 
                       <div style={fieldWrap}>
                         <label style={labelStyle}>
-                          <span style={labelDot("#8b5cf6")}></span>
+                          <span style={labelDot("#7d6df0")}></span>
                           Building
                         </label>
                         <div style={inputShell}>
@@ -742,7 +708,7 @@ const CreateGroup = () => {
 
                       <div style={fieldWrap}>
                         <label style={labelStyle}>
-                          <span style={labelDot("#ec4899")}></span>
+                          <span style={labelDot("#6366f1")}></span>
                           Start Time
                         </label>
                         <div style={inputShell}>
@@ -757,7 +723,7 @@ const CreateGroup = () => {
 
                       <div style={fieldWrap}>
                         <label style={labelStyle}>
-                          <span style={labelDot("#06b6d4")}></span>
+                          <span style={labelDot("#4e79e8")}></span>
                           End Time
                         </label>
                         <div style={inputShell}>
@@ -772,7 +738,7 @@ const CreateGroup = () => {
 
                       <div style={fieldWrap}>
                         <label style={labelStyle}>
-                          <span style={labelDot("#f59e0b")}></span>
+                          <span style={labelDot("#6366f1")}></span>
                           Hall
                         </label>
                         <div style={inputShell}>
@@ -835,7 +801,7 @@ const CreateGroup = () => {
                             margin: "0 0 8px",
                             fontSize: "22px",
                             fontWeight: 900,
-                            color: "#0f172a",
+                            color: "#172033",
                           }}
                         >
                           {group.name || "Your Group Name"}
@@ -844,7 +810,7 @@ const CreateGroup = () => {
                         <p
                           style={{
                             margin: 0,
-                            color: "#64748b",
+                            color: "#6b7280",
                             fontSize: "14px",
                             lineHeight: 1.7,
                           }}
@@ -935,10 +901,10 @@ const CreateGroup = () => {
             </div>
 
             <div style={sideCardLight}>
-              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 900, color: "#0f172a" }}>
+              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 900, color: "#172033" }}>
                 Quick idea
               </h3>
-              <p style={{ margin: "8px 0 0", color: "#64748b", fontSize: "13px", lineHeight: 1.7 }}>
+              <p style={{ margin: "8px 0 0", color: "#6b7280", fontSize: "13px", lineHeight: 1.7 }}>
                 Try using a description like:
               </p>
 
@@ -947,9 +913,9 @@ const CreateGroup = () => {
                   marginTop: "14px",
                   padding: "14px",
                   borderRadius: "18px",
-                  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
-                  border: "1px solid #e2e8f0",
-                  color: "#334155",
+                  background: "#f3f5fb",
+                  border: "1px solid #e6eaf2",
+                  color: "#4b5563",
                   fontSize: "13px",
                   lineHeight: 1.7,
                 }}

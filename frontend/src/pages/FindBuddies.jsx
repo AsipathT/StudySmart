@@ -5,8 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 
 const pageStyle = {
   minHeight: "100vh",
-  background:
-    "radial-gradient(circle at top left, rgba(99,102,241,0.18), transparent 24%), radial-gradient(circle at top right, rgba(168,85,247,0.16), transparent 26%), linear-gradient(180deg, #f8fbff 0%, #eef2ff 45%, #f8fafc 100%)",
+  background: "linear-gradient(180deg, #f3f4f6 0%, #eef2f7 45%, #f8fafc 100%)",
   padding: "24px",
   position: "relative",
   overflow: "hidden",
@@ -21,7 +20,7 @@ const floatingOrb = (top, left, size, bg, delay = "0s") => ({
   borderRadius: "50%",
   background: bg,
   filter: "blur(10px)",
-  opacity: 0.5,
+  opacity: 0.25,
   animation: "floaty 8s ease-in-out infinite",
   animationDelay: delay,
   pointerEvents: "none",
@@ -37,21 +36,20 @@ const wrapperStyle = {
 const heroCard = {
   position: "relative",
   overflow: "hidden",
-  background:
-    "linear-gradient(135deg, #0f172a 0%, #312e81 40%, #6d28d9 75%, #9333ea 100%)",
-  borderRadius: "30px",
+  background: "linear-gradient(135deg, #2f5fd0 0%, #3f7ee8 55%, #6466f1 100%)",
+  borderRadius: "28px",
   padding: "32px",
   color: "#ffffff",
-  boxShadow: "0 24px 55px rgba(79, 70, 229, 0.24)",
+  boxShadow: "0 14px 30px rgba(59, 130, 246, 0.18)",
   marginBottom: "24px",
-  border: "1px solid rgba(255,255,255,0.12)",
+  border: "1px solid rgba(255,255,255,0.14)",
 };
 
 const heroGlow = {
   position: "absolute",
   inset: 0,
   background:
-    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.16), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.12), transparent 20%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08), transparent 26%)",
+    "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.14), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255,255,255,0.10), transparent 20%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08), transparent 26%)",
   pointerEvents: "none",
 };
 
@@ -75,12 +73,12 @@ const heroText = {
 };
 
 const cardStyle = {
-  background: "rgba(255,255,255,0.8)",
+  background: "#ffffff",
   backdropFilter: "blur(14px)",
-  borderRadius: "28px",
+  borderRadius: "24px",
   padding: "24px",
-  border: "1px solid rgba(226,232,240,0.95)",
-  boxShadow: "0 16px 35px rgba(15, 23, 42, 0.08)",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
   marginBottom: "24px",
 };
 
@@ -112,12 +110,11 @@ const tabButton = (active) => ({
   padding: "11px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: active
-    ? "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)"
-    : "linear-gradient(135deg, #f8fafc, #e2e8f0)",
-  color: active ? "#ffffff" : "#1e293b",
+  background: active ? "#f59e0b" : "#f8fafc",
+  color: active ? "#ffffff" : "#334155",
   transition: "all 0.25s ease",
-  boxShadow: active ? "0 12px 24px rgba(99,102,241,0.2)" : "none",
+  boxShadow: active ? "0 10px 20px rgba(245, 158, 11, 0.22)" : "none",
+  border: active ? "none" : "1px solid #e2e8f0",
 });
 
 const filterGrid = {
@@ -134,7 +131,7 @@ const inputStyle = {
   border: "1px solid #dbe2ea",
   fontSize: "14px",
   outline: "none",
-  background: "rgba(255,255,255,0.95)",
+  background: "#ffffff",
   boxSizing: "border-box",
   transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
   boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
@@ -158,9 +155,10 @@ const secondaryButton = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
-  color: "#1e293b",
+  background: "#f8fafc",
+  color: "#334155",
   transition: "all 0.25s ease",
+  border: "1px solid #e2e8f0",
 };
 
 const resultsGrid = {
@@ -171,11 +169,11 @@ const resultsGrid = {
 };
 
 const baseGroupCard = {
-  background: "rgba(255,255,255,0.94)",
+  background: "#ffffff",
   borderRadius: "24px",
   overflow: "hidden",
   border: "1px solid #e2e8f0",
-  boxShadow: "0 14px 30px rgba(15, 23, 42, 0.08)",
+  boxShadow: "0 10px 24px rgba(15, 23, 42, 0.06)",
   transition: "transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease",
 };
 
@@ -187,8 +185,7 @@ const imageWrap = {
 const imageOverlay = {
   position: "absolute",
   inset: 0,
-  background:
-    "linear-gradient(to top, rgba(15,23,42,0.34), rgba(15,23,42,0.04))",
+  background: "linear-gradient(to top, rgba(15,23,42,0.28), rgba(15,23,42,0.04))",
 };
 
 const imageStyle = {
@@ -213,8 +210,8 @@ const chipWrap = {
 const chipStyle = {
   padding: "8px 13px",
   borderRadius: "999px",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
-  color: "#334155",
+  background: "#f8fafc",
+  color: "#475569",
   fontSize: "12px",
   fontWeight: 700,
   border: "1px solid #e2e8f0",
@@ -229,20 +226,20 @@ const statusBadge = (joined, full, popular) => ({
   fontWeight: 800,
   marginBottom: "12px",
   background: joined
-    ? "linear-gradient(135deg, #dcfce7, #bbf7d0)"
+    ? "#e8f7ee"
     : full
-    ? "linear-gradient(135deg, #fee2e2, #fecaca)"
+    ? "#fee2e2"
     : popular
-    ? "linear-gradient(135deg, #ede9fe, #ddd6fe)"
-    : "linear-gradient(135deg, #e0f2fe, #bae6fd)",
-  color: joined ? "#166534" : full ? "#b91c1c" : popular ? "#5b21b6" : "#0369a1",
+    ? "#eef2ff"
+    : "#e0f2fe",
+  color: joined ? "#16a34a" : full ? "#dc2626" : popular ? "#4f46e5" : "#2563eb",
   border: "1px solid rgba(255,255,255,0.7)",
 });
 
 const progressTrack = {
   width: "100%",
   height: "12px",
-  background: "#e2e8f0",
+  background: "#e5e7eb",
   borderRadius: "999px",
   overflow: "hidden",
   marginBottom: "16px",
@@ -254,7 +251,7 @@ const emptyState = {
   border: "2px dashed #cbd5e1",
   borderRadius: "20px",
   color: "#64748b",
-  background: "linear-gradient(135deg, #f8fafc, #eef2ff)",
+  background: "#f8fafc",
   marginTop: "18px",
 };
 
@@ -264,10 +261,12 @@ const viewButtonStyle = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
-  color: "#1e293b",
+  background: "#f1efff",
+  color: "#5b50c9",
   width: "50%",
   transition: "all 0.25s ease",
+  border: "1px solid #ddd7ff",
+  boxShadow: "0 6px 14px rgba(108, 99, 232, 0.12)",
 };
 
 const joinButtonBase = {
@@ -276,11 +275,12 @@ const joinButtonBase = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+  background: "#f59e0b",
   color: "#ffffff",
   width: "50%",
   transition: "all 0.25s ease",
-  boxShadow: "0 12px 22px rgba(99,102,241,0.18)",
+ background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+boxShadow: "0 12px 24px rgba(79, 70, 229, 0.30)",
 };
 
 const modalImageStyle = {
@@ -315,7 +315,7 @@ const modalInfoGrid = {
 };
 
 const modalInfoCard = {
-  background: "linear-gradient(135deg, #ffffff, #f8fafc)",
+  background: "#ffffff",
   border: "1px solid #e2e8f0",
   borderRadius: "18px",
   padding: "14px",
@@ -348,7 +348,7 @@ const membersGrid = {
 };
 
 const memberCard = {
-  background: "linear-gradient(135deg, #ffffff, #f8fafc)",
+  background: "#ffffff",
   border: "1px solid #e2e8f0",
   borderRadius: "16px",
   padding: "13px",
@@ -369,8 +369,8 @@ const modalSecondaryButton = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #f1f5f9, #e2e8f0)",
-  color: "#1e293b",
+  background: "#f1f5f9",
+  color: "#334155",
   transition: "all 0.25s ease",
 };
 
@@ -380,10 +380,10 @@ const modalPrimaryButton = {
   padding: "12px 18px",
   fontWeight: 800,
   cursor: "pointer",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+  background: "#f59e0b",
   color: "#ffffff",
   transition: "all 0.25s ease",
-  boxShadow: "0 12px 22px rgba(99,102,241,0.18)",
+  boxShadow: "0 10px 20px rgba(245, 158, 11, 0.22)",
 };
 
 const FindBuddies = () => {
@@ -538,7 +538,7 @@ const FindBuddies = () => {
     return data;
   }, [filteredGroups, activeTab]);
 
-  const modalAlreadyJoined = isUserJoined(selectedGroup);
+  const modalAlreadyJoined = selectedGroup ? isUserJoined(selectedGroup) : false;
   const modalMemberCount = selectedGroup?.members?.length || 0;
   const modalMaxMembers = selectedGroup?.maxMembers || 1;
   const modalIsFull = modalMemberCount >= modalMaxMembers;
@@ -555,9 +555,9 @@ const FindBuddies = () => {
         `}
       </style>
 
-      <div style={floatingOrb("80px", "-40px", "180px", "rgba(129,140,248,0.28)")}></div>
-      <div style={floatingOrb("420px", "90%", "160px", "rgba(192,132,252,0.24)", "1s")}></div>
-      <div style={floatingOrb("78%", "6%", "130px", "rgba(96,165,250,0.18)", "2s")}></div>
+      <div style={floatingOrb("80px", "-40px", "180px", "rgba(59,130,246,0.10)")}></div>
+      <div style={floatingOrb("420px", "90%", "160px", "rgba(99,102,241,0.10)", "1s")}></div>
+      <div style={floatingOrb("78%", "6%", "130px", "rgba(148,163,184,0.10)", "2s")}></div>
 
       <div style={wrapperStyle}>
         <div style={heroCard}>
@@ -715,9 +715,9 @@ const FindBuddies = () => {
                       transform: hoveredCard === cardKey ? "translateY(-7px)" : "translateY(0)",
                       boxShadow:
                         hoveredCard === cardKey
-                          ? "0 22px 40px rgba(79, 70, 229, 0.14)"
+                          ? "0 18px 34px rgba(59, 130, 246, 0.12)"
                           : baseGroupCard.boxShadow,
-                      borderColor: hoveredCard === cardKey ? "#c7d2fe" : "#e2e8f0",
+                      borderColor: hoveredCard === cardKey ? "#bfdbfe" : "#e2e8f0",
                     }}
                     onMouseEnter={() => setHoveredCard(cardKey)}
                     onMouseLeave={() => setHoveredCard(null)}
@@ -787,8 +787,7 @@ const FindBuddies = () => {
                           style={{
                             width: `${progress}%`,
                             height: "100%",
-                            background:
-                              "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+                            background: "linear-gradient(135deg, #3b82f6, #6366f1)",
                             transition: "width 0.35s ease",
                             borderRadius: "999px",
                           }}
@@ -801,8 +800,8 @@ const FindBuddies = () => {
                             ...viewButtonStyle,
                             background:
                               hoveredButton === `view-${cardKey}`
-                                ? "linear-gradient(135deg, #dbe4ff, #e9edff)"
-                                : "linear-gradient(135deg, #f8fafc, #e2e8f0)",
+                                ? "#eef2ff"
+                                : "#f8fafc",
                             transform:
                               hoveredButton === `view-${cardKey}`
                                 ? "translateY(-2px)"
@@ -826,7 +825,7 @@ const FindBuddies = () => {
                                 : "translateY(0)",
                             boxShadow:
                               hoveredButton === `join-${cardKey}` && !alreadyJoined && !full
-                                ? "0 14px 26px rgba(79, 70, 229, 0.24)"
+                                ? "0 14px 26px rgba(245, 158, 11, 0.24)"
                                 : joinButtonBase.boxShadow,
                           }}
                           onMouseEnter={() => setHoveredButton(`join-${cardKey}`)}
@@ -948,8 +947,7 @@ const FindBuddies = () => {
                   style={{
                     width: `${Math.min((modalMemberCount / modalMaxMembers) * 100, 100)}%`,
                     height: "100%",
-                    background:
-                      "linear-gradient(135deg, #4f46e5, #7c3aed, #9333ea)",
+                    background: "linear-gradient(135deg, #3b82f6, #6366f1)",
                     borderRadius: "999px",
                   }}
                 />
