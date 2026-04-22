@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BookOutlined, LogoutOutlined, UploadOutlined, FileTextOutlined, BarChartOutlined, DownloadOutlined, AppstoreOutlined, EyeOutlined, EditOutlined, HighlightOutlined, UndoOutlined, RedoOutlined, BorderOutlined, RadiusUpleftOutlined, FontSizeOutlined, BgColorsOutlined, ClearOutlined, SaveOutlined, VideoCameraOutlined, TeamOutlined, BoldOutlined, ItalicOutlined, UnderlineOutlined, AlignLeftOutlined, AlignCenterOutlined, AlignRightOutlined, OrderedListOutlined, UnorderedListOutlined, DeleteOutlined, StrikethroughOutlined, LinkOutlined, DisconnectOutlined, TableOutlined, FileImageOutlined, PrinterOutlined, FilePdfOutlined, MessageOutlined, UserOutlined, PaperClipOutlined, FolderOpenOutlined, BankOutlined, CloseOutlined, SendOutlined, CalendarOutlined, ClockCircleOutlined, CheckCircleOutlined, StarOutlined, BellOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { BookOutlined, LogoutOutlined, UploadOutlined, FileTextOutlined, BarChartOutlined, DownloadOutlined, AppstoreOutlined, EyeOutlined, EditOutlined, HighlightOutlined, UndoOutlined, RedoOutlined, BorderOutlined, RadiusUpleftOutlined, FontSizeOutlined, BgColorsOutlined, ClearOutlined, SaveOutlined, VideoCameraOutlined, TeamOutlined, BoldOutlined, ItalicOutlined, UnderlineOutlined, AlignLeftOutlined, AlignCenterOutlined, AlignRightOutlined, OrderedListOutlined, UnorderedListOutlined, DeleteOutlined, StrikethroughOutlined, LinkOutlined, DisconnectOutlined, TableOutlined, FileImageOutlined, PrinterOutlined, FilePdfOutlined, MessageOutlined, UserOutlined, PaperClipOutlined, FolderOpenOutlined, BankOutlined, CloseOutlined, SendOutlined, CalendarOutlined, ClockCircleOutlined, CheckCircleOutlined, StarOutlined, BellOutlined, ArrowLeftOutlined, FilterOutlined, CheckOutlined, InboxOutlined } from '@ant-design/icons';
 import { Badge, Button, Card, Divider, Dropdown, Form, Input, Modal, Popconfirm, Rate, Select, Spin, Upload, message } from 'antd';
 import { useAuth } from '../hooks/useAuth';
 import resourceLibraryService from '../services/resourceLibrary.service';
@@ -18,6 +18,7 @@ const RL_PATH_TO_PAGE = {
   notes: 'notes',
   flashcards: 'flashcards',
   requests: 'requests',
+  notifications: 'notifications',
 };
 
 const RL_NAV = {
@@ -26,6 +27,7 @@ const RL_NAV = {
   notes: '/resource-library/notes',
   flashcards: '/resource-library/flashcards',
   requests: '/resource-library/requests',
+  notifications: '/resource-library/notifications',
 };
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -213,6 +215,8 @@ const ResourceLibraryDashboard = () => {
   const [noteSaving, setNoteSaving] = useState(false);
   const [rlNotifications, setRlNotifications] = useState([]);
   const [rlUnread, setRlUnread] = useState(0);
+  const [requestFilters, setRequestFilters] = useState({ search: '', status: '' });
+  const [notificationFilter, setNotificationFilter] = useState('all');
   const [uploadForm] = Form.useForm();
   const [requestForm] = Form.useForm();
   const [programmeForm] = Form.useForm();
@@ -520,6 +524,28 @@ const ResourceLibraryDashboard = () => {
     () => (resources || []).filter((r) => matchesLibraryFilters(r, noteFilters, { includeType: false })),
     [resources, noteFilters]
   );
+
+  /** Client-side filtering for the Requests page — matches on title / description / requester
+   *  and optionally on status. Kept local so request loading logic (server-side) is untouched. */
+  const filteredRequestsList = useMemo(() => {
+    const q = (requestFilters.search || '').trim().toLowerCase();
+    return (requests || []).filter((r) => {
+      if (requestFilters.status && String(r.status || '') !== requestFilters.status) return false;
+      if (!q) return true;
+      const title = String(r.title || '').toLowerCase();
+      const desc = String(r.description || r.details || '').toLowerCase();
+      const who = String(r.requestedBy || '').toLowerCase();
+      const mod = String(r.moduleName || '').toLowerCase();
+      const prog = String(r.programmeName || '').toLowerCase();
+      return title.includes(q) || desc.includes(q) || who.includes(q) || mod.includes(q) || prog.includes(q);
+    });
+  }, [requests, requestFilters]);
+
+  /** Client-side filter for the Notifications page tabs (all / unread). */
+  const filteredRlNotifications = useMemo(() => {
+    if (notificationFilter === 'unread') return (rlNotifications || []).filter((n) => !n.read);
+    return rlNotifications || [];
+  }, [rlNotifications, notificationFilter]);
 
   const cards = [
     { title: 'Total Resources', value: overview.totalResources || 0, icon: <FileTextOutlined />, tone: 'blue' },
@@ -1523,6 +1549,13 @@ const ResourceLibraryDashboard = () => {
           </button>
           <button className={activePage === 'flashcards' ? 'active' : ''} onClick={() => navigate(RL_NAV.flashcards)}>Flashcards</button>
           <button className={activePage === 'requests' ? 'active' : ''} onClick={() => navigate(RL_NAV.requests)}>Requests</button>
+          <button
+            className={`rl-nav-item-with-badge ${activePage === 'notifications' ? 'active' : ''}`}
+            onClick={() => navigate(RL_NAV.notifications)}
+          >
+            <span>Notifications</span>
+            {rlUnread > 0 ? <span className="rl-nav-badge" aria-label={`${rlUnread} unread`}>{rlUnread > 99 ? '99+' : rlUnread}</span> : null}
+          </button>
         </nav>
         <div className="rl-side-footer">
           <Dropdown
@@ -1576,12 +1609,17 @@ const ResourceLibraryDashboard = () => {
       </aside>
 
       <main className="rl-main">
-        {activePage !== 'flashcards' && activePage !== 'notes' && activePage !== 'requests' && activePage !== 'resource-details' ? (
-          <div className={`rl-actions ${activePage === 'dashboard' ? 'rl-actions--dashboard' : ''}`}>
-            {activePage !== 'resources' ? (
-              <button type="button" onClick={() => navigate(RL_NAV.resources)}><BookOutlined /> Access Resources</button>
-            ) : null}
-            <button type="button" onClick={() => setOpenUpload(true)}><UploadOutlined /> Upload Resource</button>
+        {activePage !== 'flashcards' && activePage !== 'notes' && activePage !== 'requests' && activePage !== 'resource-details' && activePage !== 'notifications' ? (
+          <div className="rl-page-header">
+            <h2 className="rl-page-title">
+              {activePage === 'dashboard' ? 'Dashboard' : 'Resource Library'}
+            </h2>
+            <div className={`rl-actions rl-actions--inline ${activePage === 'dashboard' ? 'rl-actions--dashboard' : ''}`}>
+              {activePage !== 'resources' ? (
+                <button type="button" onClick={() => navigate(RL_NAV.resources)}><BookOutlined /> Access Resources</button>
+              ) : null}
+              <button type="button" onClick={() => setOpenUpload(true)}><UploadOutlined /> Upload Resource</button>
+            </div>
           </div>
         ) : null}
 
@@ -1763,9 +1801,6 @@ const ResourceLibraryDashboard = () => {
             programmeOptions={programmeFilterOptions}
             moduleOptions={moduleOptionsLib}
           />
-          <div className="rl-title-row">
-            <h3 className="rl-title">Resource Library</h3>
-          </div>
           <section className="rl-recent">
             {filteredResourcesList.length === 0 ? (
               <div className="rl-filter-empty">
@@ -2046,26 +2081,78 @@ const ResourceLibraryDashboard = () => {
               ) : null}
             </header>
 
-            {!requests.length ? (
+            {/* Filter section — mirrors the Resources/Notes filter panel (`rl-advanced-filters`) for visual consistency. */}
+            <div className="rl-advanced-filters rl-requests-filters">
+              <div className="rl-advanced-filters__collapse rl-requests-filters__panel">
+                <div className="rl-requests-filters__head">
+                  <span className="rl-advanced-filters__title">
+                    <FilterOutlined aria-hidden />
+                    <span>Filters</span>
+                  </span>
+                  {(requestFilters.search || requestFilters.status) ? (
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<ClearOutlined />}
+                      className="rl-advanced-filters__clear"
+                      onClick={() => setRequestFilters({ search: '', status: '' })}
+                    >
+                      Clear all
+                    </Button>
+                  ) : null}
+                </div>
+                <div className="rl-advanced-filters__grid rl-requests-filters__grid">
+                  <div className="rl-advanced-filters__field rl-advanced-filters__field--search">
+                    <label className="rl-advanced-filters__label" htmlFor="rl-af-search-requests">Search</label>
+                    <Input
+                      id="rl-af-search-requests"
+                      size="large"
+                      allowClear
+                      placeholder="Title, description, requester or module…"
+                      value={requestFilters.search}
+                      onChange={(e) => setRequestFilters((f) => ({ ...f, search: e.target.value }))}
+                      className="rl-advanced-filters__search-input"
+                    />
+                  </div>
+                  <div className="rl-advanced-filters__field">
+                    <label className="rl-advanced-filters__label">Status</label>
+                    <Select
+                      size="large"
+                      allowClear
+                      placeholder="Any status"
+                      value={requestFilters.status || undefined}
+                      onChange={(v) => setRequestFilters((f) => ({ ...f, status: v || '' }))}
+                      options={[
+                        { value: 'in_progress', label: 'In progress' },
+                        { value: 'resolved', label: 'Resolved' },
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {!filteredRequestsList.length ? (
               <div className="rl-requests-empty">
                 <FileTextOutlined className="rl-requests-empty__icon" aria-hidden />
-                <p className="rl-requests-empty__title">No requests yet</p>
+                <p className="rl-requests-empty__title">
+                  {requests.length ? 'No requests match these filters' : 'No requests yet'}
+                </p>
                 <p className="rl-requests-empty__hint">
-                  {isAdmin ? 'When students submit requests, they will appear here.' : 'Create a request to get help from the resource team.'}
+                  {requests.length
+                    ? 'Clear filters or broaden your search to see more results.'
+                    : isAdmin ? 'When students submit requests, they will appear here.' : 'Create a request to get help from the resource team.'}
                 </p>
               </div>
             ) : (
               <ul className="rl-requests-list" aria-label="Resource requests">
-                {requests.map((r) => {
+                {filteredRequestsList.map((r) => {
                   const reqStatusKey = String(r.status || 'in_progress').replace('_', '-');
                   const created = r.createdAt || r.created_at;
                   return (
                   <li key={r.id}>
                     <Card className={`rl-request-card rl-request-card--${reqStatusKey}`} bordered={false}>
                       <div className="rl-request-card__head">
-                        <div className="rl-request-card__icon-badge" aria-hidden>
-                          <FileTextOutlined />
-                        </div>
                         <div className="rl-request-card__head-main">
                           <div className="rl-request-card__top">
                             <h3 className="rl-request-card__title">{r.title}</h3>
@@ -2163,6 +2250,95 @@ const ResourceLibraryDashboard = () => {
                       </div>
                     </Card>
                   </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {activePage === 'notifications' && (
+          <div className="rl-notifications-page">
+            <header className="rl-notifications-page__head">
+              <div className="rl-notifications-page__head-text">
+                <h2 className="rl-notifications-page__title">Notifications</h2>
+                <p className="rl-notifications-page__subtitle">
+                  Recent activity across the Resource Library — uploads, edits, and requests.
+                </p>
+              </div>
+              {rlUnread > 0 ? (
+                <Button type="primary" className="rl-notifications-markall-btn" icon={<CheckOutlined />} onClick={handleMarkAllRlNotificationsRead}>
+                  Mark all read
+                </Button>
+              ) : null}
+            </header>
+
+            <div className="rl-notifications-tabs" role="tablist" aria-label="Filter notifications">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={notificationFilter === 'all'}
+                className={`rl-notifications-tab${notificationFilter === 'all' ? ' rl-notifications-tab--active' : ''}`}
+                onClick={() => setNotificationFilter('all')}
+              >
+                All
+                <span className="rl-notifications-tab__count">{rlNotifications.length}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={notificationFilter === 'unread'}
+                className={`rl-notifications-tab${notificationFilter === 'unread' ? ' rl-notifications-tab--active' : ''}`}
+                onClick={() => setNotificationFilter('unread')}
+              >
+                Unread
+                <span className="rl-notifications-tab__count rl-notifications-tab__count--accent">{rlUnread}</span>
+              </button>
+            </div>
+
+            {filteredRlNotifications.length === 0 ? (
+              <div className="rl-notifications-empty">
+                <InboxOutlined className="rl-notifications-empty__icon" aria-hidden />
+                <p className="rl-notifications-empty__title">
+                  {notificationFilter === 'unread' ? 'You are all caught up' : 'No notifications yet'}
+                </p>
+                <p className="rl-notifications-empty__hint">
+                  {notificationFilter === 'unread'
+                    ? 'When new uploads, edits, or requests arrive, they will show up here.'
+                    : 'Activity will appear here as soon as someone uploads, edits, or requests a resource.'}
+                </p>
+              </div>
+            ) : (
+              <ul className="rl-notifications-list" aria-label="Resource Library notifications">
+                {filteredRlNotifications.map((n) => {
+                  const kindKey = n.kind === 'upload' ? 'upload' : n.kind === 'request' ? 'request' : 'update';
+                  const kindLabel = kindKey === 'upload' ? 'New upload' : kindKey === 'request' ? 'Request' : 'Updated';
+                  const KindIcon = kindKey === 'upload' ? UploadOutlined : kindKey === 'request' ? MessageOutlined : EditOutlined;
+                  return (
+                    <li key={n.id}>
+                      <button
+                        type="button"
+                        className={`rl-notifications-card rl-notifications-card--${kindKey}${n.read ? '' : ' rl-notifications-card--unread'}`}
+                        onClick={() => handleRlNotificationClick(n)}
+                      >
+                        <span className="rl-notifications-card__icon" aria-hidden>
+                          <KindIcon />
+                        </span>
+                        <div className="rl-notifications-card__body">
+                          <div className="rl-notifications-card__top">
+                            <span className={`rl-notifications-card__kind rl-notifications-card__kind--${kindKey}`}>{kindLabel}</span>
+                            {!n.read ? <span className="rl-notifications-card__dot" aria-label="Unread" /> : null}
+                          </div>
+                          <div className="rl-notifications-card__title">{n.resourceTitle || 'Resource'}</div>
+                          <div className="rl-notifications-card__detail">{n.detail}</div>
+                          <div className="rl-notifications-card__meta">
+                            {n.actorName ? <span className="rl-notifications-card__actor">{n.actorName}</span> : null}
+                            {n.actorName ? <span className="rl-notifications-card__meta-sep" aria-hidden>·</span> : null}
+                            <span className="rl-notifications-card__time">{formatRlNotifyTime(n.createdAt)}</span>
+                          </div>
+                        </div>
+                      </button>
+                    </li>
                   );
                 })}
               </ul>
