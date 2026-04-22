@@ -52,6 +52,10 @@ const resourceLibraryService = {
   recordDownload: (id) => api.post(`/resource-library/resources/${id}/download`).then((r) => r.data),
   submitRating: (id, payload) => api.post(`/resource-library/resources/${id}/rating`, payload).then((r) => r.data),
   addComment: (id, payload) => api.post(`/resource-library/resources/${id}/comments`, payload).then((r) => r.data),
+  updateComment: (id, commentId, payload, role, userName) =>
+    api.put(`/resource-library/resources/${id}/comments/${commentId}`, payload, withRoleAndUser(role, userName)).then((r) => r.data),
+  deleteComment: (id, commentId, role, userName) =>
+    api.delete(`/resource-library/resources/${id}/comments/${commentId}`, withRoleAndUser(role, userName)).then((r) => r.data),
   getRequests: (params = {}) => api.get('/resource-library/requests', { params }).then((r) => r.data),
   getRequestById: (id) => api.get(`/resource-library/requests/${id}`).then((r) => r.data),
   createRequest: (formData) => apiForm.post('/resource-library/requests', formData).then((r) => r.data),

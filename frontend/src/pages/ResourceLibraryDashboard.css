@@ -227,7 +227,65 @@
 .rl-notify-detail{font-size:12px;color:#475569;line-height:1.35;margin-bottom:6px}
 .rl-notify-meta{font-size:11px;color:#94a3b8}
 .rl-logout{background:transparent;border:1px solid rgba(255,255,255,.24);color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:600}
-.rl-main{flex:1;padding:20px 20px 22px;max-height:100vh;overflow-y:auto}
+.rl-main{flex:1;padding:20px 20px 22px;max-height:100vh;overflow-y:auto;position:relative}
+
+/* Floating notification bell in the top-right of the Resource Library workspace. */
+.rl-topbar-notify{
+  position:sticky;
+  top:0;
+  z-index:5;
+  display:flex;
+  justify-content:flex-end;
+  margin:0 0 8px;
+  pointer-events:none;
+}
+.rl-topbar-notify > *{pointer-events:auto}
+.rl-topbar-bell{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:1px solid #e2e8f0;
+  background:#ffffff;
+  color:#4338ca;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(15,23,42,.08),0 2px 6px rgba(15,23,42,.05);
+  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease,color .15s ease;
+  font-size:20px;
+}
+.rl-topbar-bell:hover{
+  transform:translateY(-1px);
+  border-color:#c7d2fe;
+  color:#312e81;
+  box-shadow:0 14px 30px rgba(79,70,229,.18),0 4px 10px rgba(79,70,229,.12);
+}
+.rl-topbar-bell:active{transform:translateY(0)}
+.rl-topbar-bell .ant-badge{color:inherit;line-height:1}
+.rl-topbar-bell .ant-badge .anticon{font-size:20px}
+.rl-notify-dropdown--topbar{
+  width:min(400px,calc(100vw - 48px));
+  max-height:min(480px,75vh);
+}
+.rl-notify-footer{
+  border-top:1px solid rgba(148,163,184,.22);
+  background:linear-gradient(180deg,#fff,#f8fafc);
+  padding:10px 14px;
+  display:flex;
+  justify-content:center;
+}
+.rl-notify-see-all{
+  background:transparent;
+  border:0;
+  color:#2563eb;
+  font-weight:700;
+  cursor:pointer;
+  font-size:13.5px;
+  padding:4px 6px;
+  border-radius:8px;
+}
+.rl-notify-see-all:hover{background:rgba(37,99,235,.08)}
 .rl-actions{display:flex;justify-content:flex-end;gap:12px;margin-bottom:20px}
 .rl-actions button{background:var(--ant-color-primary,#1677ff);color:#fff;border:0;border-radius:12px;padding:10px 19px;cursor:pointer;font-weight:700;box-shadow:0 10px 24px rgba(22,119,255,.28);transition:transform .15s ease,box-shadow .15s ease}
 .rl-actions button:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(22,119,255,.34)}
@@ -1128,12 +1186,29 @@
 .comment-time{font-size:13px;color:#8f97ad;font-style:italic;line-height:1.1}
 .comment-text{margin-top:10px;color:#4c566f;font-size:14px;line-height:1.6}
 .comment-reply-link{
-  margin-top:12px;
+  margin-top:0;
   background:transparent;border:0;padding:0;
   color:#3f4bb4;font-size:15px;font-weight:700;
   display:inline-flex;align-items:center;gap:6px;cursor:pointer;
 }
 .comment-reply-link:hover{color:#2f3aa1}
+.comment-action-row{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  margin-top:12px;
+}
+.comment-edit-link,.comment-delete-link{
+  background:transparent;border:0;padding:0;
+  font-size:14px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;line-height:1.1;
+}
+.comment-edit-link{color:#3f4bb4}
+.comment-edit-link:hover{color:#2f3aa1}
+.comment-delete-link{color:#dc2626}
+.comment-delete-link:hover{color:#b91c1c}
+.comment-edit-row{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.comment-edit-row .ant-input{border-radius:10px;font-size:14px}
+.comment-edit-actions{display:flex;gap:8px;justify-content:flex-end}
+.comment-edit-actions .ant-btn{border-radius:10px;font-weight:700}
 .reply-input-row{display:flex;gap:8px;margin-top:10px}
 .reply-input-row .ant-input{border-radius:10px}
 .reply-input-row .ant-btn{border-radius:10px;font-weight:700}
@@ -2713,6 +2788,26 @@ html[data-theme="light"] .rl-auth-page .ant-segmented .ant-segmented-item-select
 .rl-request-status-select .ant-select-arrow {
   color: #6366f1 !important;
   right: 14px !important;
+  top: 50% !important;
+  margin-top: 0 !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 14px !important;
+  width: 14px !important;
+  pointer-events: none;
+}
+.rl-request-status-select .ant-select-arrow .anticon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-size: 12px !important;
+}
+.rl-request-status-select .ant-select-arrow svg {
+  display: block !important;
+  margin: 0 !important;
 }
 .rl-request-status-select:hover .ant-select-selector {
   border-color: #a5b4fc !important;
@@ -4156,27 +4251,103 @@ html[data-theme="light"] .rl-auth-page .ant-segmented .ant-segmented-item-select
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Readability pass — bump a few too-small font sizes inside `.rl-wrap`
-   only. Safe, scoped, and keeps the existing visual hierarchy intact.
+   Readability pass — proportionally bump font sizes inside `.rl-wrap` only
+   so text is comfortable to read without breaking the existing visual
+   hierarchy. Sidebar + card typography, filters, comments, metrics,
+   notifications, requests and detail pages are all scaled up together.
    ═══════════════════════════════════════════════════════════════════════════ */
-.rl-wrap .rl-nav{font-size:14px}
-.rl-wrap .rl-name{font-size:14px}
-.rl-wrap .rl-role{font-size:12.5px}
-.rl-wrap .view-all-btn{font-size:13.5px}
-.rl-wrap .tile-programme{font-size:12.5px}
-.rl-wrap .tile-module{font-size:13px}
-.rl-wrap .rl-content h4{font-size:17.5px}
-.rl-wrap .tile-desc{font-size:13.5px}
-.rl-wrap .tile-meta{font-size:12.5px}
-.rl-wrap .tile-meta span{font-size:12.5px}
-.rl-wrap .rl-request-card__body{font-size:14.5px}
-.rl-wrap .rl-request-card__date{font-size:13px}
-.rl-wrap .rl-request-chip{font-size:12.5px}
-.rl-wrap .rl-advanced-filters__label{font-size:12px}
-.rl-wrap .rl-advanced-filters__title{font-size:14px}
-.rl-wrap .metric-label{font-size:12.5px}
-.rl-wrap .rl-notify-kind{font-size:11px}
-.rl-wrap .rl-notify-title{font-size:13.5px}
-.rl-wrap .rl-notify-detail{font-size:12.5px}
-.rl-wrap .rl-notify-meta{font-size:11.5px}
-.rl-wrap .rl-notify-empty{font-size:13.5px}
+.rl-wrap{font-size:15px}
+
+/* Sidebar */
+.rl-wrap .rl-nav{font-size:15px}
+.rl-wrap .rl-nav button{font-size:15px}
+.rl-wrap .rl-name{font-size:15.5px}
+.rl-wrap .rl-role{font-size:13.5px}
+.rl-wrap .rl-brand strong{font-size:17px}
+.rl-wrap .rl-brand span{font-size:11px;letter-spacing:2.2px}
+.rl-wrap .rl-logout{font-size:14.5px}
+
+/* Page titles */
+.rl-wrap .rl-page-title{font-size:30px}
+.rl-wrap .rl-title{font-size:30px}
+.rl-wrap .view-all-btn{font-size:14.5px}
+
+/* Metric cards */
+.rl-wrap .metric-label{font-size:14px}
+.rl-wrap .metric-value{font-size:26px}
+
+/* Resource / note / flashcard tiles */
+.rl-wrap .tile-programme{font-size:13.5px}
+.rl-wrap .tile-module{font-size:14px}
+.rl-wrap .rl-content h4{font-size:19px}
+.rl-wrap .tile-desc{font-size:14.5px}
+.rl-wrap .tile-meta{font-size:13.5px}
+.rl-wrap .tile-meta span{font-size:13.5px}
+.rl-wrap .tile-meta a{font-size:13.5px}
+.rl-wrap .tile-author{font-size:13.5px}
+.rl-wrap .tile-rating{font-size:14px}
+.rl-wrap .tile-difficulty{font-size:12.5px}
+.rl-wrap .rl-type-badge{font-size:12px}
+
+/* Filters */
+.rl-wrap .rl-advanced-filters__label{font-size:13.5px}
+.rl-wrap .rl-advanced-filters__title{font-size:16px}
+.rl-wrap .rl-advanced-filters__subtitle{font-size:13.5px}
+.rl-wrap .rl-advanced-filters .ant-select-selection-item,
+.rl-wrap .rl-advanced-filters .ant-select-selection-placeholder,
+.rl-wrap .rl-advanced-filters .ant-input{font-size:14.5px}
+
+/* Requests page */
+.rl-wrap .rl-requests-page__title{font-size:30px}
+.rl-wrap .rl-request-card__title{font-size:18px}
+.rl-wrap .rl-request-card__body{font-size:15.5px}
+.rl-wrap .rl-request-card__date{font-size:14px}
+.rl-wrap .rl-request-chip{font-size:13.5px}
+.rl-wrap .rl-request-status-select .ant-select-selection-item{font-size:14px}
+.rl-wrap .rl-request-chat-btn{font-size:14.5px}
+.rl-wrap .rl-requests-empty{font-size:15px}
+
+/* Notifications dropdown + page */
+.rl-wrap .rl-notify-kind{font-size:12px}
+.rl-wrap .rl-notify-title{font-size:15px}
+.rl-wrap .rl-notify-detail{font-size:14px}
+.rl-wrap .rl-notify-meta{font-size:12.5px}
+.rl-wrap .rl-notify-empty{font-size:14.5px}
+.rl-wrap .rl-notifications-page__title{font-size:28px}
+.rl-wrap .rl-notifications-page__subtitle{font-size:14.5px}
+.rl-wrap .rl-notifications-tab{font-size:14.5px}
+.rl-wrap .rl-notification-card__title{font-size:16px}
+.rl-wrap .rl-notification-card__detail{font-size:14.5px}
+.rl-wrap .rl-notification-card__meta{font-size:13px}
+
+/* Resource details page */
+.rl-wrap .detail-title{font-size:26px}
+.rl-wrap .detail-subtitle{font-size:15px}
+.rl-wrap .detail-section-title{font-size:17px}
+.rl-wrap .detail-meta-row,
+.rl-wrap .detail-meta-item{font-size:14.5px}
+.rl-wrap .rl-back-btn{font-size:14.5px}
+
+/* Comments */
+.rl-wrap .comment-author{font-size:15.5px}
+.rl-wrap .comment-time{font-size:13.5px}
+.rl-wrap .comment-text{font-size:15px;line-height:1.6}
+.rl-wrap .comment-reply-link,
+.rl-wrap .comment-edit-link,
+.rl-wrap .comment-delete-link{font-size:14.5px}
+.rl-wrap .comment-input-row textarea,
+.rl-wrap .comment-editor-textarea,
+.rl-wrap .comment-edit-row textarea{font-size:14.5px}
+
+/* Forms / modals */
+.rl-wrap .ant-form-item-label > label,
+.rl-modal-root .ant-form-item-label > label{font-size:14.5px}
+.rl-wrap .ant-input,
+.rl-wrap .ant-input-number-input,
+.rl-wrap .ant-picker-input > input,
+.rl-wrap .ant-select-selection-item,
+.rl-wrap .ant-select-selection-placeholder{font-size:14.5px}
+.rl-wrap .ant-btn{font-size:14.5px}
+
+/* Actions (buttons in page header) */
+.rl-wrap .rl-actions button{font-size:14.5px}

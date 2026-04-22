@@ -515,6 +515,54 @@ exports.addComment = async (req, res) => {
   return res.status(201).json({ success: true, data: row });
 };
 
+/** Comment author (matched by x-rl-user-name) or a resource admin may edit. */
+const canModifyComment = (req, comment) => {
+  if (!comment) return false;
+  if (isRlAdmin(req)) return true;
+  const me = getClientUserName(req).toLowerCase();
+  const owner = String(comment.authorName || '').trim().toLowerCase();
+  return !!me && !!owner && me === owner;
+};
+
+exports.updateComment = async (req, res) => {
+  const comment = await ResourceComment.findOne({
+    where: { id: req.params.commentId, resourceId: req.params.id }
+  });
+  if (!comment) return res.status(404).json({ success: false, message: 'Comment not found' });
+  if (!canModifyComment(req, comment)) {
+    return res.status(403).json({
+      success: false,
+      message: 'You can only edit comments you posted.'
+    });
+  }
+  const text = String(req.body?.text || '').trim();
+  if (!text) {
+    return res.status(400).json({ success: false, message: 'Comment text cannot be empty.' });
+  }
+  comment.text = text;
+  await comment.save();
+  return res.json({ success: true, data: comment });
+};
+
+exports.deleteComment = async (req, res) => {
+  const comment = await ResourceComment.findOne({
+    where: { id: req.params.commentId, resourceId: req.params.id }
+  });
+  if (!comment) return res.status(404).json({ success: false, message: 'Comment not found' });
+  if (!canModifyComment(req, comment)) {
+    return res.status(403).json({
+      success: false,
+      message: 'You can only delete comments you posted.'
+    });
+  }
+  // Also remove direct replies to this comment so the thread isn't left orphaned.
+  if (!comment.parentId) {
+    await ResourceComment.destroy({ where: { parentId: comment.id } });
+  }
+  await comment.destroy();
+  return res.json({ success: true });
+};
+
 exports.getResourceContent = async (req, res) => {
   const resource = await ResourceItem.findByPk(req.params.id);
   if (!resource) return res.status(404).json({ success: false, message: 'Resource not found' });

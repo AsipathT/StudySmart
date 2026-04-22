@@ -182,6 +182,9 @@ const ResourceLibraryDashboard = () => {
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [replySubmittingId, setReplySubmittingId] = useState(null);
   const [activeReplyId, setActiveReplyId] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+  const [commentEditSubmitting, setCommentEditSubmitting] = useState(false);
   const [openUpload, setOpenUpload] = useState(false);
   const [openRequest, setOpenRequest] = useState(false);
   const [openRequestChat, setOpenRequestChat] = useState(false);
@@ -1285,7 +1288,11 @@ const ResourceLibraryDashboard = () => {
         /* ignore */
       }
     }
-    await loadRlNotifications();
+    try {
+      await loadRlNotifications();
+    } catch {
+      /* ignore */
+    }
     if (n.requestId) {
       try {
         const res = await resourceLibraryService.getRequestById(n.requestId);
@@ -1301,12 +1308,19 @@ const ResourceLibraryDashboard = () => {
       return;
     }
     if (n.resourceId) {
-      await openResourceDetails(n.resourceId);
+      try {
+        await openResourceDetails(n.resourceId);
+      } catch (e) {
+        message.warning(e?.response?.data?.message || 'Could not open this resource.');
+      }
     }
   };
 
   const handleMarkAllRlNotificationsRead = async (e) => {
     e?.stopPropagation?.();
+    // Immediate UI feedback: clear unread badge and mark in-memory rows as read.
+    setRlUnread(0);
+    setRlNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
       await resourceLibraryService.markAllNotificationsRead(user?.name || 'Student');
       await loadRlNotifications();
@@ -1457,6 +1471,77 @@ const ResourceLibraryDashboard = () => {
       if (parentId) setReplySubmittingId(null);
       else setCommentSubmitting(false);
     }
+  };
+
+  /** Comment author (matched by display name) or admin may edit/delete their comments. */
+  const canModifyComment = (c) => {
+    if (!c) return false;
+    if (isAdmin) return true;
+    const me = String(user?.name || '').trim().toLowerCase();
+    const owner = String(c.authorName || '').trim().toLowerCase();
+    return !!me && !!owner && me === owner;
+  };
+
+  const beginEditComment = (c) => {
+    if (!canModifyComment(c)) return;
+    setEditingCommentId(c.id);
+    setEditingCommentText(c.text || '');
+    setActiveReplyId(null);
+  };
+
+  const cancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentText('');
+  };
+
+  const saveEditComment = async () => {
+    if (!selectedResourceId || !editingCommentId) return;
+    const text = String(editingCommentText || '').trim();
+    if (!text) {
+      message.warning('Comment cannot be empty.');
+      return;
+    }
+    try {
+      setCommentEditSubmitting(true);
+      await resourceLibraryService.updateComment(
+        selectedResourceId,
+        editingCommentId,
+        { text },
+        user?.role,
+        user?.name
+      );
+      const res = await resourceLibraryService.getResourceById(selectedResourceId, { userName: user?.name || 'Student' });
+      setResourceDetails(res.data);
+      cancelEditComment();
+      message.success('Comment updated.');
+    } catch (error) {
+      message.error(error?.response?.data?.message || 'Unable to update comment.');
+    } finally {
+      setCommentEditSubmitting(false);
+    }
+  };
+
+  const removeComment = (c) => {
+    if (!canModifyComment(c)) return;
+    Modal.confirm({
+      title: 'Delete this comment?',
+      content: 'This cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      className: 'rl-delete-confirm-modal',
+      onOk: async () => {
+        try {
+          await resourceLibraryService.deleteComment(selectedResourceId, c.id, user?.role, user?.name);
+          const res = await resourceLibraryService.getResourceById(selectedResourceId, { userName: user?.name || 'Student' });
+          setResourceDetails(res.data);
+          if (editingCommentId === c.id) cancelEditComment();
+          message.success('Comment deleted.');
+        } catch (error) {
+          message.error(error?.response?.data?.message || 'Unable to delete comment.');
+        }
+      }
+    });
   };
 
   const formatSizeKB = (size) => {
@@ -1616,6 +1701,59 @@ const ResourceLibraryDashboard = () => {
       </aside>
 
       <main className="rl-main">
+        <div className="rl-topbar-notify">
+          <Dropdown
+            trigger={['click']}
+            placement="bottomRight"
+            popupRender={() => (
+              <div className="rl-notify-dropdown rl-notify-dropdown--topbar" onClick={(e) => e.stopPropagation()}>
+                <div className="rl-notify-header">
+                  <span>Notifications</span>
+                  {rlUnread > 0 ? (
+                    <button type="button" className="rl-notify-mark-all" onClick={handleMarkAllRlNotificationsRead}>
+                      Mark all read
+                    </button>
+                  ) : null}
+                </div>
+                <div className="rl-notify-list">
+                  {rlNotifications.length === 0 ? (
+                    <div className="rl-notify-empty">No notifications yet.</div>
+                  ) : (
+                    rlNotifications.slice(0, 12).map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        className={`rl-notify-item${n.read ? '' : ' rl-notify-unread'}`}
+                        onClick={() => handleRlNotificationClick(n)}
+                      >
+                        <div className="rl-notify-kind">
+                          {n.kind === 'upload' ? 'New upload' : n.kind === 'request' ? 'Request' : 'Updated'}
+                        </div>
+                        <div className="rl-notify-title">{n.resourceTitle || 'Resource'}</div>
+                        <div className="rl-notify-detail">{n.detail}</div>
+                        <div className="rl-notify-meta">
+                          {n.actorName ? `${n.actorName} · ` : ''}
+                          {formatRlNotifyTime(n.createdAt)}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+                <div className="rl-notify-footer">
+                  <button type="button" className="rl-notify-see-all" onClick={() => navigate(RL_NAV.notifications)}>
+                    See all notifications
+                  </button>
+                </div>
+              </div>
+            )}
+          >
+            <button type="button" className="rl-topbar-bell" aria-label="Notifications">
+              <Badge count={rlUnread} size="small" offset={[-2, 2]} overflowCount={99}>
+                <BellOutlined />
+              </Badge>
+            </button>
+          </Dropdown>
+        </div>
         {activePage !== 'flashcards' && activePage !== 'notes' && activePage !== 'requests' && activePage !== 'resource-details' && activePage !== 'notifications' ? (
           <div className="rl-page-header">
             <h2 className="rl-page-title">
@@ -2647,10 +2785,36 @@ const ResourceLibraryDashboard = () => {
                               <div className="comment-author">{c.authorName}</div>
                               <div className="comment-time">{formatCommentDate(c.createdAt)}</div>
                             </div>
-                            <div className="comment-text">{c.text}</div>
-                            <button type="button" className="comment-reply-link" onClick={() => setActiveReplyId(c.id)}>
-                              <EditOutlined /> Reply
-                            </button>
+                            {editingCommentId === c.id ? (
+                              <div className="comment-edit-row">
+                                <Input.TextArea
+                                  autoSize={{ minRows: 2, maxRows: 6 }}
+                                  value={editingCommentText}
+                                  onChange={(e) => setEditingCommentText(e.target.value)}
+                                />
+                                <div className="comment-edit-actions">
+                                  <Button size="small" onClick={cancelEditComment}>Cancel</Button>
+                                  <Button size="small" type="primary" loading={commentEditSubmitting} onClick={saveEditComment}>Save</Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="comment-text">{c.text}</div>
+                            )}
+                            <div className="comment-action-row">
+                              <button type="button" className="comment-reply-link" onClick={() => setActiveReplyId(c.id)}>
+                                <EditOutlined /> Reply
+                              </button>
+                              {canModifyComment(c) && editingCommentId !== c.id ? (
+                                <>
+                                  <button type="button" className="comment-edit-link" onClick={() => beginEditComment(c)}>
+                                    <EditOutlined /> Edit
+                                  </button>
+                                  <button type="button" className="comment-delete-link" onClick={() => removeComment(c)}>
+                                    <DeleteOutlined /> Delete
+                                  </button>
+                                </>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                         {activeReplyId === c.id ? (
@@ -2673,7 +2837,31 @@ const ResourceLibraryDashboard = () => {
                                   <div className="comment-author">{r.authorName}</div>
                                   <div className="comment-time">{formatCommentDate(r.createdAt)}</div>
                                 </div>
-                                <div className="comment-text">{r.text}</div>
+                                {editingCommentId === r.id ? (
+                                  <div className="comment-edit-row">
+                                    <Input.TextArea
+                                      autoSize={{ minRows: 2, maxRows: 6 }}
+                                      value={editingCommentText}
+                                      onChange={(e) => setEditingCommentText(e.target.value)}
+                                    />
+                                    <div className="comment-edit-actions">
+                                      <Button size="small" onClick={cancelEditComment}>Cancel</Button>
+                                      <Button size="small" type="primary" loading={commentEditSubmitting} onClick={saveEditComment}>Save</Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="comment-text">{r.text}</div>
+                                )}
+                                {canModifyComment(r) && editingCommentId !== r.id ? (
+                                  <div className="comment-action-row">
+                                    <button type="button" className="comment-edit-link" onClick={() => beginEditComment(r)}>
+                                      <EditOutlined /> Edit
+                                    </button>
+                                    <button type="button" className="comment-delete-link" onClick={() => removeComment(r)}>
+                                      <DeleteOutlined /> Delete
+                                    </button>
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
                           </div>

@@ -63,6 +63,8 @@ router.post('/resources/:id/view', controller.recordView);
 router.post('/resources/:id/download', controller.recordDownload);
 router.post('/resources/:id/rating', controller.submitRating);
 router.post('/resources/:id/comments', controller.addComment);
+router.put('/resources/:id/comments/:commentId', controller.updateComment);
+router.delete('/resources/:id/comments/:commentId', controller.deleteComment);
 router.get('/requests', controller.getRequests);
 router.get('/requests/:id', controller.getRequestById);
 router.post('/requests', upload.single('evidenceFile'), controller.createRequest);
