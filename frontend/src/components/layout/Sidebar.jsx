@@ -41,7 +41,23 @@ const AVATAR_KEY = 'sidebarAvatarUrl';
 const PREDICTOR_KEYS = ['/upload', '/analytics', '/predictions', '/chatbot', '/history'];
 
 // Routes that belong under Session Tracker
-const SESSION_TRACKER_KEYS = ['/study-tracker', '/quizzes', '/tracking-summary', '/material-mastery', '/create-students'];
+const SESSION_TRACKER_KEYS = [
+  '/study-tracker',
+  '/quizzes',
+  '/tracking-summary',
+  '/material-mastery',
+  '/create-students',
+];
+
+// Routes that belong under Study Buddy Finder
+const STUDY_BUDDY_KEYS = [
+  '/buddy/dashboard',
+  '/buddy/find',
+  '/buddy/my-groups',
+  '/buddy/joined',
+  
+  '/buddy/create',
+];
 
 const RESOURCE_LIBRARY_KEYS = [
   '/resource-library/dashboard',
@@ -68,6 +84,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       keys.push('resource-library');
     return keys;
   });
+
   const [avatarUrl, setAvatarUrl] = useState(
     () => sessionStorage.getItem(AVATAR_KEY) || null
   );
@@ -87,7 +104,9 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     }
   };
 
-  useEffect(() => { loadAvatar(); }, [user]);
+  useEffect(() => {
+    loadAvatar();
+  }, [user]);
 
   useEffect(() => {
     const onAvatarUpdate = (e) => {
@@ -96,12 +115,14 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         sessionStorage.setItem(AVATAR_KEY, e.detail.avatarUrl);
       }
     };
+
     window.addEventListener('avatarUpdated', onAvatarUpdate);
     return () => window.removeEventListener('avatarUpdated', onAvatarUpdate);
   }, []);
 
   useEffect(() => {
     setSelectedKey(location.pathname);
+
     if (!collapsed) {
       const newKeys = [];
       if (PREDICTOR_KEYS.includes(location.pathname)) newKeys.push('performance-predictor');
@@ -146,6 +167,90 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     setOpenKeys(keys);
   };
 
+  const menuItems = [
+    {
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
+    },
+
+    ...(user?.role === 'admin'
+      ? [
+          {
+            key: '/admin-dashboard',
+            icon: <ThunderboltOutlined />,
+            label: 'Admin Dashboard',
+          },
+        ]
+      : []),
+
+    {
+      key: 'performance-predictor',
+      icon: <BarChartOutlined />,
+      label: 'Performance Predictor',
+      children: [
+        { key: '/upload', icon: <UploadOutlined />, label: 'Upload Marks' },
+        { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
+        { key: '/predictions', icon: <BookOutlined />, label: 'Predictions' },
+        { key: '/chatbot', icon: <RobotOutlined />, label: 'AI Assistant' },
+        ...(user?.role === 'admin'
+          ? [{ key: '/history', icon: <HistoryOutlined />, label: 'History' }]
+          : []),
+      ],
+    },
+
+    {
+      key: 'study-buddy',
+      icon: <BookOutlined />,
+      label: 'Study Buddy Finder',
+      children: [
+        { key: '/buddy/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
+        { key: '/buddy/find', icon: <SearchOutlined />, label: 'Find Buddies' },
+        
+        { key: '/buddy/joined', icon: <GroupOutlined />, label: 'Joined Groups' },
+        { key: '/buddy/my-groups', icon: <UserOutlined />, label: 'My Groups' },
+        { key: '/buddy/create', icon: <PlusCircleOutlined />, label: 'Create Group' },
+      ],
+    },
+
+    {
+      key: 'session-tracker',
+      icon: <ClockCircleOutlined />,
+      label: 'Session Tracker',
+      children: [
+        { key: '/study-tracker', icon: <PlayCircleOutlined />, label: 'Sessions' },
+        ...(user?.role !== 'admin'
+          ? [
+              { key: '/quizzes', icon: <TrophyOutlined />, label: 'Quizzes' },
+              { key: '/tracking-summary', icon: <LineChartOutlined />, label: 'Tracking Summary' },
+              { key: '/material-mastery', icon: <RiseOutlined />, label: 'Material Mastery' },
+            ]
+          : []),
+        ...(user?.role === 'admin'
+          ? [{ key: '/create-students', icon: <UserAddOutlined />, label: 'Create Students' }]
+          : []),
+      ],
+    },
+
+    { type: 'divider' },
+
+    {
+      key: '/profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+    },
+    {
+      key: '/settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      danger: true,
+    },
+  ];
   const resourceLibraryMenuItem = {
     key: 'resource-library',
     icon: <ReadOutlined />,
@@ -244,11 +349,22 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     >
       <div className="sidebar-logo">
         {!collapsed ? (
-          <Space direction="vertical" size={2} style={{ width: '100%', textAlign: 'center' }}>
-            <Title level={3} style={{ margin: 0, color: '#2d3e50' }}>StudySmart</Title>
+          <Space
+            direction="vertical"
+            size={2}
+            style={{ width: '100%', textAlign: 'center' }}
+          >
+            <Title level={3} style={{ margin: 0, color: '#2d3e50' }}>
+              StudySmart
+            </Title>
+            <Text type="secondary">Smart Insights & Predictions</Text>
           </Space>
         ) : (
-          <Avatar size={40} icon={<BookOutlined />} style={{ backgroundColor: '#2d3e50' }} />
+          <Avatar
+            size={40}
+            icon={<BookOutlined />}
+            style={{ backgroundColor: '#2d3e50' }}
+          />
         )}
       </div>
 
