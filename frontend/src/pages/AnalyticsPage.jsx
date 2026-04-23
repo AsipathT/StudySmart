@@ -23,7 +23,7 @@ import {
 import analyticsService from '../services/analytics.service';
 import profileService from '../services/profile.service';
 import { useAuth } from '../hooks/useAuth';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import './AnalyticsPage.css';
 
 const { Title, Text } = Typography;
