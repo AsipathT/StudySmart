@@ -312,7 +312,7 @@ const MultipleFileUpload = ({ onUploadComplete, onAnalyticsUpdate }) => {
 
       {loadingAnalytics && (
         <Card style={{ marginTop: 20 }}>
-          <Spin size="large" tip="Loading analytics..." />
+          <Spin size="large" />
         </Card>
       )}
     </div>

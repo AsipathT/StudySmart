@@ -20,11 +20,16 @@ import {
   LineChartOutlined,
   RiseOutlined,
   UserAddOutlined,
-  SearchOutlined,
+  FolderOpenOutlined,
+  FileTextOutlined,
+  HighlightOutlined,
+  MessageOutlined,
+  ReadOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import profileService from '../../services/profile.service';
+import { setRlLoginIntent } from '../resourceLibrary/rlLoginIntent';
 import './Sidebar.css';
 
 const { Sider } = Layout;
@@ -54,17 +59,29 @@ const STUDY_BUDDY_KEYS = [
   '/buddy/create',
 ];
 
+const RESOURCE_LIBRARY_KEYS = [
+  '/resource-library/dashboard',
+  '/resource-library/resources',
+  '/resource-library/notes',
+  '/resource-library/flashcards',
+  '/resource-library/requests',
+];
+
+/** Main shell: hide Profile / Settings in sidebar while on Resource Library (keep them elsewhere). */
+const isResourceLibraryShellPath = (pathname) =>
+  pathname === '/resource-library' || pathname.startsWith('/resource-library/');
+
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
+  const { user, logout, loading, token } = useAuth();
   const [selectedKey, setSelectedKey] = useState(location.pathname);
   const [openKeys, setOpenKeys] = useState(() => {
     const keys = [];
     if (PREDICTOR_KEYS.includes(location.pathname)) keys.push('performance-predictor');
     if (SESSION_TRACKER_KEYS.includes(location.pathname)) keys.push('session-tracker');
-    if (STUDY_BUDDY_KEYS.includes(location.pathname)) keys.push('study-buddy');
+    if (RESOURCE_LIBRARY_KEYS.some((k) => location.pathname === k || location.pathname.startsWith(`${k}/`)))
+      keys.push('resource-library');
     return keys;
   });
 
@@ -72,7 +89,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     () => sessionStorage.getItem(AVATAR_KEY) || null
   );
 
-  // Load avatar from profile API
   const loadAvatar = async () => {
     if (!user) return;
     try {
@@ -104,7 +120,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     return () => window.removeEventListener('avatarUpdated', onAvatarUpdate);
   }, []);
 
-  // Sync selected key + auto-open parent when route changes
   useEffect(() => {
     setSelectedKey(location.pathname);
 
@@ -112,28 +127,40 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       const newKeys = [];
       if (PREDICTOR_KEYS.includes(location.pathname)) newKeys.push('performance-predictor');
       if (SESSION_TRACKER_KEYS.includes(location.pathname)) newKeys.push('session-tracker');
-      if (STUDY_BUDDY_KEYS.includes(location.pathname)) newKeys.push('study-buddy');
-
-      if (newKeys.length > 0) {
-        setOpenKeys(newKeys);
-      }
+      if (RESOURCE_LIBRARY_KEYS.some((k) => location.pathname === k || location.pathname.startsWith(`${k}/`)))
+        newKeys.push('resource-library');
+      if (newKeys.length > 0) setOpenKeys(newKeys);
     }
   }, [location.pathname, collapsed]);
 
-  // When collapsing, close all sub-menus
   useEffect(() => {
     if (collapsed) setOpenKeys([]);
   }, [collapsed]);
 
   const handleMenuClick = ({ key }) => {
     setSelectedKey(key);
-
     if (key === 'logout') {
       logout();
       navigate('/login');
-    } else {
-      navigate(key);
+      return;
     }
+
+    const isRlParent = key === 'resource-library';
+    const isRlChild = key.startsWith('/resource-library');
+
+    if (isRlParent || isRlChild) {
+      if (loading) return;
+      const authed = !!(user || token);
+      if (!authed) {
+        setRlLoginIntent();
+        navigate('/resource-library');
+        return;
+      }
+      navigate(isRlParent ? '/resource-library/dashboard' : key);
+      return;
+    }
+
+    navigate(key);
   };
 
   const handleOpenChange = (keys) => {
@@ -224,6 +251,92 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       danger: true,
     },
   ];
+  const resourceLibraryMenuItem = {
+    key: 'resource-library',
+    icon: <ReadOutlined />,
+    label: 'Resource Library',
+    children: [
+      { key: '/resource-library/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
+      { key: '/resource-library/resources', icon: <FolderOpenOutlined />, label: 'Resources' },
+      { key: '/resource-library/notes', icon: <FileTextOutlined />, label: 'Notes' },
+      { key: '/resource-library/flashcards', icon: <HighlightOutlined />, label: 'Flashcards' },
+      { key: '/resource-library/requests', icon: <MessageOutlined />, label: 'Requests' },
+    ],
+  };
+
+  const menuItems =
+    user?.role === 'resource_admin'
+      ? [
+          resourceLibraryMenuItem,
+          { type: 'divider' },
+          { key: '/profile', icon: <UserOutlined />, label: 'Profile' },
+          { key: '/settings', icon: <SettingOutlined />, label: 'Settings' },
+          { key: 'logout', icon: <LogoutOutlined />, label: 'Logout', danger: true },
+        ]
+      : [
+          {
+            key: '/dashboard',
+            icon: <DashboardOutlined />,
+            label: 'Dashboard',
+          },
+          ...(user?.role === 'admin' ? [
+            {
+              key: '/admin-dashboard',
+              icon: <ThunderboltOutlined />,
+              label: 'Admin Dashboard',
+            },
+          ] : []),
+          {
+            key: 'performance-predictor',
+            icon: <BarChartOutlined />,
+            label: 'Performance Predictor',
+            children: [
+              { key: '/upload', icon: <UploadOutlined />, label: 'Upload Marks' },
+              { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
+              { key: '/predictions', icon: <BookOutlined />, label: 'Predictions' },
+              { key: '/chatbot', icon: <RobotOutlined />, label: 'AI Assistant' },
+              ...(user?.role === 'admin' ? [
+                { key: '/history', icon: <HistoryOutlined />, label: 'History' },
+              ] : []),
+            ],
+          },
+          resourceLibraryMenuItem,
+          {
+            key: 'study-buddy',
+            icon: <BookOutlined />,
+            label: 'Study Buddy Finder',
+            children: [
+              { key: '/buddy/my-groups', icon: <UserOutlined />, label: 'My Groups' },
+              { key: '/buddy/joined', icon: <GroupOutlined />, label: 'Joined Groups' },
+              { key: '/buddy/all-groups', icon: <UsergroupAddOutlined />, label: 'All Groups' },
+              { key: '/buddy/create', icon: <PlusCircleOutlined />, label: 'Create Group' },
+            ],
+          },
+          {
+            key: 'session-tracker',
+            icon: <ClockCircleOutlined />,
+            label: 'Session Tracker',
+            children: [
+              { key: '/study-tracker', icon: <PlayCircleOutlined />, label: 'Sessions' },
+              ...(user?.role !== 'admin' ? [
+                { key: '/quizzes', icon: <TrophyOutlined />, label: 'Quizzes' },
+                { key: '/tracking-summary', icon: <LineChartOutlined />, label: 'Tracking Summary' },
+                { key: '/material-mastery', icon: <RiseOutlined />, label: 'Material Mastery' },
+              ] : []),
+              ...(user?.role === 'admin' ? [
+                { key: '/create-students', icon: <UserAddOutlined />, label: 'Create Students' },
+              ] : []),
+            ],
+          },
+          { type: 'divider' },
+          { key: '/profile', icon: <UserOutlined />, label: 'Profile' },
+          { key: '/settings', icon: <SettingOutlined />, label: 'Settings' },
+          { key: 'logout', icon: <LogoutOutlined />, label: 'Logout', danger: true },
+        ];
+
+  const menuItemsFiltered = isResourceLibraryShellPath(location.pathname)
+    ? menuItems.filter((item) => item.key !== '/profile' && item.key !== '/settings')
+    : menuItems;
 
   return (
     <Sider
@@ -266,7 +379,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           <div className="user-info">
             <Text strong>{user.name}</Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {user.role}
+              {user.role === 'resource_admin' ? 'Resource Library Admin' : user.role}
             </Text>
           </div>
         </div>
@@ -278,7 +391,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         openKeys={openKeys}
         onOpenChange={handleOpenChange}
         onClick={handleMenuClick}
-        items={menuItems}
+        items={menuItemsFiltered}
         className="sidebar-menu"
       />
     </Sider>

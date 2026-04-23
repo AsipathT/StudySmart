@@ -187,6 +187,16 @@ const FileIcon = ({ fileName }) => {
 const StudentInfoForm = ({ form, onNext }) => {
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [selectedYear,    setSelectedYear]    = useState(null);
+  
+   // TEST HELPER - allows Playwright to set form values directly
+  useEffect(() => {
+    window.__setUploadFormValues = (values) => {
+      form.setFieldsValue(values);
+      if (values.courseProgram) setSelectedProgram(values.courseProgram);
+      if (values.academicYear) setSelectedYear(values.academicYear);
+    };
+    return () => { delete window.__setUploadFormValues; };
+  }, [form]);
 
   const handleNext = async () => {
     try {
