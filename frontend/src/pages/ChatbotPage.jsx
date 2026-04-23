@@ -754,7 +754,8 @@ async function loadStudentData(user) {
   } catch (e) { /* ignore */ }
 
   /* ── SOURCE 2: /api/analytics/student/:id ─────────── */
-  if (averageScore === null && studentId) {
+  const roleLc = String(user?.role || '').toLowerCase();
+  if (averageScore === null && studentId && (roleLc === 'student' || roleLc === 'resource_admin_student')) {
     try {
       const res = await fetch(`${API_BASE}/analytics/student/${studentId}`, { headers });
       if (res.ok) {

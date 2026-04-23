@@ -6,13 +6,14 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    const { connectMongoDB } = require('../config/database');
+    const { connectMongoDB, connectPostgreSQL } = require('../config/database');
     await connectMongoDB();
+    await connectPostgreSQL();
     // Seed demo + admin users now that DB is connected
     const { seedUsers } = require('./routes/auth.routes');
     if (seedUsers) await seedUsers();
   } catch (e) {
-    console.warn('⚠️ MongoDB unavailable:', e.message);
+    console.warn('⚠️ Database warning:', e.message);
   }
 
   const server = app.listen(PORT, () => {

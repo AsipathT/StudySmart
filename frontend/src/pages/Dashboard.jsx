@@ -461,7 +461,8 @@ async function loadDashboardData(user) {
 
   if (scores.length === 0) {
     const uid = user?.id || user?._id || user?.studentId;
-    if (uid) {
+    const roleLc = String(user?.role || '').toLowerCase();
+    if (uid && (roleLc === 'student' || roleLc === 'resource_admin_student')) {
       try {
         const dashRaw = await analyticsService.getStudentDashboard(uid).catch(() => null);
         const dash = unwrap(dashRaw);

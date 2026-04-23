@@ -26,7 +26,8 @@ const corsOptions = {
     callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  // x-rl-role: multipart RL requests. x-rl-user-name: collaborative note save (PUT /content).
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-rl-role', 'x-rl-user-name'],
   credentials: true,
   optionsSuccessStatus: 200, // IE11 compatibility
 };
@@ -44,6 +45,22 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use("/api/study-groups", require("./routes/studygroup.routes"));
 const staticUploadsPath = path.join(__dirname, 'uploads');
 console.log('📁 Serving static uploads from', staticUploadsPath);
+
+// Pre-create every Resource Library upload folder at startup so a fresh clone or
+// an early upload cannot lose files just because the target directory didn't exist.
+try {
+  const fs = require('fs');
+  const dirs = [
+    path.join(staticUploadsPath, 'resource-library', 'resources'),
+    path.join(staticUploadsPath, 'resource-library', 'modules'),
+    path.join(staticUploadsPath, 'resource-library', 'requests'),
+    path.join(staticUploadsPath, 'resource-library', 'request-chat'),
+  ];
+  for (const d of dirs) fs.mkdirSync(d, { recursive: true });
+} catch (e) {
+  console.warn('⚠️ Could not pre-create upload directories:', e.message);
+}
+
 app.use('/uploads', express.static(staticUploadsPath));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -116,6 +133,13 @@ try {
   console.log('✅ quizzes routes');
 } catch (e) {
   console.warn('⚠️ quiz.routes:', e.message);
+}
+
+try {
+  app.use('/api/resource-library', require('../src/routes/resourceLibrary.routes'));
+  console.log('✅ resource-library routes');
+} catch (e) {
+  console.warn('⚠️ resourceLibrary.routes:', e.message);
 }
 
 // ── Health check ──────────────────────────────────────────────────────────────

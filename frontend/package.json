@@ -18,17 +18,17 @@
     "react-hot-toast": "^2.4.1",
     "react-markdown": "^8.0.7",
     "react-router-dom": "^6.15.0",
-    "recharts": "^2.8.0",
-    "xlsx": "^0.18.5"
+    "recharts": "^2.8.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "DANGEROUSLY_DISABLE_HOST_CHECK=true HOST=localhost WATCHPACK_POLLING=true react-scripts start",
+    "dev": "DANGEROUSLY_DISABLE_HOST_CHECK=true HOST=localhost WATCHPACK_POLLING=true react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "react-scripts": "^5.0.1"
+    "react-scripts": "5.0.1"
   },
   "browserslist": {
     "production": [

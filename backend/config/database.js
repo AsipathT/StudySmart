@@ -1,4 +1,6 @@
+const { Sequelize } = require('sequelize');
 const mongoose = require('mongoose');
+const pg = require('pg');
 require('dotenv').config();
 
 const connectMongoDB = async () => {
@@ -26,4 +28,35 @@ const disconnectMongoDB = async () => {
   }
 };
 
-module.exports = { connectMongoDB, disconnectMongoDB };
+const sequelize = new Sequelize(
+  process.env.PG_DATABASE || 'studysmart',
+  process.env.PG_USER || 'postgres',
+  process.env.PG_PASSWORD || '',
+  {
+    host: process.env.PG_HOST || '127.0.0.1',
+    port: process.env.PG_PORT || 5432,
+    dialect: 'postgres',
+    dialectModule: pg,
+    logging: false,
+    pool: {
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
+  }
+);
+
+const connectPostgreSQL = async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync({ alter: true });
+    console.log('✅ PostgreSQL connected');
+    return true;
+  } catch (error) {
+    console.warn('⚠️ PostgreSQL unavailable — continuing without it:', error.message);
+    return false;
+  }
+};
+
+module.exports = { connectMongoDB, disconnectMongoDB, connectPostgreSQL, sequelize };
