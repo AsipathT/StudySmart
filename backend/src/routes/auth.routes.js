@@ -35,17 +35,43 @@ async function seedUsers() {
   const seeds = [
     { name: 'Demo Student', email: 'demo@studysmart.com', password: 'demo123', role: 'student', studentId: 'IT23145870' },
     { name: 'Admin',        email: 'admin@nidu.sliit.lk', password: 'nidu@123', role: 'admin',   studentId: '' },
+    {
+      name: 'Resource Library Admin',
+      email: 'resourceadmin@gmail.com',
+      password: 'RAdmin123',
+      role: 'resource_admin',
+      studentId: '',
+    },
+    { name: 'Kasun',    email: 'kasun@gmail.com',    password: 'kasun123',    role: 'student', studentId: '' },
+    { name: 'Nadeesha', email: 'nadeesha@gmail.com', password: 'nadeesha123', role: 'student', studentId: '' },
+    { name: 'Dulani',   email: 'dulani@gmail.com',   password: 'dulani123',   role: 'student', studentId: '' },
+    { name: 'Chamod',   email: 'chamod@gmail.com',   password: 'chamod123',   role: 'student', studentId: '' },
+    { name: 'Ishani',   email: 'ishani@gmail.com',   password: 'ishani123',   role: 'student', studentId: '' },
   ];
 
   for (const seed of seeds) {
     try {
       const existing = await User.findOne({ email: seed.email });
       if (!existing) {
-        const hash = await bcrypt.hash(seed.password, 10);
-        const u = await User.create({ ...seed, password: hash });
+        // Plain password — User pre('save') hashes once. Do NOT pass a pre-bcrypt hash here
+        // or comparePassword(plain) will fail (double-hash).
+        const u = await User.create({
+          name: seed.name,
+          email: seed.email,
+          password: seed.password,
+          role: seed.role,
+          studentId: seed.studentId || '',
+        });
         console.log(`[AUTH] ✅ Seeded ${seed.role}:`, seed.email, '| _id:', u._id.toString());
       } else {
-        console.log(`[AUTH] ✅ Already exists (${seed.role}):`, seed.email);
+        // Resync password/role/name for seed accounts (fixes stale DB after password changes
+        // or documents created when seed mistakenly double-hashed).
+        const hash = await bcrypt.hash(seed.password, 10);
+        await User.updateOne(
+          { _id: existing._id },
+          { $set: { password: hash, role: seed.role, name: seed.name } }
+        );
+        console.log(`[AUTH] ✅ Synced seed account (${seed.role}):`, seed.email);
       }
     } catch (e) {
       console.warn(`[AUTH] Seed error for ${seed.email}:`, e.message);
@@ -129,12 +155,24 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'No account found with this email' });
     }
 
-    // Verify password
+    // Verify password — use bcrypt directly on the stored hash so we always compare correctly
+    // (some DB drivers return Buffer; comparePassword can fail if `this` or field shape differs).
+    const plain = String(password);
+    const stored = user.password;
+    const hashStr = Buffer.isBuffer(stored) ? stored.toString('utf8') : String(stored || '');
+
     let valid = false;
-    try {
-      valid = await user.comparePassword(password);
-    } catch {
-      valid = await bcrypt.compare(password, user.password);
+    if (hashStr.startsWith('$2')) {
+      valid = await bcrypt.compare(plain, hashStr);
+      if (!valid && plain.trim() !== plain) {
+        valid = await bcrypt.compare(plain.trim(), hashStr);
+      }
+    } else if (hashStr) {
+      try {
+        valid = await user.comparePassword(plain);
+      } catch {
+        valid = await bcrypt.compare(plain, hashStr);
+      }
     }
 
     if (!valid) {
