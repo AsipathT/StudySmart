@@ -181,6 +181,90 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     setOpenKeys(keys);
   };
 
+  const menuItems = [
+    {
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
+    },
+
+    ...(user?.role === 'admin'
+      ? [
+          {
+            key: '/admin-dashboard',
+            icon: <ThunderboltOutlined />,
+            label: 'Admin Dashboard',
+          },
+        ]
+      : []),
+
+    {
+      key: 'performance-predictor',
+      icon: <BarChartOutlined />,
+      label: 'Performance Predictor',
+      children: [
+        { key: '/upload', icon: <UploadOutlined />, label: 'Upload Marks' },
+        { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
+        { key: '/predictions', icon: <BookOutlined />, label: 'Predictions' },
+        { key: '/chatbot', icon: <RobotOutlined />, label: 'AI Assistant' },
+        ...(user?.role === 'admin'
+          ? [{ key: '/history', icon: <HistoryOutlined />, label: 'History' }]
+          : []),
+      ],
+    },
+
+    {
+      key: 'study-buddy',
+      icon: <BookOutlined />,
+      label: 'Study Buddy Finder',
+      children: [
+        { key: '/buddy/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
+        { key: '/buddy/find', icon: <SearchOutlined />, label: 'Find Buddies' },
+        
+        { key: '/buddy/joined', icon: <GroupOutlined />, label: 'Joined Groups' },
+        { key: '/buddy/my-groups', icon: <UserOutlined />, label: 'My Groups' },
+        { key: '/buddy/create', icon: <PlusCircleOutlined />, label: 'Create Group' },
+      ],
+    },
+
+    {
+      key: 'session-tracker',
+      icon: <ClockCircleOutlined />,
+      label: 'Session Tracker',
+      children: [
+        { key: '/study-tracker', icon: <PlayCircleOutlined />, label: 'Sessions' },
+        ...(user?.role !== 'admin'
+          ? [
+              { key: '/quizzes', icon: <TrophyOutlined />, label: 'Quizzes' },
+              { key: '/tracking-summary', icon: <LineChartOutlined />, label: 'Tracking Summary' },
+              { key: '/material-mastery', icon: <RiseOutlined />, label: 'Material Mastery' },
+            ]
+          : []),
+        ...(user?.role === 'admin'
+          ? [{ key: '/create-students', icon: <UserAddOutlined />, label: 'Create Students' }]
+          : []),
+      ],
+    },
+
+    { type: 'divider' },
+
+    {
+      key: '/profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+    },
+    {
+      key: '/settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      danger: true,
+    },
+  ];
   const resourceLibraryMenuItem = {
     key: 'resource-library',
     icon: <ReadOutlined />,
