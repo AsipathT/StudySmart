@@ -1,0 +1,24 @@
+{
+  "name": "studysmart-rl-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright end-to-end tests for the Resource Library module (WE_238_3.2, Member 4).",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:auth": "playwright test specs/rl-auth.spec.ts",
+    "test:dashboard": "playwright test specs/rl-dashboard.spec.ts",
+    "test:resources": "playwright test specs/rl-resources.spec.ts",
+    "test:notes": "playwright test specs/rl-notes.spec.ts",
+    "test:requests": "playwright test specs/rl-requests.spec.ts",
+    "test:comments": "playwright test specs/rl-comments.spec.ts",
+    "test:notifications": "playwright test specs/rl-notifications.spec.ts",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^25.6.0",
+    "playwright": "^1.47.0",
+    "typescript": "^5.4.0"
+  }
+}
