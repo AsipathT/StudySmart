@@ -74,7 +74,7 @@ const isResourceLibraryShellPath = (pathname) =>
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, token, loading, logout } = useAuth();
 
   const [selectedKey, setSelectedKey] = useState(location.pathname);
   const [openKeys, setOpenKeys] = useState(() => {
