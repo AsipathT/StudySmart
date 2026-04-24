@@ -287,7 +287,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             <Title level={3} style={{ margin: 0, color: '#2d3e50' }}>
               StudySmart
             </Title>
-            <Text type="secondary">Smart Insights & Predictions</Text>
+            {/* <Text type="secondary">Smart Insights & Predictions</Text> */}
           </Space>
         ) : (
           <Avatar

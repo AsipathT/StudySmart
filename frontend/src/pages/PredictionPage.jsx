@@ -197,22 +197,22 @@ const PredictionPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{
               width: 52, height: 52, borderRadius: 14,
-              background: 'rgba(255,255,255,0.2)',
+              background: 'rgba(59, 130, 246, 0.12)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <ThunderboltOutlined style={{ fontSize: 26, color: '#fff' }} />
+              <ThunderboltOutlined style={{ fontSize: 26, color: '#2563eb' }} />
             </div>
             <div>
-              <Title level={3} style={{ margin: 0, color: '#fff' }}>Performance Predictor</Title>
-              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
+              <Title level={3} style={{ margin: 0 }}>Performance Predictor</Title>
+              <Text type="secondary" style={{ fontSize: 13 }}>
                 AI-powered predictions based on your uploaded marks
               </Text>
             </div>
           </div>
           <Tag style={{
-            background: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            color: '#fff', fontSize: 13, padding: '4px 14px', borderRadius: 20
+            background: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.15)',
+            color: '#2563eb', fontSize: 13, padding: '4px 14px', borderRadius: 20
           }}>
             {availSubs.length > 0 ? `${availSubs.length} subjects with data` : 'Upload marks to get started'}
           </Tag>
