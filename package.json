@@ -7,5 +7,8 @@
     "start:frontend": "npm run start --prefix frontend",
     "start:backend": "npm run start --prefix backend",
     "backend": "npm run start --prefix backend"
+  },
+  "dependencies": {
+    "xlsx-js-style": "^1.2.0"
   }
 }

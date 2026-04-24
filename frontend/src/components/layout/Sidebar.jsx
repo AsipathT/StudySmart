@@ -74,14 +74,14 @@ const isResourceLibraryShellPath = (pathname) =>
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, loading, token } = useAuth();
+  const { user, token, loading, logout } = useAuth();
+
   const [selectedKey, setSelectedKey] = useState(location.pathname);
   const [openKeys, setOpenKeys] = useState(() => {
     const keys = [];
     if (PREDICTOR_KEYS.includes(location.pathname)) keys.push('performance-predictor');
     if (SESSION_TRACKER_KEYS.includes(location.pathname)) keys.push('session-tracker');
-    if (RESOURCE_LIBRARY_KEYS.some((k) => location.pathname === k || location.pathname.startsWith(`${k}/`)))
-      keys.push('resource-library');
+    if (STUDY_BUDDY_KEYS.includes(location.pathname)) keys.push('study-buddy');
     return keys;
   });
 
@@ -89,6 +89,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     () => sessionStorage.getItem(AVATAR_KEY) || null
   );
 
+  // Load avatar from profile API
   const loadAvatar = async () => {
     if (!user) return;
     try {
@@ -123,16 +124,29 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   useEffect(() => {
     setSelectedKey(location.pathname);
 
-    if (!collapsed) {
-      const newKeys = [];
-      if (PREDICTOR_KEYS.includes(location.pathname)) newKeys.push('performance-predictor');
-      if (SESSION_TRACKER_KEYS.includes(location.pathname)) newKeys.push('session-tracker');
-      if (RESOURCE_LIBRARY_KEYS.some((k) => location.pathname === k || location.pathname.startsWith(`${k}/`)))
-        newKeys.push('resource-library');
-      if (newKeys.length > 0) setOpenKeys(newKeys);
+    const newKeys = [];
+
+    if (
+      RESOURCE_LIBRARY_KEYS.some(
+        (k) =>
+          location.pathname === k ||
+          location.pathname.startsWith(`${k}/`)
+      )
+    ) {
+      newKeys.push('resource-library');
+    }
+
+    if (STUDY_BUDDY_KEYS.includes(location.pathname)) {
+      newKeys.push('study-buddy');
+    }
+
+    if (newKeys.length > 0) {
+      setOpenKeys(newKeys);
     }
   }, [location.pathname, collapsed]);
 
+
+  // When collapsing, close all sub-menus
   useEffect(() => {
     if (collapsed) setOpenKeys([]);
   }, [collapsed]);
@@ -357,7 +371,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
             <Title level={3} style={{ margin: 0, color: '#2d3e50' }}>
               StudySmart
             </Title>
-            <Text type="secondary">Smart Insights & Predictions</Text>
+            {/* <Text type="secondary">Smart Insights & Predictions</Text> */}
           </Space>
         ) : (
           <Avatar

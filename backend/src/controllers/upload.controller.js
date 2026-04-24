@@ -64,7 +64,10 @@ async function createExtractionRecord(data) {
     data.uploadedBy = data.metadata.userId;
   }
   try {
-    return await ExtractedData.create(data);
+    // Use Mongoose syntax for MongoDB
+    const record = new ExtractedData(data);
+    await record.save();
+    return record;
   } catch (e) {
     console.warn('⚠️  ExtractedData.create failed:', e.message);
     return { id: 'no-db-' + Date.now(), update: async () => {} };
@@ -157,11 +160,19 @@ class UploadController {
       const normalizedRows = rows.map(normalizeRowId);
       const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId, 'csv');
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-      await extractionRecord.update({ status:'completed', processedAt:new Date(), recordCount:savedRecords.length, normalizedRecords:normalizedRows });
+      // Update using Mongoose syntax
+      extractionRecord.status = 'completed';
+      extractionRecord.processedAt = new Date();
+      extractionRecord.recordCount = savedRecords.length;
+      extractionRecord.normalizedRecords = normalizedRows;
+      await extractionRecord.save();
       const studentRow = findStudentRow(normalizedRows, studentId);
       return { recordsCount:savedRecords.length, extractionId:extractionRecord._id||extractionRecord.id, studentFound:!!studentRow, preview:studentRow?[studentRow]:normalizedRows.slice(0,5) };
     } catch (error) {
-      await extractionRecord.update({ status:'failed', metadata:{ error:error.message } });
+      // Update using Mongoose syntax
+      extractionRecord.status = 'failed';
+      extractionRecord.metadata = { ...extractionRecord.metadata, error: error.message };
+      await extractionRecord.save();
       throw new Error(`CSV processing failed: ${error.message}`);
     }
   }
@@ -179,11 +190,19 @@ class UploadController {
       const normalizedRows = normalizedData.map(normalizeRowId);
       const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId, 'pdf');
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-      await extractionRecord.update({ status:'completed', processedAt:new Date(), recordCount:savedRecords.length, normalizedRecords:normalizedRows });
+      // Update using Mongoose syntax
+      extractionRecord.status = 'completed';
+      extractionRecord.processedAt = new Date();
+      extractionRecord.recordCount = savedRecords.length;
+      extractionRecord.normalizedRecords = normalizedRows;
+      await extractionRecord.save();
       const studentRow = findStudentRow(normalizedRows, studentId);
       return { recordsCount:savedRecords.length, extractionId:extractionRecord._id||extractionRecord.id, studentFound:!!studentRow, preview:studentRow?[studentRow]:normalizedRows.slice(0,5) };
     } catch (error) {
-      await extractionRecord.update({ status:'failed', metadata:{ error:error.message } });
+      // Update using Mongoose syntax
+      extractionRecord.status = 'failed';
+      extractionRecord.metadata = { ...extractionRecord.metadata, error: error.message };
+      await extractionRecord.save();
       throw new Error(`PDF processing failed: ${error.message}`);
     }
   }
@@ -218,11 +237,19 @@ class UploadController {
       const normalizedRows = rows.map(normalizeRowId);
       const savedRecords   = await this.saveRows(normalizedRows, file.path, formData, userId, 'excel');
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-      await extractionRecord.update({ status:'completed', processedAt:new Date(), recordCount:savedRecords.length, normalizedRecords:normalizedRows });
+      // Update using Mongoose syntax
+      extractionRecord.status = 'completed';
+      extractionRecord.processedAt = new Date();
+      extractionRecord.recordCount = savedRecords.length;
+      extractionRecord.normalizedRecords = normalizedRows;
+      await extractionRecord.save();
       const studentRow = findStudentRow(normalizedRows, studentId);
       return { recordsCount:savedRecords.length, extractionId:extractionRecord._id||extractionRecord.id, sheetName, studentFound:!!studentRow, preview:studentRow?[studentRow]:normalizedRows.slice(0,5) };
     } catch (error) {
-      await extractionRecord.update({ status:'failed', metadata:{ error:error.message } });
+      // Update using Mongoose syntax
+      extractionRecord.status = 'failed';
+      extractionRecord.metadata = { ...extractionRecord.metadata, error: error.message };
+      await extractionRecord.save();
       throw new Error(`Excel processing failed: ${error.message}`);
     }
   }
@@ -258,32 +285,34 @@ class UploadController {
         const stYear   = record.academicYear || record.year || formData.academicYear || null;
         const stSem    = record.semester || record.Semester || formData.semester || null;
 
-        let student = await Student.findOne({ where: { studentNumber } });
+        let student = await Student.findOne({ studentNumber });
         if (!student) {
-          student = await Student.create({
+          student = new Student({
             studentNumber,
             name:     record.name || record.Name || formData.fullName || `Student ${studentNumber}`,
             email:    record.email || record.Email || `${studentNumber.toLowerCase()}@student.edu`,
             metadata: { source:'file_upload', userId, program:stProg, year:stYear, semester:stSem, branch:stBranch },
           });
+          await student.save();
         } else {
           // Merge new info into metadata
           const existing = student.metadata || {};
-          await Student.update({
-            name:     formData.fullName || record.name || record.Name || student.name,
-            metadata: { ...existing, userId, program:stProg||existing.program, year:stYear||existing.year, semester:stSem||existing.semester, branch:stBranch||existing.branch },
-          }, { where: { id: student.id } });
+          student.name = formData.fullName || record.name || record.Name || student.name;
+          student.metadata = { ...existing, userId, program:stProg||existing.program, year:stYear||existing.year, semester:stSem||existing.semester, branch:stBranch||existing.branch };
+          await student.save();
         }
 
-        // BUG FIX 2: store userId in metadata so profile controller can find scores
-        const quizScore = await QuizScore.create({
-          studentId:     student.id,
+        // BUG FIX 2: store userId directly and in metadata so analytics and profile lookups can find this row
+        const quizScore = new QuizScore({
+          userId:        userId,
+          studentId:     student._id.toString(),
           subject, score, type,
           date:          record.date || new Date(),
           sourceFile:    filePath,
           extractedData: record,
           metadata:      { grade, status, uploadedBy: userId, studentNumber },
         });
+        await quizScore.save();
         saved.push(quizScore);
 
         mongoRows.push({
