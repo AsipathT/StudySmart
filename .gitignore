@@ -1,0 +1,21 @@
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Cache
+.cache/
+**/.cache/
+
+# Environment variables
+.env
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,74 @@
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background:
+    linear-gradient(rgba(30,60,114,0.85), rgba(42,82,152,0.85)),
+    url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914');
+
+  background-size: cover;
+  background-position: center;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  padding: 30px;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.register-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.register-title {
+  margin: 0;
+}
+
+.register-btn {
+  border-radius: 8px !important;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+}
+
+.register-btn:hover {
+  opacity: 0.9;
+}
+
+.register-footer {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.login-link {
+  font-weight: bold;
+  color: #667eea;
+}
+
+.error-text {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.demo-box {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(240,242,245,0.8);
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: center;
+  color: #555;
+}

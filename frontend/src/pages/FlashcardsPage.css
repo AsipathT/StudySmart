@@ -1,0 +1,691 @@
+/* Flashcards page — supplements ResourceLibraryDashboard.css (Notes-style layout) */
+
+.fc-flash-page {
+  display: block;
+  margin-top: 8px;
+}
+
+/* Match Resource Library card grid + body layout (not Notes line-clamp) */
+.notes-collab-wrap.fc-flash-page .notes-gallery-grid {
+  align-items: stretch;
+  gap: 14px;
+}
+
+.notes-collab-wrap.fc-flash-page .note-tile.rl-card {
+  height: 100%;
+}
+
+.notes-collab-wrap.fc-flash-page .note-tile .rl-content.note-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Same as .rl-content .tile-desc on resource tiles: fixed min height + flex so rows align */
+.notes-collab-wrap.fc-flash-page .note-tile .tile-desc {
+  flex: 1 1 auto;
+  min-height: 36px;
+  margin: 0;
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  line-clamp: unset;
+  color: #4b5568;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fc-flash-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fc-flash-head-left h3 {
+  margin: 0;
+}
+
+/* Primary Generate / New deck — explicit white label (global App.css can tint text) */
+.fc-flash-generate-primary.ant-btn-primary,
+.fc-flash-generate-primary.ant-btn-primary:not(:disabled) {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.fc-flash-generate-primary.ant-btn-primary > span,
+.fc-flash-generate-primary.ant-btn-primary .ant-btn-icon,
+.fc-flash-generate-primary.ant-btn-primary .anticon {
+  color: #ffffff !important;
+}
+
+.fc-flash-dock-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+.fc-flash-size {
+  min-width: 48px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #d7e2f8;
+  background: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.fc-flash-size:hover {
+  border-color: #2563eb;
+  background: #f7faff;
+}
+
+.fc-flash-size--on {
+  border-color: transparent;
+  background: linear-gradient(90deg, #2563eb, #6d28d9);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+}
+
+.fc-flash-empty-grid {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 36px 20px;
+  border: 1px dashed #ccd7f2;
+  border-radius: 14px;
+  background: #f9fbff;
+  color: #273255;
+}
+
+.fc-flash-empty-grid p {
+  margin: 0;
+  font-weight: 700;
+}
+
+.fc-flash-empty-grid__sub {
+  margin-top: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #6d7899 !important;
+}
+
+.fc-flash-alert {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(234, 179, 8, 0.45);
+  background: linear-gradient(105deg, #fffbeb, #ffffff);
+  font-size: 14px;
+  font-weight: 600;
+  color: #854d0e;
+  line-height: 1.5;
+}
+
+/* Loading */
+.fc-flash-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 41, 59, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.fc-flash-loading__panel {
+  text-align: center;
+  padding: 36px 40px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e2e9f8;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  max-width: 360px;
+}
+
+.fc-flash-loading__spinner {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 16px;
+  border: 3px solid #e2e9f8;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: fc-flash-spin 0.85s linear infinite;
+}
+
+@keyframes fc-flash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fc-flash-loading__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #181b2a;
+}
+
+.fc-flash-loading__sub {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Modal: light shell (overrides global dark modal in App.css) */
+.fc-flash-modal-wrap .ant-modal-content {
+  padding: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.fc-flash-modal-wrap .ant-modal-body {
+  padding: 0 !important;
+}
+
+.fc-flash-modal-wrap .ant-modal-mask {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+/* Generate deck: standard light dialog */
+.fc-flash-generate-modal-wrap .ant-modal-content {
+  padding: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  background: #fff !important;
+  border: 1px solid #e2e9f8 !important;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12) !important;
+}
+
+.fc-flash-generate-modal-wrap .ant-modal-header {
+  background: linear-gradient(180deg, #f8fbff 0%, #fff 100%) !important;
+  border-bottom: 1px solid #e6ecf7 !important;
+  margin: 0 !important;
+  padding: 16px 20px !important;
+}
+
+.fc-flash-generate-modal-wrap .ant-modal-title {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  color: #181b2a !important;
+}
+
+.fc-flash-generate-modal-wrap .ant-modal-close {
+  top: 14px !important;
+  color: #64748b !important;
+}
+
+.fc-flash-generate-modal-wrap .ant-modal-body {
+  padding: 20px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+}
+
+.fc-flash-generate-modal-wrap .ant-modal-footer {
+  margin: 0 !important;
+  padding: 14px 20px 18px !important;
+  border-top: 1px solid #e6ecf7 !important;
+  background: linear-gradient(180deg, #fafbff 0%, #f8fbff 100%) !important;
+}
+
+/* Cancel — white surface, dark label (contrasts with footer + primary Generate) */
+.fc-flash-generate-modal-wrap .fc-flash-generate-cancel.ant-btn,
+.fc-flash-generate-modal-wrap .fc-flash-generate-cancel.ant-btn-default {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  min-width: 96px;
+  height: 40px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+.fc-flash-generate-modal-wrap .fc-flash-generate-cancel.ant-btn:hover:not(:disabled),
+.fc-flash-generate-modal-wrap .fc-flash-generate-cancel.ant-btn-default:hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.fc-flash-generate-modal-wrap .fc-flash-generate-cancel.ant-btn > span {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.fc-flash-generate-modal__body {
+  padding: 0;
+}
+
+.fc-flash-generate-modal__label {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.fc-flash-generate-modal__sizes {
+  justify-content: flex-start !important;
+}
+
+.fc-flash-generate-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fc-flash-generate-modal-wrap .ant-modal-mask {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+/* Study deck card — polished shell aligned with Flashcards page theme */
+.fc-flash-modal-wrap .fc-flash-modal-card.notes-editor-card {
+  margin: 0 !important;
+  background: linear-gradient(165deg, #ffffff 0%, #f8fbff 48%, #ffffff 100%) !important;
+  border: 1px solid rgba(226, 233, 248, 0.95) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 4px 6px -1px rgba(15, 23, 42, 0.05),
+    0 20px 40px -12px rgba(30, 64, 175, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+  overflow: hidden;
+}
+
+.fc-flash-modal-wrap .fc-flash-modal-card .ant-card-body {
+  padding: 0 !important;
+  color: #1e293b !important;
+}
+
+.fc-flash-modal-wrap .fc-flash-modal-top.notes-editor-top {
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding: 16px 18px 14px !important;
+  border-bottom: 1px solid rgba(230, 236, 247, 0.95) !important;
+  background: linear-gradient(180deg, #f4f8ff 0%, #fbfcff 55%, #ffffff 100%) !important;
+  border-radius: 0 !important;
+}
+
+.fc-flash-modal-close.ant-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+.fc-flash-modal-close.ant-btn:hover {
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+}
+
+.fc-flash-modal-close.ant-btn .anticon {
+  font-size: 16px;
+}
+
+/* Toolbar buttons: light surface + dark text (portal is outside .rl-wrap; overrides App.css dark theme) */
+.fc-flash-modal-wrap .fc-flash-modal-top .fc-flash-modal-tool.ant-btn-default {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+}
+
+.fc-flash-modal-wrap .fc-flash-modal-top .fc-flash-modal-tool.ant-btn-default:hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.fc-flash-modal-wrap .fc-flash-modal-top .fc-flash-modal-tool.ant-btn-default .anticon {
+  color: #475569 !important;
+}
+
+.fc-flash-modal-meta {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fc-flash-modal-deck {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.fc-flash-modal-stats {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.fc-flash-modal-tool {
+  border-radius: 12px !important;
+  height: 36px !important;
+  font-weight: 800 !important;
+}
+
+.fc-flash-modal-progress {
+  height: 4px;
+  background: linear-gradient(90deg, #eef2ff, #f1f5f9);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.fc-flash-modal-progress__fill {
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(90deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.35);
+}
+
+.fc-flash-modal-body {
+  padding: 24px 22px 8px;
+  background: radial-gradient(120% 80% at 50% 0%, rgba(239, 246, 255, 0.65) 0%, transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, #f9fbff 40%, #ffffff 100%);
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  color: #1e293b;
+}
+
+/* Study actions — readable on light modal (global dark ant overrides) */
+.fc-flash-modal-body .fc-flash-actions .ant-btn-default {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+.fc-flash-modal-body .fc-flash-actions .ant-btn-default:hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.fc-flash-modal-body .fc-flash-actions .ant-btn-dangerous {
+  background: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #b91c1c !important;
+  font-weight: 700 !important;
+}
+
+.fc-flash-modal-body .fc-flash-actions .ant-btn-dangerous:hover:not(:disabled) {
+  background: #ffe4e6 !important;
+  border-color: #fda4af !important;
+  color: #991b1b !important;
+}
+
+.fc-flash-modal-body .fc-flash-actions .ant-btn-primary {
+  background: linear-gradient(90deg, #2563eb, #6d28d9) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28) !important;
+}
+
+.fc-flash-modal-body .fc-flash-actions .ant-btn-primary:hover:not(:disabled) {
+  color: #ffffff !important;
+  filter: brightness(1.06);
+}
+
+.fc-flash-modal-body .fc-flash-actions .ant-btn-primary > span,
+.fc-flash-modal-body .fc-flash-actions .ant-btn-primary .anticon {
+  color: #ffffff !important;
+}
+
+.fc-flash-done .ant-btn-primary {
+  background: linear-gradient(90deg, #2563eb, #6d28d9) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.fc-flash-done .ant-btn-primary > span {
+  color: #ffffff !important;
+}
+
+.fc-flash-study-hint-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 20px;
+}
+
+.fc-flash-study-hint {
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #475569;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.fc-flash-stage {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 6px;
+  perspective: 1400px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(238, 242, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 100%);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.fc-flash-flip {
+  width: 100%;
+  cursor: pointer;
+  outline: none;
+  border-radius: 16px;
+}
+
+.fc-flash-flip:focus-visible {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+  border-radius: 16px;
+}
+
+.fc-flash-flip__inner {
+  position: relative;
+  min-height: 288px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.fc-flash-flip--answer .fc-flash-flip__inner {
+  transform: rotateY(180deg);
+}
+
+.fc-flash-flip__face {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 22px 24px 24px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: linear-gradient(165deg, #ffffff 0%, #fafbff 100%);
+  border: 1px solid rgba(226, 233, 248, 0.95);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 32px -8px rgba(30, 58, 138, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.fc-flash-flip__face--back {
+  transform: rotateY(180deg);
+  background: linear-gradient(165deg, #ffffff 0%, #f5f8ff 55%, #fafbff 100%);
+}
+
+.fc-flash-flip__badge {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(219, 234, 254, 0.95) 0%, rgba(239, 246, 255, 0.9) 100%);
+  color: #1d4ed8;
+  border: 1px solid rgba(147, 197, 253, 0.55);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+}
+
+.fc-flash-flip__badge--answer {
+  background: linear-gradient(180deg, rgba(237, 233, 254, 0.95) 0%, rgba(245, 243, 255, 0.9) 100%);
+  color: #6d28d9;
+  border-color: rgba(196, 181, 253, 0.55);
+  box-shadow: 0 1px 2px rgba(124, 58, 237, 0.1);
+}
+
+.fc-flash-flip__text {
+  margin: 0;
+  flex: 1;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #0f172a;
+  overflow-y: auto;
+  letter-spacing: -0.01em;
+}
+
+.fc-flash-flip__hint {
+  margin-top: auto;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(191, 219, 254, 0.8);
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.95) 0%, rgba(255, 255, 255, 0.6) 100%);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #1e3a8a;
+}
+
+.fc-flash-flip__hint-lab {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #2563eb;
+  margin-bottom: 6px;
+}
+
+.fc-flash-actions-shell {
+  margin-top: 8px;
+  padding: 22px 4px 8px;
+  border-top: 1px solid rgba(232, 238, 247, 0.95);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(248, 250, 255, 0.65) 100%);
+  border-radius: 0 0 4px 4px;
+}
+
+.fc-flash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  max-width: 540px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fc-flash-actions-btn {
+  border-radius: 14px !important;
+  height: 46px !important;
+  font-weight: 700 !important;
+  flex: 1;
+  min-width: 140px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+.fc-flash-done {
+  text-align: center;
+  padding: 24px 16px 8px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.fc-flash-done__icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #047857;
+  background: linear-gradient(145deg, #d1fae5, #ecfdf5);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.fc-flash-done__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #181b2a;
+}
+
+.fc-flash-done__text {
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .fc-flash-dock-sizes {
+    justify-content: flex-start;
+  }
+
+  .fc-flash-actions {
+    flex-direction: column;
+  }
+
+  .fc-flash-actions-btn {
+    width: 100%;
+  }
+}

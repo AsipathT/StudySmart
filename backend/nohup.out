@@ -1,0 +1,81 @@
+
+> performance-predictor-backend@1.0.0 start
+> node src/app.js
+
+(node:25511) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✅ Connected to MongoDB
+✅ Server running on port 5000
+✅ Health check available at http://localhost:5000/health
+Killed
+
+> performance-predictor-backend@1.0.0 start
+> node src/app.js
+
+(node:23814) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✅ Connected to MongoDB
+[AUTH] Available users: [ 'demo@studysmart.com' ]
+✅ Auth routes loaded
+✅ PostgreSQL Connected successfully
+✅ PostgreSQL Tables synced successfully
+
+✅ Server running on port 5000
+   Health:  http://localhost:5000/health
+   Upload:  POST http://localhost:5000/api/upload/upload
+   Login:   POST http://localhost:5000/api/auth/login
+
+Killed
+
+> performance-predictor-backend@1.0.0 start
+> node src/app.js
+
+(node:23923) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✅ Connected to MongoDB
+[AUTH] Available users: [ 'demo@studysmart.com' ]
+✅ Auth routes loaded
+✅ PostgreSQL Connected successfully
+✅ PostgreSQL Tables synced successfully
+
+✅ Server running on port 5000
+   Health:  http://localhost:5000/health
+   Upload:  POST http://localhost:5000/api/upload/upload
+   Login:   POST http://localhost:5000/api/auth/login
+
+Killed
+📁 Serving static uploads from /home/nidu/Documents/Study Smart Tracker (SLIIT)/StudySmart/backend/src/uploads
+(node:9489) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✅ Connected to MongoDB
+✅ Auth routes loaded
+✅ PostgreSQL Connected successfully
+✅ PostgreSQL Tables synced successfully
+
+✅ Server running on port 5000
+   Health:  http://localhost:5000/health
+   Upload:  POST http://localhost:5000/api/upload/upload
+   Login:   POST http://localhost:5000/api/auth/login
+
+[AUTH] ✅ Demo user exists  _id: 69bff49d514a78816d629276
+[AUTH] Login attempt: demo@studysmart.com
+[AUTH] ✅ Login OK: demo@studysmart.com | _id: 69bff49d514a78816d629276
+
+> performance-predictor-backend@1.0.0 start
+> node src/app.js
+
+📁 Serving static uploads from /home/nidu/Documents/Study Smart Tracker (SLIIT)/StudySmart/backend/src/uploads
+(node:11150) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✅ Connected to MongoDB
+✅ Auth routes loaded
+✅ PostgreSQL Connected successfully
+✅ PostgreSQL Tables synced successfully
+
+✅ Server running on port 5000
+   Health:  http://localhost:5000/health
+   Upload:  POST http://localhost:5000/api/upload/upload
+   Login:   POST http://localhost:5000/api/auth/login
+
+[AUTH] ✅ Demo user exists  _id: 69bff49d514a78816d629276
+Killed
