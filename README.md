@@ -1,59 +1,118 @@
-StudySmart
+# 📚 StudySmart
 
-Intelligent study session tracker with ML-based exam predictions and personalized recommendations for students.
+<div align="center">
 
-Project Overview
+**An intelligent academic performance tracking and prediction platform built for SLIIT students.**
 
-StudySmart is a web application designed to help university students study more effectively.
-It tracks study sessions, predicts exam performance using a simple ML model, provides actionable study recommendations, and connects students with compatible study partners.
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Sequelize-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Playwright](https://img.shields.io/badge/Tested%20with-Playwright-45ba4b?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
 
-Problems it solves:
+</div>
 
-Students don’t know if they are studying enough.
+---
 
-Students can’t identify weak areas until it’s too late.
+## 🎯 What is StudySmart?
 
-Studying alone limits peer learning opportunities.
+StudySmart is a full-stack web application that helps SLIIT students track their academic performance, upload marks, visualise grade trends, predict exam outcomes, and get AI-powered study recommendations — all from one dashboard.
 
-Key Features
+---
 
-Study Session Tracker
+## ✨ Key Features
 
-Log study time, subject, topic, and quiz scores
+- 📤 **Upload Marks** — Excel/CSV upload with auto subject parsing
+- 📊 **Analytics Dashboard** — GPA gauge, trend chart, grade distribution, subject cards
+- ⚠️ **Early Warning System** — flags failing and at-risk subjects automatically
+- 🔮 **Score Prediction** — ML-based predicted final score
+- 🤖 **AI Study Assistant** — personalised study tips and recommendations
+- 👤 **Student Profile** — academic info, study habits, avatar, semester GPA history
+- 🔐 **Role-Based Access** — Student / Teacher / Admin roles
 
-Start/stop timer with easy-to-use interface
+---
 
-Session history with CRUD functionality
+## 🛠 Tech Stack
 
-Performance Predictor (ML-Based)
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Ant Design, React Router |
+| Backend | Node.js, Express.js |
+| Database | PostgreSQL + Sequelize ORM |
+| Auth | JWT + bcrypt |
+| Testing | Playwright (E2E) |
 
-Predicts likely exam score using linear regression
+---
 
-Provides actionable recommendations: “Study 5 more hours to reach 75%”
+## 🚀 Getting Started
 
-Tracks prediction accuracy over time
+### 1. Clone the repo
+```bash
+git clone https://github.com/your-username/StudySmart.git
+cd StudySmart
+```
 
-Study Insights & Recommendations Engine
+### 2. Backend
+```bash
+cd backend
+npm install
+```
 
-Highlights weak subjects and topics
+Create `backend/.env`:
+```env
+PORT=5000
+DB_HOST=localhost
+DB_NAME=studysmart
+DB_USER=your_user
+DB_PASSWORD=your_password
+JWT_SECRET=your_secret
+```
 
-Generates weekly personalized study tips
+```bash
+npm run dev
+```
 
-Suggests adjustments to study plan for better outcomes
+### 3. Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Study Buddy Finder
+### 4. Demo Login
 
-Matches students based on strengths & weaknesses
+| Role | Email | Password |
+|---|---|---|
+| Student | `ITxxxxxxxx@my.sliit.lk` | `PW` |
+| Admin | `admin@studysmart.com` | `demo123` |
 
-Displays top compatible partners
+---
 
-Basic messaging interface for collaboration
+## 🧪 Running Tests
 
-Technology Stack
-Component	        Technology
-Frontend	        React.js
-Backend	                Node.js + Express
-Database	        MongoDB
-Machine Learning	Python (scikit-learn)
-Charts & Visualization	Chart.js
-Testing	                Playwright
+```bash
+cd frontend
+npx playwright install   # first time only
+npx playwright test
+npx playwright test --ui # with visual UI
+```
+
+---
+
+## 👥 Team
+
+**Group WE_238_3.2 · IT Project Management (IT 3040) · SLIIT · 3rd Year, 2nd Semester**
+
+| Name | Contribution |
+|---|---|
+| Asipath T.M.N.V | Student Performance Predictor |
+| Jithmini E.A.D.A | Session tracker |
+| Kavindi T.A.C | Resource Library |
+| Sarangi K.P.E | Study buddy finder |
+
+---
+
+<div align="center">
+
+**Built with ❤️ by Team WE_288_1.1 · SLIIT Faculty of Computing**
+
+</div>
