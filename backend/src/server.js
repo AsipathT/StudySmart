@@ -6,19 +6,32 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    const { connectMongoDB } = require('../config/database');
+    const { connectMongoDB, connectPostgreSQL } = require('../config/database');
     await connectMongoDB();
+    await connectPostgreSQL();
     // Seed demo + admin users now that DB is connected
     const { seedUsers } = require('./routes/auth.routes');
     if (seedUsers) await seedUsers();
   } catch (e) {
-    console.warn('⚠️ MongoDB unavailable:', e.message);
+    console.warn('⚠️ Database warning:', e.message);
   }
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`\n✅ Server running on port ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/health`);
     console.log(`   Login:  POST http://localhost:${PORT}/api/auth/login`);
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err, promise) => {
+    console.error('Unhandled Rejection:', err.message);
+    server.close(() => process.exit(1));
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err.message);
+    server.close(() => process.exit(1));
   });
 };
 

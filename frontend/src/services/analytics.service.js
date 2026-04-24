@@ -2,6 +2,14 @@ import api from './api';
 
 class AnalyticsService {
   /**
+   * Get user analytics (for authenticated user with uploaded marks)
+   */
+  async getUserAnalytics() {
+    const response = await api.get('/analytics/user');
+    return response.data;
+  }
+
+  /**
    * Get student dashboard
    */
   async getStudentDashboard(studentId) {
@@ -50,9 +58,27 @@ class AnalyticsService {
    * Download PDF analytics report
    */
   async downloadPdfReport() {
-    const response = await api.get('/report/pdf', {
+    const response = await api.get('/analytics/export/pdf', {
       responseType: 'blob'
     });
+    return response.data;
+  }
+
+  /**
+   * Download CSV analytics report
+   */
+  async downloadCsvReport() {
+    const response = await api.get('/analytics/export/csv', {
+      responseType: 'blob'
+    });
+    return response.data;
+  }
+
+  /**
+   * Get admin dashboard with real student data
+   */
+  async getAdminDashboard() {
+    const response = await api.get('/analytics/admin/dashboard');
     return response.data;
   }
 }

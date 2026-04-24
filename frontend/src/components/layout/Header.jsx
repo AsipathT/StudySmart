@@ -10,7 +10,7 @@ import {
   BulbOutlined,
   BulbFilled,
 } from '@ant-design/icons';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useSessionTheme } from '../../context/SessionThemeContext';
 import './Header.css';
@@ -25,19 +25,36 @@ const SESSION_TRACKER_ROUTES = [
   '/create-students',
 ];
 
+const isResourceLibraryShellPath = (pathname) =>
+  pathname === '/resource-library' || pathname.startsWith('/resource-library/');
+
 const Header = ({ collapsed, setCollapsed }) => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useSessionTheme();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isSessionRoute = SESSION_TRACKER_ROUTES.includes(location.pathname);
+  const hideProfileSettings = isResourceLibraryShellPath(location.pathname);
 
-  const userMenuItems = [
-    { key: 'profile',  icon: <UserOutlined />,   label: 'Profile'  },
-    { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
-    { type: 'divider' },
-    { key: 'logout', icon: <LogoutOutlined />, label: 'Logout', onClick: logout },
-  ];
+  const userMenuItems = hideProfileSettings
+    ? [{ key: 'logout', icon: <LogoutOutlined />, label: 'Logout', onClick: logout }]
+    : [
+        {
+          key: 'profile',
+          icon: <UserOutlined />,
+          label: 'Profile',
+          onClick: () => navigate('/profile'),
+        },
+        {
+          key: 'settings',
+          icon: <SettingOutlined />,
+          label: 'Settings',
+          onClick: () => navigate('/settings'),
+        },
+        { type: 'divider' },
+        { key: 'logout', icon: <LogoutOutlined />, label: 'Logout', onClick: logout },
+      ];
 
   return (
     <AntHeader className="site-header" style={{ padding: 0, marginLeft: collapsed ? 80 : 250 }}>

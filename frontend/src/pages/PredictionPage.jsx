@@ -17,6 +17,7 @@ import {
   Tooltip as RTooltip, Legend
 } from 'recharts';
 import predictionAPI from '../services/prediction.service';
+import './PredictionPage.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -25,19 +26,22 @@ const { Option } = Select;
 const C = {
   primary:   '#2563eb',
   primaryBg: '#eff6ff',
-  success:   '#059669',
-  successBg: '#ecfdf5',
+  accent:    '#f59e0b',
+  accentBg:  '#fffbeb',
+  success:   '#16a34a',
+  successBg: '#f0fdf4',
   warning:   '#d97706',
   warningBg: '#fffbeb',
   error:     '#dc2626',
   errorBg:   '#fef2f2',
   purple:    '#7c3aed',
   purpleBg:  '#f5f3ff',
-  text:      '#1e293b',
+  text:      '#0f172a',
   textMd:    '#475569',
   textSm:    '#64748b',
-  border:    '#dbeafe',
-  bg:        '#f0f5ff',
+  border:    '#e2e8f0',
+  bg:        '#f8fafc',
+  surface:   '#ffffff',
 };
 
 // ── All SLIIT subjects (same as UploadPage) ───────────────────────────────────
@@ -184,40 +188,43 @@ const PredictionPage = () => {
   ];
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', padding: '24px 28px',
-      fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div className="prediction-page">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #7c3aed 100%)',
-        borderRadius: 18, padding: '28px 32px', marginBottom: 24,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 16,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(255,255,255,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ThunderboltOutlined style={{ fontSize: 26, color: '#fff' }} />
+      <Card className="prediction-header">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: 14,
+              background: 'rgba(59, 130, 246, 0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <ThunderboltOutlined style={{ fontSize: 26, color: '#2563eb' }} />
+            </div>
+            <div>
+              <Title level={3} style={{ margin: 0 }}>Performance Predictor</Title>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                AI-powered predictions based on your uploaded marks
+              </Text>
+            </div>
           </div>
-          <div>
-            <Title level={3} style={{ margin: 0, color: '#fff' }}>Performance Predictor</Title>
-            <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
-              AI-powered predictions based on your uploaded marks
-            </Text>
-          </div>
+          <Tag style={{
+            background: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.15)',
+            color: '#2563eb', fontSize: 13, padding: '4px 14px', borderRadius: 20
+          }}>
+            {availSubs.length > 0 ? `${availSubs.length} subjects with data` : 'Upload marks to get started'}
+          </Tag>
         </div>
-        <Tag style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-          color: '#fff', fontSize: 13, padding: '4px 14px', borderRadius: 20 }}>
-          {availSubs.length > 0 ? `${availSubs.length} subjects with data` : 'Upload marks to get started'}
-        </Tag>
-      </div>
+      </Card>
 
       <Row gutter={[20, 20]}>
         {/* ── Left: Controls ───────────────────────────────────────────────── */}
         <Col xs={24} lg={8}>
-          <Card style={{ borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+          <Card className="prediction-card" style={{ marginBottom: 20 }}>
             <Title level={5} style={{ marginTop: 0 }}>
-              <RocketOutlined style={{ color: C.primary, marginRight: 8 }} />
+              <RocketOutlined style={{ color: '#2563eb', marginRight: 8 }} />
               Generate Prediction
             </Title>
 
@@ -271,15 +278,15 @@ const PredictionPage = () => {
           </Card>
 
           {/* Quick Stats */}
-          <Card style={{ borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+          <Card className="prediction-card" style={{ marginBottom: 20 }}>
             <Title level={5} style={{ marginTop: 0 }}>
-              <BarChartOutlined style={{ color: C.purple, marginRight: 8 }} />
+              <BarChartOutlined style={{ color: '#7c3aed', marginRight: 8 }} />
               Overview
             </Title>
             <Row gutter={[12, 12]}>
               {[
-                { label: 'Subjects Tracked', value: availSubs.length, col: C.primary,  bg: C.primaryBg },
-                { label: 'Predictions Made', value: history.length,   col: C.purple,   bg: C.purpleBg  },
+                { label: 'Subjects Tracked', value: availSubs.length, col: '#2563eb', bg: '#eff6ff' },
+                { label: 'Predictions Made', value: history.length,   col: '#7c3aed', bg: '#f5f3ff' },
                 { label: 'High Confidence',
                   value: history.filter(h => h.confidence === 'High').length,
                   col: C.success, bg: C.successBg },
@@ -297,18 +304,18 @@ const PredictionPage = () => {
 
           {/* History */}
           {history.length > 0 && (
-            <Card style={{ borderRadius: 14, border: `1px solid ${C.border}` }}
-              title={<Space><HistoryOutlined style={{ color: C.primary }} /><span>Recent Predictions</span></Space>}>
+            <Card className="prediction-card"
+              title={<Space><HistoryOutlined style={{ color: '#2563eb' }} /><span>Recent Predictions</span></Space>}>
               <List size="small" dataSource={history.slice(0, 5)} renderItem={item => (
                 <List.Item style={{ padding: '10px 0' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.text,
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       maxWidth: 160 }}>
                       {item.subject?.split(' - ')[0] || item.subject}
                     </div>
-                    <Tag color={confidenceColor(item.confidence) === C.success ? 'green'
-                      : confidenceColor(item.confidence) === C.warning ? 'orange' : 'red'}
+                    <Tag color={confidenceColor(item.confidence) === '#16a34a' ? 'green'
+                      : confidenceColor(item.confidence) === '#f59e0b' ? 'orange' : 'red'}
                       style={{ fontSize: 10, marginTop: 2 }}>
                       {item.confidence}
                     </Tag>
@@ -337,11 +344,18 @@ const PredictionPage = () => {
           ) : pred ? (
             <>
               {/* ── Main prediction card ─────────────────────────────────── */}
-              <Card style={{ borderRadius: 14, border: `2px solid ${scoreColor(pred.predictedScore)}30`,
-                background: scoreBg(pred.predictedScore), marginBottom: 20 }}>
+              <Card style={{
+                borderRadius: 16,
+                border: `2px solid ${scoreColor(pred.predictedScore)}30`,
+                background: scoreColor(pred.predictedScore) >= 75 ? '#f0fdf4' : scoreColor(pred.predictedScore) >= 55 ? '#fffbeb' : '#fef2f2',
+                marginBottom: 20,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.08)'
+              }}>
                 <Row gutter={[24, 24]} align="middle">
                   <Col xs={24} sm={10} style={{ textAlign: 'center' }}>
-                    <GaugeArc score={pred.predictedScore} size={180} />
+                    <div className="prediction-gauge-container">
+                      <GaugeArc score={pred.predictedScore} size={180} />
+                    </div>
                     <div style={{ marginTop: 8 }}>
                       <Tag style={{
                         background: confidenceColor(pred.confidence) + '20',
@@ -354,7 +368,7 @@ const PredictionPage = () => {
                     </div>
                   </Col>
                   <Col xs={24} sm={14}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.textSm,
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b',
                       textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 6 }}>
                       {pred.subject}
                     </div>
@@ -401,7 +415,7 @@ const PredictionPage = () => {
               {/* ── Factor breakdown ─────────────────────────────────────── */}
               <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
                 <Col xs={24} sm={12}>
-                  <Card style={{ borderRadius: 14, border: `1px solid ${C.border}`, height: '100%' }}
+                  <Card className="prediction-card"
                     title={<Space><BarChartOutlined style={{ color: C.primary }} /><span>Score Factors</span></Space>}>
                     {[
                       { label: 'Quiz Average',    value: pred.factors?.quizAverage  || 0, max: 100, col: C.primary },
@@ -421,7 +435,7 @@ const PredictionPage = () => {
                 </Col>
 
                 <Col xs={24} sm={12}>
-                  <Card style={{ borderRadius: 14, border: `1px solid ${C.border}`, height: '100%' }}
+                  <Card className="prediction-card"
                     title={<Space><BulbOutlined style={{ color: C.warning }} /><span>Recommendations</span></Space>}>
                     <List size="small" dataSource={[
                       pred.predictedScore < 50  && { icon: '🚨', col: C.error,   text: `Score below pass threshold — urgent revision needed for ${pred.subject?.split(' - ')[0]}` },
@@ -443,8 +457,7 @@ const PredictionPage = () => {
               </Row>
 
               {/* ── Meta info ────────────────────────────────────────────── */}
-              <Card style={{ borderRadius: 14, border: `1px solid ${C.border}`,
-                background: C.primaryBg }}>
+              <Card className="prediction-card" style={{ background: C.primaryBg }}>
                 <Row gutter={[16, 8]}>
                   {[
                     { label: 'Quiz Scores Used',   value: pred.metadata?.quizScoresCount },
@@ -462,7 +475,7 @@ const PredictionPage = () => {
             </>
           ) : (
             /* ── Empty / no prediction yet ─────────────────────────────── */
-            <Card style={{ borderRadius: 14, border: `1px solid ${C.border}`,
+            <Card className="prediction-card" style={{
               background: '#fff', textAlign: 'center', padding: '60px 24px' }}>
               <ThunderboltOutlined style={{ fontSize: 56, color: C.primary, opacity: 0.3 }} />
               <Title level={4} style={{ marginTop: 20, color: C.text }}>

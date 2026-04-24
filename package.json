@@ -1,0 +1,14 @@
+{
+  "name": "studysmart",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npm run start --prefix frontend",
+    "start:frontend": "npm run start --prefix frontend",
+    "start:backend": "npm run start --prefix backend",
+    "backend": "npm run start --prefix backend"
+  },
+  "dependencies": {
+    "xlsx-js-style": "^1.2.0"
+  }
+}

@@ -22,6 +22,7 @@ const isMongoUp = () => mongoose.connection.readyState === 1;
 
 async function protect(req, res, next) {
   try {
+    console.log('protect middleware called for:', req.path);
     // ── 1. Extract token ──────────────────────────────────────────────────────
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -120,4 +121,61 @@ function authorize(...roles) {
   };
 }
 
-module.exports = { protect, authorize };
+// Optional protection middleware — allows unauthenticated requests, but populates req.user when valid token present
+async function optionalProtect(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      req.user = null;
+      return next();
+    }
+    const token = authHeader.split(' ')[1];
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (jwtErr) {
+      console.warn('Optional auth: invalid token', jwtErr.message);
+      req.user = null;
+      return next();
+    }
+
+    if (isMongoUp() && User && mongoose.isValidObjectId(decoded.id)) {
+      try {
+        const user = await User.findById(decoded.id).select('-password');
+        if (user) {
+          req.user = {
+            id:        user._id.toString(),
+            email:     user.email,
+            role:      user.role || 'student',
+            name:      user.name || '',
+            studentId: user.studentId || ''
+          };
+          return next();
+        }
+      } catch (dbErr) {
+        console.error('Optional auth DB error:', dbErr.message);
+      }
+    }
+
+    if (decoded?.id && decoded?.email) {
+      req.user = {
+        id:        decoded.id,
+        email:     decoded.email,
+        role:      decoded.role || 'student',
+        name:      decoded.name || '',
+        studentId: decoded.studentId || ''
+      };
+      return next();
+    }
+
+    req.user = null;
+    next();
+  } catch (err) {
+    console.error('Optional auth unexpected error:', err.message);
+    req.user = null;
+    next();
+  }
+}
+
+module.exports = { protect, authorize, optionalProtect };

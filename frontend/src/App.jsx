@@ -4,7 +4,6 @@ import { Layout } from 'antd';
 import { AuthProvider } from './context/AuthContext';
 import { SessionThemeProvider, useSessionTheme } from './context/SessionThemeContext';
 import Sidebar from './components/layout/Sidebar';
-import Header from './components/layout/Header';
 import PrivateRoute from './components/common/PrivateRoute';
 
 const SessionDarkWrapper = ({ children }) => {
@@ -26,11 +25,19 @@ import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminDashboard from './pages/AdminDashboard';
+import ResourceLibraryDashboard from './pages/ResourceLibraryDashboard';
+import ResourceLibraryLoginPage from './pages/ResourceLibraryLoginPage';
+import ResourceLibraryPrivateRoute from './components/resourceLibrary/ResourceLibraryPrivateRoute';
 
 import MyGroups from "./pages/MyGroups";
 import JoinedGroups from "./pages/JoinedGroups";
-import AllGroups from "./pages/AllGroups";
+
 import CreateGroup from "./pages/CreateGroup";
+import StudyBuddyDashboard from "./pages/StudyBuddyDashboard";
+import FindBuddies from "./pages/FindBuddies";
+import GroupChat from "./pages/GroupChat";
+
+
 import StudySessionPage from "./pages/StudySessionPage";
 import TrackingSummaryPage from "./pages/TrackingSummaryPage";
 import QuizPage from "./pages/QuizPage";
@@ -47,7 +54,7 @@ function App() {
   return (
     <AuthProvider>
       <SessionThemeProvider>
-      <Router future={{ v7_relativeSplatPath: true }}>
+      <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
         <Layout style={{ minHeight: '100vh' }}>
           <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
           <Layout 
@@ -58,10 +65,9 @@ function App() {
               position: 'relative'
             }}
           >
-            <Header collapsed={collapsed} setCollapsed={setCollapsed} />
             <Content 
               style={{ 
-                margin: '24px 16px', 
+                margin: 0, 
                 padding: 24, 
                 minHeight: 280,
                 background: '#fff',
@@ -71,6 +77,15 @@ function App() {
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/resource-library" element={<ResourceLibraryLoginPage />} />
+                <Route
+                  path="/resource-library/:section"
+                  element={
+                    <ResourceLibraryPrivateRoute>
+                      <ResourceLibraryDashboard />
+                    </ResourceLibraryPrivateRoute>
+                  }
+                />
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 
                 {/* Admin Route */}
@@ -178,14 +193,32 @@ function App() {
   }
 />
 
+
+
 <Route
-  path="/buddy/all-groups"
+  path="/buddy/dashboard"
   element={
     <PrivateRoute>
-      <AllGroups />
+      <StudyBuddyDashboard />
     </PrivateRoute>
   }
 />
+
+<Route
+  path="/buddy/find"
+  element={
+    <PrivateRoute>
+      <FindBuddies />
+    </PrivateRoute>
+  }
+/>
+
+<Route path="/buddy/chat/:groupId" element={<GroupChat />} />
+
+
+
+
+
 
 <Route
   path="/study-tracker"

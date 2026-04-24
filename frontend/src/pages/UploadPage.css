@@ -3,7 +3,12 @@
 
 /* ─── CSS Variables ────────────────────────────────────────────── */
 :root {
-  --primary: #2563eb;
+  /* 60-30-20 Color Rule Implementation */
+  --dominant: #f8fafc; /* 60% - Soft neutral background */
+  --secondary: #2563eb; /* 30% - Blue for supporting elements */
+  --accent: #f59e0b; /* 20% - Warm amber for highlights and CTAs */
+
+  --primary: var(--secondary);
   --primary-light: #eff6ff;
   --primary-mid: #dbeafe;
   --primary-dark: #1d4ed8;
@@ -15,24 +20,37 @@
   --error: #dc2626;
   --error-light: #fef2f2;
   --surface: #ffffff;
-  --surface-2: #f8fafc;
+  --surface-2: var(--dominant);
   --surface-3: #f1f5f9;
   --border: #e2e8f0;
   --border-focus: #93c5fd;
   --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-  --shadow-lg: 0 10px 32px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-glow: 0 0 0 3px rgba(37,99,235,0.12);
-  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'DM Mono', 'Fira Mono', monospace;
-  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', 'Fira Mono', 'SF Mono', monospace;
+  --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 15px 16px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', 'Fira Mono', 'SF Mono', monospace;
+  --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 15px 16px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', 'Fira Mono', 'SF Mono', monospace;
+  --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ─── Global resets for page ──────────────────────────────────── */
@@ -43,8 +61,8 @@
 
 /* ─── Upload Page ─────────────────────────────────────────────── */
 .upload-page {
-  padding: 28px 32px;
-  background: #f1f5f9;
+  padding: 32px 36px;
+  background: var(--dominant);
   background-image:
     radial-gradient(circle at 20% 0%, rgba(37,99,235,0.06) 0%, transparent 50%),
     radial-gradient(circle at 80% 100%, rgba(22,163,74,0.04) 0%, transparent 40%);
@@ -56,7 +74,8 @@
   border-radius: var(--radius-xl) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow-sm) !important;
-  background: var(--surface) !important;
+  transition: all var(--transition) !important;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(248, 250, 252, 0.8) 100%) !important;
   overflow: hidden;
   position: relative;
 }
@@ -78,8 +97,14 @@
   border-radius: var(--radius-xl) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow-md) !important;
-  background: var(--surface) !important;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(248, 250, 252, 0.8) 100%) !important;
   overflow: hidden;
+  transition: all var(--transition) !important;
+}
+
+.wizard-card.ant-card:hover {
+  box-shadow: var(--shadow-lg) !important;
+  transform: translateY(-2px) !important;
 }
 
 .wizard-card .ant-card-body {
@@ -96,7 +121,7 @@
 }
 
 .wizard-card .ant-steps-item-title {
-  font-size: 13px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
   color: var(--text-secondary) !important;
 }
@@ -113,7 +138,7 @@
   width: 32px !important;
   height: 32px !important;
   line-height: 32px !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 /* ─── Step Content ─────────────────────────────────────────────── */
@@ -155,7 +180,7 @@
 
 /* ─── Ant Form overrides ───────────────────────────────────────── */
 .step-content .ant-form-item-label > label {
-  font-size: 13px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
   color: var(--text-primary) !important;
   letter-spacing: 0 !important;
@@ -166,9 +191,9 @@
 .step-content .ant-select-selector {
   border-radius: var(--radius-sm) !important;
   border-color: var(--border) !important;
-  font-size: 14px !important;
+  font-size: 15px !important;
   transition: all var(--transition) !important;
-  background: var(--surface) !important;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(248, 250, 252, 0.8) 100%) !important;
 }
 
 .step-content .ant-input-affix-wrapper:hover,
@@ -180,7 +205,7 @@
 .step-content .ant-input-affix-wrapper:focus-within,
 .step-content .ant-input:focus,
 .step-content .ant-select-focused .ant-select-selector {
-  border-color: var(--primary) !important;
+  border-color: var(--accent) !important;
   box-shadow: var(--shadow-glow) !important;
 }
 
@@ -200,7 +225,7 @@
   border-radius: var(--radius-sm) !important;
   border: 1.5px solid var(--border) !important;
   font-weight: 500 !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   height: 40px !important;
   line-height: 38px !important;
   color: var(--text-secondary) !important;
@@ -217,16 +242,16 @@
 }
 
 .semester-radio-group .ant-radio-button-wrapper:hover {
-  border-color: var(--primary) !important;
+  border-color: var(--accent) !important;
   color: var(--primary) !important;
   background: var(--primary-light) !important;
 }
 
 .semester-radio-group .ant-radio-button-wrapper-checked {
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
   color: #fff !important;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.3) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
 }
 
 /* ─── Divider ──────────────────────────────────────────────────── */
@@ -250,17 +275,17 @@
   height: 44px !important;
   border-radius: var(--radius-sm) !important;
   font-weight: 600 !important;
-  font-size: 14px !important;
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 2px 10px rgba(37,99,235,0.3) !important;
+  font-size: 15px !important;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3) !important;
   transition: all var(--transition) !important;
 }
 
 .next-btn.ant-btn:hover {
   background: var(--primary-dark) !important;
   border-color: var(--primary-dark) !important;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.4) !important;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -366,7 +391,7 @@
 }
 
 .upload-progress .ant-progress-bg {
-  background: linear-gradient(90deg, var(--primary), #60a5fa) !important;
+  background: linear-gradient(90deg, var(--accent), #fbbf24) !important;
   border-radius: 4px !important;
 }
 
@@ -417,6 +442,7 @@
   border-radius: var(--radius-xl) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow-sm) !important;
+  transition: all var(--transition) !important;
   overflow: hidden;
 }
 
@@ -424,11 +450,11 @@
   border-bottom: 1px solid var(--border) !important;
   padding: 0 24px !important;
   min-height: 52px !important;
-  background: var(--surface) !important;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(248, 250, 252, 0.8) 100%) !important;
 }
 
 .ant-card-head-title {
-  font-size: 14px !important;
+  font-size: 15px !important;
   font-weight: 700 !important;
   color: var(--text-primary) !important;
   padding: 14px 0 !important;
@@ -467,7 +493,7 @@
 }
 
 .ant-table-tbody > tr > td {
-  font-size: 13px !important;
+  font-size: 14px !important;
   padding: 10px 14px !important;
   color: var(--text-primary) !important;
   border-bottom: 1px solid #f1f5f9 !important;
@@ -490,37 +516,37 @@
 .ant-btn {
   border-radius: var(--radius-sm) !important;
   font-weight: 500 !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   transition: all var(--transition) !important;
 }
 
 .ant-btn-primary {
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.25) !important;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25) !important;
 }
 
 .ant-btn-primary:hover {
   background: var(--primary-dark) !important;
   border-color: var(--primary-dark) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 14px rgba(37,99,235,0.35) !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
 }
 
 .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):hover {
-  border-color: var(--primary) !important;
+  border-color: var(--accent) !important;
   color: var(--primary) !important;
 }
 
 /* ─── Alerts ───────────────────────────────────────────────────── */
 .ant-alert {
   border-radius: var(--radius-sm) !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 /* ─── Timeline ─────────────────────────────────────────────────── */
 .ant-timeline-item-content {
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 .ant-timeline-item-tail {
@@ -537,15 +563,15 @@
 }
 
 .ant-descriptions-bordered .ant-descriptions-item-content {
-  font-size: 13px !important;
+  font-size: 14px !important;
   padding: 10px 14px !important;
   color: var(--text-primary) !important;
 }
 
 /* ─── Pagination ───────────────────────────────────────────────── */
 .ant-pagination-item-active {
-  border-color: var(--primary) !important;
-  background: var(--primary) !important;
+  border-color: var(--accent) !important;
+  background: var(--accent) !important;
 }
 
 .ant-pagination-item-active a {
@@ -642,7 +668,7 @@
 /* ─── Empty state ──────────────────────────────────────────────── */
 .ant-empty-description {
   color: var(--text-muted) !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 /* ─── Spin ─────────────────────────────────────────────────────── */

@@ -7,17 +7,63 @@ require('dns').setServers(['8.8.8.8', '1.1.1.1']);
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/api/study-groups", require("./routes/studygroup.routes"));
+// ── CORS — must be FIRST, before any routes ───────────────────────────────────
+// Allow all localhost origins (React dev server on any port)
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Allow any localhost or 127.0.0.1 origin
+    if (
+      origin.startsWith('http://localhost') ||
+      origin.startsWith('http://127.0.0.1') ||
+      origin.startsWith('https://localhost')
+    ) {
+      return callback(null, true);
+    }
+    // In production, add your deployed frontend URL here:
+    // if (origin === 'https://your-app.com') return callback(null, true);
+    callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  // x-rl-role: multipart RL requests. x-rl-user-name: collaborative note save (PUT /content).
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-rl-role', 'x-rl-user-name'],
+  credentials: true,
+  optionsSuccessStatus: 200, // IE11 compatibility
+};
 
+app.use(cors(corsOptions));
+
+// Handle preflight OPTIONS for ALL routes
+app.options('*', cors(corsOptions));
+
+// ── Body parsing ──────────────────────────────────────────────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ── Static uploads ────────────────────────────────────────────────────────────
+app.use("/api/study-groups", require("./routes/studygroup.routes"));
 const staticUploadsPath = path.join(__dirname, 'uploads');
 console.log('📁 Serving static uploads from', staticUploadsPath);
+
+// Pre-create every Resource Library upload folder at startup so a fresh clone or
+// an early upload cannot lose files just because the target directory didn't exist.
+try {
+  const fs = require('fs');
+  const dirs = [
+    path.join(staticUploadsPath, 'resource-library', 'resources'),
+    path.join(staticUploadsPath, 'resource-library', 'modules'),
+    path.join(staticUploadsPath, 'resource-library', 'requests'),
+    path.join(staticUploadsPath, 'resource-library', 'request-chat'),
+  ];
+  for (const d of dirs) fs.mkdirSync(d, { recursive: true });
+} catch (e) {
+  console.warn('⚠️ Could not pre-create upload directories:', e.message);
+}
+
 app.use('/uploads', express.static(staticUploadsPath));
 
-// Routes
+// ── Routes ────────────────────────────────────────────────────────────────────
 try {
   app.use('/api/auth', require('../src/routes/auth.routes'));
   console.log('✅ auth routes');
@@ -34,9 +80,10 @@ try {
 
 try {
   app.use('/api/analytics', require('../src/routes/analytics.routes'));
-  console.log('✅ analytics routes');
+  console.log('✅ analytics routes loaded');
 } catch (e) {
   console.warn('⚠️ analytics.routes:', e.message);
+  console.error(e.stack);
 }
 
 try {
@@ -88,24 +135,31 @@ try {
   console.warn('⚠️ quiz.routes:', e.message);
 }
 
-// Health check
+try {
+  app.use('/api/resource-library', require('../src/routes/resourceLibrary.routes'));
+  console.log('✅ resource-library routes');
+} catch (e) {
+  console.warn('⚠️ resourceLibrary.routes:', e.message);
+}
+
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
   });
 });
 
-// Global error handler
+// ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.stack || err.message);
   res.status(err.status || 500).json({
     success: false,
     error: {
       code: err.code || 'SERVER_ERROR',
-      message: err.message || 'Internal server error'
-    }
+      message: err.message || 'Internal server error',
+    },
   });
 });
 

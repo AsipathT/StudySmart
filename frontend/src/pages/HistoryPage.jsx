@@ -26,10 +26,16 @@ const HistoryPage = () => {
     setLoading(true);
     try {
       const data = await uploadService.getExtractionHistory();
-      setHistory(data.data || []);
+      const historyData = data?.data ?? [];
+      setHistory(historyData);
+      sessionStorage.setItem('uploadHistory', JSON.stringify(historyData));
     } catch (error) {
       console.error('Failed to load history:', error);
-      message.error('Failed to load history');
+      message.error('Failed to load history (will fallback to local cache)');
+      const fallback = sessionStorage.getItem('uploadHistory');
+      if (fallback) {
+        setHistory(JSON.parse(fallback));
+      }
     } finally {
       setLoading(false);
     }
@@ -91,7 +97,9 @@ const HistoryPage = () => {
       title: 'Type',
       dataIndex: 'fileType',
       key: 'fileType',
-      render: (fileType) => <Tag>{fileType.toUpperCase()}</Tag>
+      render: (fileType) => (
+        <Tag>{(fileType || 'unknown').toString().toUpperCase()}</Tag>
+      )
     },
     {
       title: 'Status',
@@ -156,17 +164,7 @@ const HistoryPage = () => {
   ];
 
 
-  // Admin access check
-  if (!isAdmin) {
-    return (
-      <Result
-        status="403"
-        title="Access Denied"
-        subTitle="Only administrators can access the upload history."
-      />
-    );
-  }
-
+  // Edit/delete is admin-only, but everyone can view upload history.
   return (
     <div className="history-page">
       <Card style={{ marginBottom: 24 }}>
@@ -189,7 +187,7 @@ const HistoryPage = () => {
           <Table
             columns={columns}
             dataSource={history}
-            rowKey="id"
+            rowKey="_id"
             loading={loading}
             pagination={{ pageSize: 10 }}
           />

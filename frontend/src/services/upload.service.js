@@ -41,6 +41,22 @@ class UploadService {
   }
 
   /**
+   * Get user marks (uploaded from documents)
+   */
+  async getUserMarks() {
+    const response = await api.get('/upload/user-marks');
+    return response.data;
+  }
+
+  /**
+   * Get marks for a specific student
+   */
+  async getStudentMarks(studentId) {
+    const response = await api.get(`/upload/student-marks/${studentId}`);
+    return response.data;
+  }
+
+  /**
    * Get extraction status
    */
   async getExtractionStatus(extractionId) {

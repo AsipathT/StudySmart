@@ -1,0 +1,16 @@
+StudySmart backend — run commands from THIS directory only
+===========================================================
+
+The backend lives at:  StudySmart/backend  (this folder must contain package.json).
+
+If npm reports ENOENT for package.json under another path (for example
+Paf-assignment/SmartCampusHub/backend), your terminal is in a different project.
+Use:
+
+  cd /path/to/StudySmart/backend
+  npm install
+  npm start
+
+From the StudySmart repo root you can also run:
+
+  npm run start:backend
